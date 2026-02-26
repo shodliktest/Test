@@ -3,94 +3,326 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>TestPro — Tarix</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<title>TestPro — Natijalar Tarixi</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet"/>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;
-  background:linear-gradient(135deg,#f5f3ff 0%,#fce7f3 50%,#eff6ff 100%);color:#1a1a2e}
-[data-theme="dark"] body{background:linear-gradient(135deg,#0d0820,#140a20,#080d1a);color:#e8e0ff}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#EEF0FF;--card:#fff;--text:#1a1a2e;--text2:#6b7280;--text3:#9ca3af;
+  --acc:#6C3FE8;--acc2:#C040C8;--border:rgba(108,63,232,.1);--shadow:0 2px 10px rgba(108,63,232,.07);
+}
+[data-theme=dark]{--bg:#0d0820;--card:#140d28;--text:#e8e0ff;--text2:#9ca3af;--text3:#6b7280;--border:rgba(108,63,232,.2)}
+body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(--bg);color:var(--text)}
+
 .nav{position:fixed;top:0;left:0;right:0;height:54px;z-index:500;
-  display:flex;align-items:center;justify-content:space-between;padding:0 1rem;
-  background:rgba(245,243,255,.92);backdrop-filter:blur(20px);
-  border-bottom:1px solid rgba(124,58,237,.1)}
-[data-theme="dark"] .nav{background:rgba(13,8,32,.92)}
+  display:flex;align-items:center;justify-content:space-between;padding:0 1rem;background:var(--bg)}
 .logo{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:900;cursor:pointer;
-  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.nav-r{display:flex;gap:.4rem;align-items:center}
-.nbtn{padding:.38rem .8rem;border-radius:8px;border:1.5px solid rgba(0,0,0,.1);
-  background:#fff;cursor:pointer;font-size:.78rem;font-weight:700;
-  font-family:'Plus Jakarta Sans',sans-serif;color:#374151;transition:all .2s}
-[data-theme="dark"] .nbtn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);color:#c4b5fd}
-.nbtn:hover{border-color:#7c3aed;color:#7c3aed}
-.tbtn{width:31px;height:31px;border-radius:8px;border:1.5px solid rgba(0,0,0,.1);
-  background:#fff;cursor:pointer;font-size:.82rem}
-[data-theme="dark"] .tbtn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15)}
-.page{padding:70px 1rem 3rem;max-width:600px;margin:0 auto}
-.page-h{font-family:'Unbounded',sans-serif;font-size:1.25rem;font-weight:900;margin-bottom:1.25rem}
-.hi{display:flex;align-items:center;justify-content:space-between;gap:.75rem;
-  padding:.9rem 1rem;background:#fff;border:1px solid rgba(0,0,0,.07);
-  border-radius:14px;margin-bottom:.55rem;transition:all .2s;flex-wrap:wrap}
-[data-theme="dark"] .hi{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.09)}
-.hi:hover{border-color:rgba(124,58,237,.3);box-shadow:0 3px 12px rgba(124,58,237,.1)}
-.hi-title{font-size:.88rem;font-weight:700;color:#111827;margin-bottom:.15rem}
-[data-theme="dark"] .hi-title{color:#e5e7eb}
-.hi-meta{font-size:.7rem;color:#9ca3af}
-.score-pill{font-family:'Unbounded',sans-serif;font-size:.85rem;font-weight:900;
-  padding:.28rem .8rem;border-radius:99px;flex-shrink:0}
-.sp-g{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
-.sp-a{background:rgba(245,158,11,.1);color:#d97706;border:1px solid rgba(245,158,11,.2)}
-.sp-r{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
-.sp-el{width:26px;height:26px;border:2.5px solid rgba(124,58,237,.2);
-  border-top-color:#7c3aed;border-radius:50%;animation:spin .7s linear infinite;margin:2rem auto}
+.nav-r{display:flex;align-items:center;gap:.4rem}
+.ibtn{width:34px;height:34px;border-radius:99px;border:none;cursor:pointer;font-size:.88rem;
+  background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center}
+[data-theme=dark] .ibtn{background:rgba(255,255,255,.1)}
+.bbtn{padding:.38rem .82rem;border-radius:99px;font-size:.78rem;font-weight:700;cursor:pointer;
+  border:none;font-family:inherit;background:rgba(255,255,255,.8);color:var(--text2)}
+[data-theme=dark] .bbtn{background:rgba(255,255,255,.1)}
+
+.page{padding:66px 1rem 3rem;max-width:640px;margin:0 auto}
+
+.pg-hdr{margin-bottom:1rem}
+.pg-hdr h1{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:900;margin-bottom:.18rem}
+.pg-hdr p{font-size:.76rem;color:var(--text3)}
+
+/* STATS */
+.sbar{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem;margin-bottom:1rem}
+.sb{background:var(--card);border-radius:13px;padding:.7rem .4rem;text-align:center;
+  border:1px solid var(--border);box-shadow:var(--shadow)}
+.sv{font-family:'Unbounded',sans-serif;font-size:1.05rem;font-weight:900;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sl{font-size:.56rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;font-weight:700;margin-top:.06rem}
+
+/* FILTER TAGS */
+.filters{display:flex;gap:.3rem;overflow-x:auto;padding-bottom:.3rem;margin-bottom:.9rem}
+.filters::-webkit-scrollbar{display:none}
+.ftag{padding:.32rem .78rem;border-radius:99px;font-size:.74rem;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--border);background:var(--card);
+  color:var(--text2);transition:all .2s;white-space:nowrap;font-family:inherit;flex-shrink:0}
+.ftag.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent;
+  box-shadow:0 3px 12px rgba(108,63,232,.28)}
+
+/* DATE ACCORDION */
+.dgrp{margin-bottom:.75rem}
+
+.dhdr{display:flex;align-items:center;justify-content:space-between;
+  padding:.82rem 1rem;border-radius:14px;cursor:pointer;
+  background:var(--card);border:1.5px solid var(--border);transition:all .22s;user-select:none}
+.dhdr:hover{border-color:rgba(108,63,232,.3)}
+.dhdr.open{border-color:rgba(108,63,232,.4);background:rgba(108,63,232,.03);
+  border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.dh-l{display:flex;align-items:center;gap:.58rem}
+.dh-ico{width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.dh-date{font-size:.88rem;font-weight:800;color:var(--text)}
+.dh-info{font-size:.68rem;color:var(--text3);font-weight:600;margin-top:.06rem}
+.dh-r{display:flex;align-items:center;gap:.4rem}
+.dh-cnt{font-size:.7rem;font-weight:700;color:var(--acc);
+  background:rgba(108,63,232,.08);border-radius:99px;padding:.15rem .48rem;border:1px solid rgba(108,63,232,.12)}
+.dh-arr{font-size:.7rem;color:var(--text3);transition:transform .25s}
+.dhdr.open .dh-arr{transform:rotate(180deg)}
+
+.ditems{display:none;flex-direction:column;gap:.38rem;
+  padding:.5rem .5rem .55rem;
+  background:var(--card);
+  border:1.5px solid rgba(108,63,232,.4);border-top:none;
+  border-bottom-left-radius:14px;border-bottom-right-radius:14px}
+.ditems.open{display:flex}
+
+/* RESULT CARD */
+.rc{display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  padding:.72rem .8rem;border-radius:11px;
+  background:var(--bg);border:1px solid var(--border);transition:all .2s}
+.rc:hover{border-color:rgba(108,63,232,.28);background:rgba(108,63,232,.02)}
+.rc-l{flex:1;min-width:0}
+.rc-nm{font-size:.84rem;font-weight:800;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:.14rem}
+.rc-meta{font-size:.68rem;color:var(--text3);display:flex;gap:.42rem;flex-wrap:wrap}
+.rc-r{display:flex;flex-direction:column;align-items:flex-end;gap:.28rem;flex-shrink:0}
+.rc-pct{font-family:'Unbounded',sans-serif;font-size:.98rem;font-weight:900}
+.sg{color:#059669}.sa{color:#d97706}.sr{color:#ef4444}
+.rc-frac{font-size:.63rem;color:var(--text3);font-weight:600}
+.tbtn{padding:.26rem .6rem;border-radius:7px;font-size:.66rem;font-weight:700;
+  cursor:pointer;border:1.5px solid rgba(108,63,232,.22);
+  background:rgba(108,63,232,.06);color:var(--acc);
+  font-family:inherit;transition:all .2s;white-space:nowrap}
+.tbtn:hover{background:rgba(108,63,232,.18);border-color:var(--acc)}
+
+/* LOADER / EMPTY */
+.sp{width:28px;height:28px;border:3px solid rgba(108,63,232,.15);border-top-color:var(--acc);
+  border-radius:50%;animation:spin .7s linear infinite;margin:2.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
-.emp{text-align:center;padding:2rem;color:#9ca3af;font-size:.82rem}
+.emp{text-align:center;padding:2.5rem 1rem}
+.emp-ico{font-size:2.5rem;margin-bottom:.6rem}
+.emp-t{font-size:.9rem;font-weight:700;margin-bottom:.25rem}
+.emp-p{font-size:.76rem;color:var(--text3)}
 </style>
 </head>
 <body>
+
 <nav class="nav">
   <div class="logo" onclick="goTo('index.html')">TestPro</div>
   <div class="nav-r">
-    <button class="nbtn" onclick="goTo('dashboard.html')">← Dashboard</button>
-    <button class="tbtn" id="tbtn">🌙</button>
+    <button class="bbtn" onclick="goTo('dashboard.html')">← Orqaga</button>
+    <button class="ibtn" id="tbtn">🌙</button>
   </div>
 </nav>
+
 <div class="page">
-  <div class="page-h">📜 Test tarixi</div>
-  <div id="list"><div class="sp-el"></div></div>
+  <div class="pg-hdr">
+    <h1>📜 Natijalar Tarixi</h1>
+    <p>Barcha ishlangan testlar kunlar tartibida</p>
+  </div>
+
+  <div class="sbar">
+    <div class="sb"><div class="sv" id="st-all">0</div><div class="sl">Jami</div></div>
+    <div class="sb"><div class="sv" id="st-avg">—</div><div class="sl">O'rtacha</div></div>
+    <div class="sb"><div class="sv" id="st-best">—</div><div class="sl">Eng yaxshi</div></div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="ftag on" onclick="setFilter('all',this)">🗂 Barchasi</button>
+  </div>
+
+  <div id="content"><div class="sp"></div></div>
 </div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase.js"></script>
 <script>
-const T={get(){return localStorage.getItem('tp_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')},
+/* THEME */
+const TH={
+  get(){return localStorage.getItem('tp_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')},
   set(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('tp_theme',t);
-    document.getElementById('tbtn').textContent=t==='dark'?'☀️':'🌙'},
-  toggle(){this.set(this.get()==='dark'?'light':'dark')}};
-T.set(T.get());
-document.getElementById('tbtn').onclick=()=>T.toggle();
+    const b=document.getElementById('tbtn');if(b)b.textContent=t==='dark'?'☀️':'🌙';},
+  toggle(){this.set(this.get()==='dark'?'light':'dark')}
+};
+TH.set(TH.get());
+document.getElementById('tbtn').onclick=()=>TH.toggle();
 
-(async()=>{
-  const user=await AuthHelpers.requireAuth('login.html');
-  if(!user)return;
-  const wrap=document.getElementById('list');
-  try{
-    const results=await DB.getMyResults(user.uid,50);
-    if(!results.length){wrap.innerHTML='<div class="emp">Hali test ishlanmagan</div>';return;}
-    wrap.innerHTML=results.map(r=>{
-      const cls=r.score>=80?'sp-g':r.score>=50?'sp-a':'sp-r';
-      return `<div class="hi">
+const ICON={english:'🇬🇧',arabic:'🕌',russian:'🇷🇺',turkish:'🇹🇷',math:'🧮',it:'💻',science:'🔬',religion:'📖',other:'📚'};
+
+let ALL=[];
+let CUR='all';
+
+window.setFilter=(f,el)=>{
+  CUR=f;
+  document.querySelectorAll('.ftag').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  render(ALL);
+};
+
+/* helpers */
+function getTs(ts){
+  if(!ts)return null;
+  try{return ts.toDate?ts.toDate():new Date(ts.seconds?ts.seconds*1000:ts);}catch{return null;}
+}
+function dayKey(ts){
+  const d=getTs(ts);if(!d)return '0';
+  return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()+'';
+}
+function dayLabel(ts){
+  const d=getTs(ts);if(!d)return '—';
+  const t=new Date();const y=new Date(t);y.setDate(y.getDate()-1);
+  if(d.toDateString()===t.toDateString())return 'Bugun';
+  if(d.toDateString()===y.toDateString())return 'Kecha';
+  return d.toLocaleDateString('uz-UZ',{day:'numeric',month:'long',year:'numeric'});
+}
+function timeStr(ts){
+  const d=getTs(ts);if(!d)return '';
+  return d.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+}
+function elapsed2str(s){s=s||0;return Math.floor(s/60)+'d '+String(s%60).padStart(2,'0')+'s';}
+
+/* RENDER */
+function render(results){
+  const wrap=document.getElementById('content');
+  const list=CUR==='all'?results:results.filter(r=>(r.subject||'other')===CUR);
+
+  if(!list.length){
+    wrap.innerHTML=`<div class="emp"><div class="emp-ico">📭</div>
+      <div class="emp-t">Natija topilmadi</div>
+      <div class="emp-p">Bu fan bo'yicha hali test ishlanmagan</div></div>`;
+    return;
+  }
+
+  /* Group by day */
+  const groups={};
+  list.forEach(r=>{
+    const k=dayKey(r.completedAt);
+    if(!groups[k])groups[k]={label:dayLabel(r.completedAt),items:[]};
+    groups[k].items.push(r);
+  });
+  const keys=Object.keys(groups).sort((a,b)=>b-a);
+
+  wrap.innerHTML='';
+  keys.forEach((k,gi)=>{
+    const g=groups[k];
+    const isFirst=gi===0;
+    const avg=Math.round(g.items.reduce((s,r)=>s+(r.score||0),0)/g.items.length);
+
+    const gEl=document.createElement('div');
+    gEl.className='dgrp';
+
+    const hdr=document.createElement('div');
+    hdr.className='dhdr'+(isFirst?' open':'');
+    hdr.innerHTML=`
+      <div class="dh-l">
+        <div class="dh-ico">📅</div>
         <div>
-          <div class="hi-title">${esc(r.testTitle||'Test')}</div>
-          <div class="hi-meta">${fmtDate(r.completedAt)} · ${r.correct||0} to'g'ri · ${fmtTime(r.elapsed||0)}</div>
+          <div class="dh-date">${g.label}</div>
+          <div class="dh-info">O'rtacha: ${avg}% &bull; ${g.items.length} ta</div>
         </div>
-        <div class="score-pill ${cls}">${r.score||0}%</div>
+      </div>
+      <div class="dh-r">
+        <span class="dh-cnt">${g.items.length}</span>
+        <span class="dh-arr">▼</span>
       </div>`;
-    }).join('');
-  }catch(e){wrap.innerHTML=`<div class="emp" style="color:#ef4444">❌ ${e.message}</div>`;}
+
+    const items=document.createElement('div');
+    items.className='ditems'+(isFirst?' open':'');
+
+    g.items.forEach(r=>{
+      const sub=getSubject(r.subject||'other');
+      const icon=ICON[r.subject||'other']||'📚';
+      const cls=r.score>=80?'sg':r.score>=50?'sa':'sr';
+      const c=document.createElement('div');
+      c.className='rc';
+      c.innerHTML=`
+        <div class="rc-l">
+          <div class="rc-nm">${esc(r.testTitle||'Test')}</div>
+          <div class="rc-meta">
+            <span>${icon} ${sub.label}</span>
+            <span>🕐 ${timeStr(r.completedAt)}</span>
+            <span>📝 ${r.total||0} savol</span>
+            ${r.elapsed?`<span>⏱ ${elapsed2str(r.elapsed)}</span>`:''}
+          </div>
+        </div>
+        <div class="rc-r">
+          <div class="rc-pct ${cls}">${r.score||0}%</div>
+          <div class="rc-frac">${r.correct||0} / ${r.total||0}</div>
+          <button class="tbtn" onclick="goTo('review.html?id=${r.id}')">🔍 Tahlil</button>
+        </div>`;
+      items.appendChild(c);
+    });
+
+    hdr.onclick=()=>{
+      const open=hdr.classList.contains('open');
+      hdr.classList.toggle('open',!open);
+      items.classList.toggle('open',!open);
+    };
+
+    gEl.appendChild(hdr);
+    gEl.appendChild(items);
+    wrap.appendChild(gEl);
+  });
+}
+
+/* MAIN */
+(async()=>{
+  let CU=null;
+  try{CU=await AuthHelpers.requireAuth('login.html');if(!CU)return;}
+  catch(e){goTo('login.html');return;}
+
+  /* Check for subject filter from URL (from dashboard "Barchasini ko'rish") */
+  const urlSubj=new URLSearchParams(location.search).get('subject');
+
+  try{
+    const res=await DB.getMyResults(CU.uid,0);
+    ALL=res;
+
+    /* Stats */
+    document.getElementById('st-all').textContent=res.length;
+    if(res.length){
+      const avg=Math.round(res.reduce((s,r)=>s+(r.score||0),0)/res.length);
+      const best=Math.max(...res.map(r=>r.score||0));
+      document.getElementById('st-avg').textContent=avg+'%';
+      document.getElementById('st-best').textContent=best+'%';
+    }
+
+    /* Build subject filter buttons */
+    const subjects=[...new Set(res.map(r=>r.subject||'other'))];
+    const fr=document.getElementById('filters');
+    subjects.forEach(s=>{
+      const sub=getSubject(s);const icon=ICON[s]||'📚';
+      const btn=document.createElement('button');
+      btn.className='ftag';btn.textContent=icon+' '+sub.label;
+      btn.onclick=()=>setFilter(s,btn);
+      fr.appendChild(btn);
+    });
+
+    /* If opened from dashboard with subject filter */
+    if(urlSubj&&urlSubj!=='all'){
+      const btn=fr.querySelector(`[data-subj="${urlSubj}"]`);
+      CUR=urlSubj;
+      /* Mark correct button active */
+      fr.querySelectorAll('.ftag').forEach(b=>{
+        if(b.textContent.includes(getSubject(urlSubj).label)){
+          b.classList.add('on');
+          fr.querySelector('.ftag:first-child').classList.remove('on');
+        }
+      });
+    }
+
+    render(res);
+  }catch(e){
+    document.getElementById('content').innerHTML=
+      `<div class="emp"><div class="emp-ico">❌</div>
+        <div class="emp-t">Xatolik yuz berdi</div>
+        <div class="emp-p">${e.message}</div></div>`;
+  }
 })();
 </script>
 </body>

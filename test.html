@@ -349,8 +349,9 @@ function finish(){
   document.getElementById('r-t').textContent=fmtTime(elapsed);
 
   if(CU){
+    const uaArr=questions.map((_,i)=>answers[i]!==undefined?answers[i]:-1);
     DB.saveResult({userId:CU.uid,testId:testData.id,testTitle:testData.title||'Test',
-      score,correct,total:tot,elapsed}).catch(()=>{});
+      subject:testData.subject||'other',score,correct,total:tot,elapsed,userAnswers:uaArr}).catch(()=>{});
   }
 }
 
