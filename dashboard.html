@@ -566,12 +566,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   </div>
 
   <!-- RESULTS -->
-  <div class="sec" id="res-sec" style="display:none">
+  <div class="sec" id="res-sec">
     <div class="sec-hdr">
-      <div class="sec-t">🏆 Bugungi natijalar</div>
-      <button class="sec-link" onclick="goTo('history.html')">Hammasi →</button>
+      <div class="sec-t">🏆 So'nggi natijalar</div>
+      <button class="sec-link" onclick="goTo('history.html')">Barchasi →</button>
     </div>
-    <div id="res-list"></div>
+    <div id="res-list"><div class="emp">Hali test ishlanmagan</div></div>
   </div>
 
   <!-- QUICK ACTIONS -->
@@ -1036,7 +1036,7 @@ let CU=null;
       <small style="color:var(--text3)">Firebase Console → Firestore → Rules yangilang</small></div>`;
   }
 
-    // Results — faqat bugungi
+  // Results — so'nggi 5 ta (doim ko'rinib turadi)
   try{
     const allResults=await DB.getMyResults(CU.uid,0);
     document.getElementById('s-t').textContent=myTests.length;
@@ -1045,29 +1045,19 @@ let CU=null;
       const avg=Math.round(allResults.reduce((s,r)=>s+(r.score||0),0)/allResults.length);
       document.getElementById('s-a').textContent=avg+'%';
     }
-    // Faqat bugungi natijalar
-    const todayStr=new Date().toDateString();
-    function getDate(ts){
-      if(!ts)return null;
-      try{return ts.toDate?ts.toDate():new Date(ts.seconds?ts.seconds*1000:ts);}catch{return null;}
-    }
-    const todayResults=allResults.filter(r=>{
-      const d=getDate(r.completedAt);
-      return d&&d.toDateString()===todayStr;
-    });
-    if(todayResults.length){
-      document.getElementById('res-sec').style.display='block';
-      document.getElementById('res-list').innerHTML=todayResults.map(r=>{
+    function rTs(ts){try{return ts?.toDate?ts.toDate():new Date(ts?.seconds?ts.seconds*1000:ts);}catch{return null;}}
+    const last5=allResults.slice(0,5);
+    if(last5.length){
+      document.getElementById('res-list').innerHTML=last5.map(r=>{
         const cls=r.score>=80?'sc-g':r.score>=50?'sc-a':'sc-r';
         const sub=getSubject(r.subject||'other');
         const icon=ICON[r.subject||'other']||'📚';
-        function getTs2(ts){try{return ts.toDate?ts.toDate():new Date(ts.seconds?ts.seconds*1000:ts);}catch{return null;}}
-        const d=getTs2(r.completedAt);
-        const time=d?d.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}):'';
+        const d=rTs(r.completedAt);
+        const dateStr=d?d.toLocaleDateString('uz-UZ',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'}):'';
         return `<div class="ri">
-          <div>
+          <div style="flex:1;min-width:0">
             <div class="ri-nm">${esc(r.testTitle||'Test')}</div>
-            <div class="ri-dt">${icon} ${sub.label} • ${time}</div>
+            <div class="ri-dt">${icon} ${esc(sub.label)} • ${dateStr}</div>
           </div>
           <div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0">
             <div class="ri-sc ${cls}">${r.score||0}%</div>
