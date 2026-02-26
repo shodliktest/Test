@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="uz" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TestPro — Kirish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;
+  background:linear-gradient(135deg,#f5f3ff 0%,#fce7f3 50%,#eff6ff 100%);
+  display:flex;align-items:center;justify-content:center;padding:1rem}
+[data-theme="dark"] body{background:linear-gradient(135deg,#0d0820,#140a20,#080d1a);color:#e8e0ff}
+.card{background:#fff;border-radius:22px;padding:2rem 1.75rem;width:100%;max-width:400px;
+  box-shadow:0 20px 60px rgba(124,58,237,.15)}
+[data-theme="dark"] .card{background:#130d26;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.logo{font-family:'Unbounded',sans-serif;font-size:1.4rem;font-weight:900;text-align:center;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:.35rem}
+.sub{text-align:center;font-size:.8rem;color:#9ca3af;margin-bottom:1.75rem}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-bottom:1.5rem;
+  background:rgba(124,58,237,.07);border-radius:12px;padding:.3rem}
+.tab{padding:.55rem;border-radius:9px;border:none;cursor:pointer;font-weight:700;
+  font-size:.82rem;font-family:'Plus Jakarta Sans',sans-serif;
+  background:transparent;color:#9ca3af;transition:all .2s}
+.tab.on{background:#fff;color:#7c3aed;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+[data-theme="dark"] .tab.on{background:rgba(255,255,255,.12);color:#c4b5fd}
+.form-group{margin-bottom:.85rem}
+label{display:block;font-size:.78rem;font-weight:700;color:#374151;margin-bottom:.32rem}
+[data-theme="dark"] label{color:#c4b5fd}
+input{width:100%;padding:.72rem .9rem;border-radius:11px;border:1.5px solid rgba(0,0,0,.1);
+  background:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:.88rem;
+  color:#111827;outline:none;transition:border-color .2s}
+[data-theme="dark"] input{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.12);color:#e8e0ff}
+input:focus{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.12)}
+.btn{width:100%;padding:.82rem;border-radius:12px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);color:#fff;
+  font-weight:800;font-size:.9rem;font-family:'Plus Jakarta Sans',sans-serif;
+  transition:all .2s;margin-top:.35rem}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.35)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.alert{padding:.65rem .9rem;border-radius:10px;font-size:.8rem;font-weight:600;
+  margin-bottom:.85rem;text-align:center}
+.alert-e{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+.alert-s{background:rgba(16,185,129,.1);color:#059669;border:1px solid rgba(16,185,129,.2)}
+.divider{display:flex;align-items:center;gap:.65rem;margin:.85rem 0;color:#9ca3af;font-size:.75rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(0,0,0,.09)}
+[data-theme="dark"] .divider::before,[data-theme="dark"] .divider::after{background:rgba(255,255,255,.1)}
+.back{text-align:center;margin-top:.9rem;font-size:.78rem;color:#9ca3af}
+.back a{color:#7c3aed;font-weight:700;cursor:pointer}
+.tbtn{position:fixed;top:.85rem;right:.85rem;width:34px;height:34px;
+  border-radius:9px;border:1.5px solid rgba(0,0,0,.1);background:#fff;cursor:pointer;font-size:.88rem}
+[data-theme="dark"] .tbtn{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.15)}
+</style>
+</head>
+<body>
+<button class="tbtn" id="tbtn">🌙</button>
+
+<div class="card">
+  <div class="logo">TestPro</div>
+  <div class="sub">Bilimingizni sinang va o'stiring</div>
+
+  <div class="tabs">
+    <button class="tab on" id="tab-login" onclick="switchTab('login')">Kirish</button>
+    <button class="tab" id="tab-reg" onclick="switchTab('reg')">Ro'yxatdan o'tish</button>
+  </div>
+
+  <div id="alert-box"></div>
+
+  <!-- LOGIN -->
+  <div id="login-form">
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="l-email" placeholder="email@example.com"/>
+    </div>
+    <div class="form-group">
+      <label>Parol</label>
+      <input type="password" id="l-pass" placeholder="Parolingiz"/>
+    </div>
+    <button class="btn" id="login-btn">Kirish →</button>
+  </div>
+
+  <!-- REGISTER -->
+  <div id="reg-form" style="display:none">
+    <div class="form-group">
+      <label>Ism Familiya</label>
+      <input type="text" id="r-name" placeholder="Ism Familiya"/>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="r-email" placeholder="email@example.com"/>
+    </div>
+    <div class="form-group">
+      <label>Parol (kamida 6 ta belgi)</label>
+      <input type="password" id="r-pass" placeholder="Parol o'ylab toping"/>
+    </div>
+    <button class="btn" id="reg-btn">Ro'yxatdan o'tish →</button>
+  </div>
+
+  <div class="divider">yoki</div>
+  <div class="back"><a onclick="goTo('index.html')">← Bosh sahifaga qaytish</a></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="js/firebase.js"></script>
+<script>
+const T={get(){return localStorage.getItem('tp_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')},
+  set(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('tp_theme',t);
+    document.getElementById('tbtn').textContent=t==='dark'?'☀️':'🌙'},
+  toggle(){this.set(this.get()==='dark'?'light':'dark')}};
+T.set(T.get());
+document.getElementById('tbtn').onclick=()=>T.toggle();
+
+/* If already logged in, go to dashboard */
+AuthHelpers.getCurrentUser().then(u=>{if(u)goTo('dashboard.html');}).catch(()=>{});
+
+function showAlert(msg,type='e'){
+  document.getElementById('alert-box').innerHTML=`<div class="alert alert-${type}">${msg}</div>`;
+}
+function clearAlert(){document.getElementById('alert-box').innerHTML='';}
+
+function switchTab(t){
+  document.getElementById('login-form').style.display=t==='login'?'block':'none';
+  document.getElementById('reg-form').style.display=t==='reg'?'block':'none';
+  document.getElementById('tab-login').classList.toggle('on',t==='login');
+  document.getElementById('tab-reg').classList.toggle('on',t==='reg');
+  clearAlert();
+}
+
+/* LOGIN */
+document.getElementById('login-btn').onclick=async()=>{
+  const email=document.getElementById('l-email').value.trim();
+  const pass=document.getElementById('l-pass').value;
+  if(!email||!pass){showAlert('Email va parolni kiriting');return;}
+  const btn=document.getElementById('login-btn');
+  btn.disabled=true;btn.textContent='⏳ Kirilmoqda...';
+  try{
+    await auth.signInWithEmailAndPassword(email,pass);
+    goTo('dashboard.html');
+  }catch(e){
+    const msgs={
+      'auth/user-not-found':'Foydalanuvchi topilmadi',
+      'auth/wrong-password':'Parol noto\'g\'ri',
+      'auth/invalid-email':'Email noto\'g\'ri',
+      'auth/too-many-requests':'Ko\'p urinish. Bir oz kuting',
+      'auth/invalid-credential':'Email yoki parol noto\'g\'ri'
+    };
+    showAlert(msgs[e.code]||e.message);
+    btn.disabled=false;btn.textContent='Kirish →';
+  }
+};
+
+/* REGISTER */
+document.getElementById('reg-btn').onclick=async()=>{
+  const name=document.getElementById('r-name').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const pass=document.getElementById('r-pass').value;
+  if(!name||!email||!pass){showAlert('Barcha maydonlarni to\'ldiring');return;}
+  if(pass.length<6){showAlert('Parol kamida 6 ta belgi bo\'lishi kerak');return;}
+  const btn=document.getElementById('reg-btn');
+  btn.disabled=true;btn.textContent='⏳ Ro\'yxatdan o\'tilmoqda...';
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(email,pass);
+    await cred.user.updateProfile({displayName:name});
+    await DB.createUser(cred.user.uid,{name,email,avatarUrl:''});
+    goTo('dashboard.html');
+  }catch(e){
+    const msgs={
+      'auth/email-already-in-use':'Bu email allaqachon ro\'yxatda',
+      'auth/invalid-email':'Email noto\'g\'ri',
+      'auth/weak-password':'Parol juda zaif'
+    };
+    showAlert(msgs[e.code]||e.message);
+    btn.disabled=false;btn.textContent='Ro\'yxatdan o\'tish →';
+  }
+};
+
+/* Enter key */
+['l-email','l-pass'].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-btn').click();});});
+['r-name','r-email','r-pass'].forEach(id=>{document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('reg-btn').click();});});
+</script>
+</body>
+</html>
