@@ -239,6 +239,48 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   font-family:inherit;font-size:.78rem;font-weight:700;text-align:center;transition:all .2s;margin-top:auto}
 .card-btn:hover{box-shadow:0 4px 12px rgba(108,63,232,.3)}
 
+/* ─── EXPANDED ALL TESTS LIST ─── */
+.all-tests-wrap{
+  margin-top:.55rem;overflow:hidden;
+  max-height:0;transition:max-height .35s cubic-bezier(.16,1,.3,1);
+}
+.all-tests-wrap.open{max-height:9999px}
+.see-all-btn{
+  font-size:.74rem;font-weight:700;color:var(--acc);cursor:pointer;
+  background:none;border:none;font-family:inherit;white-space:nowrap;flex-shrink:0;
+  display:flex;align-items:center;gap:.25rem;transition:all .2s;
+}
+.see-all-btn .arr{display:inline-block;transition:transform .28s}
+.see-all-btn.open .arr{transform:rotate(180deg)}
+
+/* Sort tabs inside expanded */
+.exp-sort{display:flex;gap:.28rem;margin-bottom:.55rem;flex-wrap:wrap}
+.esb{padding:.26rem .62rem;border-radius:99px;font-size:.7rem;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--border);background:var(--card);
+  color:var(--text2);transition:all .18s;font-family:inherit}
+.esb.on{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}
+
+/* List item */
+.eli{display:flex;align-items:center;gap:.6rem;padding:.72rem .8rem;
+  border-radius:12px;background:var(--card);border:1.5px solid var(--border);
+  margin-bottom:.42rem;transition:all .2s;cursor:pointer}
+.eli:hover{border-color:rgba(108,63,232,.3);transform:translateX(3px)}
+.eli-ico{width:38px;height:38px;border-radius:11px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;font-size:1.22rem;flex-shrink:0}
+.eli-info{flex:1;min-width:0}
+.eli-nm{font-size:.84rem;font-weight:800;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:.14rem}
+.eli-mt{font-size:.68rem;color:var(--text3);display:flex;gap:.38rem;flex-wrap:wrap}
+.eli-r{display:flex;flex-direction:column;align-items:flex-end;gap:.25rem;flex-shrink:0}
+.go-btn{padding:.32rem .72rem;border-radius:8px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
+  font-family:inherit;font-size:.72rem;font-weight:700;transition:all .2s;white-space:nowrap}
+.done-tag{font-size:.58rem;font-weight:700;padding:.1rem .38rem;border-radius:99px;
+  background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+.avg-tag{font-size:.58rem;font-weight:700;padding:.1rem .38rem;border-radius:99px;
+  background:rgba(108,63,232,.08);color:var(--acc);border:1px solid rgba(108,63,232,.12);
+  font-family:'Unbounded',sans-serif}
+
 /* ─── RESULTS ─── */
 .ri{background:var(--card);border:1px solid var(--border);border-radius:12px;
   padding:.7rem .85rem;margin-bottom:.4rem;
@@ -782,12 +824,63 @@ let CU=null;
 
   // Public tests
   const pubWrap=document.getElementById('pub-tests');
+
+  // Helper: get timestamp date
+  function gTs(ts){try{return ts?.toDate?ts.toDate():new Date(ts?.seconds?ts.seconds*1000:ts);}catch{return null;}}
+
+  // Render expanded list for a subject
+  function renderExpanded(subj, allTests, myDoneIds, sortType, wrap){
+    const list=[...allTests].filter(t=>(t.subject||'other')===subj);
+    if(!list.length){wrap.innerHTML='<div style="text-align:center;padding:.8rem;color:var(--text3);font-size:.76rem">Test yo\'q</div>';return;}
+
+    if(sortType==='new') list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    else if(sortType==='popular') list.sort((a,b)=>(b.attempts||0)-(a.attempts||0));
+    else if(sortType==='score') list.sort((a,b)=>(b.averageScore||0)-(a.averageScore||0));
+
+    wrap.innerHTML='';
+    list.forEach(t=>{
+      const d=gTs(t.createdAt);
+      const dateStr=d?d.toLocaleDateString('uz-UZ',{day:'numeric',month:'short',year:'numeric'}):'';
+      const icon=ICON[t.subject||'other']||'📚';
+      const isDone=myDoneIds.has(t.id);
+      const el=document.createElement('div');
+      el.className='eli';
+      el.onclick=()=>goTo('test.html?id='+t.id);
+      el.innerHTML=`
+        <div class="eli-ico">${icon}</div>
+        <div class="eli-info">
+          <div class="eli-nm">${esc(t.title)}</div>
+          <div class="eli-mt">
+            <span>📝 ${t.questionCount||0} savol</span>
+            <span>👁 ${t.attempts||0}</span>
+            ${t.timeLimit?`<span>⏱ ${t.timeLimit}d</span>`:''}
+            ${dateStr?`<span>📅 ${dateStr}</span>`:''}
+          </div>
+        </div>
+        <div class="eli-r">
+          ${isDone?'<span class="done-tag">✅ Ishlandi</span>':''}
+          ${t.averageScore?`<span class="avg-tag">⭐${t.averageScore}%</span>`:''}
+          <button class="go-btn" onclick="event.stopPropagation();goTo('test.html?id=${t.id}')">Boshlash →</button>
+        </div>`;
+      wrap.appendChild(el);
+    });
+  }
+
   try{
-    const all=await DB.getPublicTests();
-    const pub=all.filter(t=>t.visibility==='public');
+    const allPub=await DB.getPublicTests();
+    const pub=allPub.filter(t=>t.visibility==='public');
     document.getElementById('pub-cnt').textContent=`(${pub.length})`;
 
     if(!pub.length){pubWrap.innerHTML='<div class="emp">Ommaviy test yo\'q</div>';return;}
+
+    // Get user done tests (for ✅ badge)
+    const myDoneIds=new Set();
+    if(CU){
+      try{
+        const myRes=await DB.getMyResults(CU.uid,0);
+        myRes.forEach(r=>myDoneIds.add(r.testId));
+      }catch(e){}
+    }
 
     const grps={};
     pub.forEach(t=>{const k=t.subject||'other';if(!grps[k])grps[k]=[];grps[k].push(t);});
@@ -796,25 +889,41 @@ let CU=null;
     Object.entries(grps).forEach(([subj,arr])=>{
       const sub=getSubject(subj);
       const icon=ICON[subj]||'📚';
+      const gId='grp-'+subj;
       const g=document.createElement('div');
       g.className='grp';
+      g.id=gId;
+
+      // Sort state per group
+      const sortState={v:'new'};
+
       g.innerHTML=`
         <div class="grp-hdr">
           <div class="grp-l">
             <div class="grp-icon">${icon}</div>
             <div>
               <div class="grp-nm">${esc(sub.label)}</div>
-              <div class="grp-ct">${arr.length} ta test</div>
+              <div class="grp-ct" id="ct-${subj}">${arr.length} ta test</div>
             </div>
           </div>
-          <button onclick="goTo('history.html?subject=${subj}')"
-            style="font-size:.74rem;font-weight:700;color:var(--acc);cursor:pointer;
-              background:none;border:none;font-family:inherit;white-space:nowrap;flex-shrink:0">
-            Barchasini ko'rish →
+          <button class="see-all-btn" id="sab-${subj}">
+            Barchasini ko'rish <span class="arr">▾</span>
           </button>
         </div>
-        <div class="scroll" id="pub-${subj}"></div>`;
-      const sc=g.querySelector(`#pub-${subj}`);
+        <!-- Horizontal scroll (default) -->
+        <div class="scroll" id="scroll-${subj}"></div>
+        <!-- Expanded list (hidden by default) -->
+        <div class="all-tests-wrap" id="exp-${subj}">
+          <div class="exp-sort" id="esort-${subj}">
+            <button class="esb on" data-s="new">🕐 Yangi</button>
+            <button class="esb" data-s="popular">🔥 Mashhur</button>
+            <button class="esb" data-s="score">⭐ Reyting</button>
+          </div>
+          <div id="explist-${subj}"></div>
+        </div>`;
+
+      // Horizontal scroll cards
+      const sc=g.querySelector(`#scroll-${subj}`);
       arr.forEach(t=>{
         const c=document.createElement('div');c.className='card';
         c.onclick=()=>goTo('test.html?id='+t.id);
@@ -831,7 +940,40 @@ let CU=null;
           <button class="card-btn">Boshlash →</button>`;
         sc.appendChild(c);
       });
+
       pubWrap.appendChild(g);
+
+      // "Barchasini ko'rish" toggle logic
+      const sabBtn=document.getElementById('sab-'+subj);
+      const expWrap=document.getElementById('exp-'+subj);
+      const scrollWrap=document.getElementById('scroll-'+subj);
+      const expList=document.getElementById('explist-'+subj);
+      const esortRow=document.getElementById('esort-'+subj);
+
+      let expanded=false;
+
+      // Sort buttons inside expanded
+      esortRow.querySelectorAll('.esb').forEach(btn=>{
+        btn.onclick=()=>{
+          esortRow.querySelectorAll('.esb').forEach(b=>b.classList.remove('on'));
+          btn.classList.add('on');
+          sortState.v=btn.dataset.s;
+          renderExpanded(subj,pub,myDoneIds,sortState.v,expList);
+        };
+      });
+
+      sabBtn.onclick=()=>{
+        expanded=!expanded;
+        sabBtn.classList.toggle('open',expanded);
+        expWrap.classList.toggle('open',expanded);
+        // Hide/show horizontal scroll
+        scrollWrap.style.display=expanded?'none':'flex';
+        if(expanded){
+          renderExpanded(subj,pub,myDoneIds,sortState.v,expList);
+          // Smooth scroll to this group
+          setTimeout(()=>g.scrollIntoView({behavior:'smooth',block:'start'}),50);
+        }
+      };
     });
   }catch(e){
     console.error('getPublicTests:',e);
