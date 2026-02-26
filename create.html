@@ -824,71 +824,98 @@ if (dz) {
 ═══════════════════════════════════════ */
 function parseTxt(raw) {
   const results = [];
-  const blocks  = raw.split(/\n(?=\s*\d+[\.\)\:])/g);
+
+  // Bloklarga ajratish: bo'sh qator bilan ajralgan yoki yangi raqam+nuqta/qavsdan boshlanuvchi
+  const rawBlocks = raw.split(/\n\s*\n+/);
+  const blocks = [];
+  for (const rb of rawBlocks) {
+    const trimmed = rb.trim();
+    if (!trimmed) continue;
+    // Agar blok ichida bir nechta savol bo'lsa (raqamli), yana ajratamiz
+    const subBlocks = trimmed.split(/(?=^\s*\d+[\.\)]\s+\S)/m);
+    for (const sb of subBlocks) {
+      if (sb.trim()) blocks.push(sb.trim());
+    }
+  }
 
   for (const block of blocks) {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
     if (!lines.length) continue;
 
-    let qText = '', options = [], correctIdx = 0, explanation = '', hasOpts = false;
+    let qText = '';
+    let options = [];
+    let correctIdx = 0;
+    let explanation = '';
 
-    for (const line of lines) {
+    // 1-chi qator = savol matni (raqam va nuqtani olib tashlaymiz)
+    qText = lines[0].replace(/^\s*\d+[\.\)\:]\s*/, '').trim();
+
+    // Qolgan qatorlar = variantlar yoki izoh
+    for (let li = 1; li < lines.length; li++) {
+      const line = lines[li];
+
       /* Izoh */
       if (/^izoh\s*:/i.test(line)) {
         explanation = line.replace(/^izoh\s*:\s*/i, '').trim();
         continue;
       }
 
-      /* Option: A) B) ... or 1. 2. 3. */
-      const optM = line.match(/^(?:[A-Da-d]\s*[\)\.:]|\d+[\)\.\s])\s*(.+)/);
-      if (optM) {
-        hasOpts = true;
-        let content = optM[1].trim();
+      /* Variant: A) B) C) D) E) yoki A. B. C. */
+      const optLetterM = line.match(/^([A-Ea-e])\s*[\)\.]\s*(.+)/);
+      if (optLetterM) {
+        let content = optLetterM[2].trim();
         let isCorr = false;
-
-        if (/\*\s*$/.test(content))    { isCorr = true; content = content.replace(/\s*\*\s*$/, '').trim(); }
-        if (/\[\+\]/.test(content))    { isCorr = true; content = content.replace(/\s*\[\+\]\s*/g, '').trim(); }
-        if (/\(\+\)/.test(content))    { isCorr = true; content = content.replace(/\s*\(\+\)\s*/g, '').trim(); }
-        if (/\(to'g'ri\)/i.test(content)) { isCorr = true; content = content.replace(/\s*\(to'g'ri\)\s*/gi, '').trim(); }
-
+        if (/\*\s*$/.test(content))       { isCorr = true; content = content.replace(/\s*\*\s*$/, '').trim(); }
+        if (/\[\+\]/.test(content))       { isCorr = true; content = content.replace(/\s*\[\+\]\s*/g, '').trim(); }
+        if (/\(\+\)/.test(content))       { isCorr = true; content = content.replace(/\s*\(\+\)\s*/g, '').trim(); }
+        if (/\(to.g.ri\)/i.test(content)) { isCorr = true; content = content.replace(/\(to.g.ri\)/gi, '').trim(); }
         if (isCorr) correctIdx = options.length;
         options.push(content);
         continue;
       }
 
-      /* Ha / Yo'q direct */
-      if (!hasOpts && /^(ha|yes|true)\s*(\*|\[\+\])?$/i.test(line)) {
-        hasOpts = true;
-        const isCorr = /(\*|\[\+\])/.test(line) || /^(ha|yes|true)$/i.test(line.split(/[\s\*\[\]]/)[0]);
-        if (isCorr) correctIdx = options.length;
-        options.push(line.replace(/\s*[\*\[\]\+]+\s*$/, '').trim());
+      /* Variant raqamli ketma-ket: faqat options boshlanganidan keyin */
+      if (options.length > 0) {
+        const optNumM = line.match(/^\d+[\)\.\s]\s*(.+)/);
+        if (optNumM) {
+          let content = optNumM[1].trim();
+          let isCorr = false;
+          if (/\*\s*$/.test(content))    { isCorr = true; content = content.replace(/\s*\*\s*$/, '').trim(); }
+          if (/\[\+\]/.test(content))    { isCorr = true; content = content.replace(/\s*\[\+\]\s*/g, '').trim(); }
+          if (isCorr) correctIdx = options.length;
+          options.push(content);
+          continue;
+        }
+      }
+
+      /* Ha / Yo'q */
+      if (/^(ha|yes|true)\s*(\*|\[\+\])?$/i.test(line)) {
+        options.push('Ha');
         continue;
       }
-      if (!hasOpts && /^(yo'q|yoq|no|false)\s*(\*|\[\+\])?$/i.test(line)) {
-        hasOpts = true;
+      if (/^(yo.q|yoq|no|false)\s*(\*|\[\+\])?$/i.test(line)) {
         const isCorr = /(\*|\[\+\])/.test(line);
         if (isCorr) correctIdx = options.length;
-        options.push(line.replace(/\s*[\*\[\]\+]+\s*$/, '').trim());
+        options.push("Yo'q");
         continue;
       }
 
-      /* Question text */
-      if (!hasOpts) {
-        qText += (qText ? ' ' : '') + line.replace(/^\d+[\.\)\:]\s*/, '');
+      /* Savol matni davomi */
+      if (options.length === 0) {
+        qText += ' ' + line;
       }
     }
 
-    if (!qText && lines[0]) qText = lines[0].replace(/^\d+[\.\)\:]\s*/, '');
-    if (!qText) continue;
+    if (!qText.trim()) continue;
 
-    /* Determine type */
+    /* Tur aniqlash */
     let type = 'text';
     if (options.length >= 2) {
       type = 'multiple';
       const lower = options.map(o => o.toLowerCase());
       if (options.length === 2 &&
           (lower[0].includes('ha') || lower[0].includes('yes') || lower[0].includes('true')) &&
-          (lower[1].includes("yo'q") || lower[1].includes('no') || lower[1].includes('false'))) {
+          (lower[1].includes("yo'q") || lower[1].includes('yoq') || lower[1].includes('no') || lower[1].includes('false'))) {
         type = 'truefalse';
       }
     }
@@ -897,7 +924,7 @@ function parseTxt(raw) {
       _id:         Date.now() + Math.random(),
       type,
       text:        qText.trim(),
-      options,
+      options:     type === 'text' ? [] : options,
       correct:     correctIdx,
       explanation,
       points:      1,
