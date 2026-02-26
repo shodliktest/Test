@@ -239,6 +239,119 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   font-family:inherit;font-size:.78rem;font-weight:700;text-align:center;transition:all .2s;margin-top:auto}
 .card-btn:hover{box-shadow:0 4px 12px rgba(108,63,232,.3)}
 
+/* ─── MY-TEST KARUSEL CARD ─── */
+.mt-card{
+  min-width:175px;max-width:175px;flex-shrink:0;scroll-snap-align:start;
+  background:var(--card);border-radius:16px;padding:.9rem;
+  border:1.5px solid var(--border);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:.35rem;
+  transition:transform .2s,box-shadow .2s;
+}
+.mt-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(108,63,232,.15)}
+.mt-icon{width:42px;height:42px;border-radius:12px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;font-size:1.35rem;margin-bottom:.2rem}
+.mt-title{font-size:.82rem;font-weight:800;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;min-height:2.2em}
+.mt-meta{font-size:.67rem;color:var(--text3);display:flex;gap:.3rem;flex-wrap:wrap;margin:.1rem 0}
+.mt-vtag{display:inline-block;padding:.1rem .42rem;border-radius:99px;font-size:.58rem;font-weight:700}
+.mt-pub{background:rgba(16,185,129,.1);color:#059669;border:1px solid rgba(16,185,129,.2)}
+.mt-priv{background:rgba(245,158,11,.1);color:#d97706;border:1px solid rgba(245,158,11,.22)}
+.mt-code-row{display:flex;align-items:center;gap:.3rem;margin-top:.15rem;
+  padding:.3rem .5rem;background:rgba(108,63,232,.05);
+  border:1px dashed rgba(108,63,232,.22);border-radius:8px}
+.mt-code{font-family:'Unbounded',sans-serif;font-size:.72rem;font-weight:900;
+  color:var(--acc);letter-spacing:.1em;flex:1}
+.mt-copy{padding:.15rem .42rem;border-radius:6px;border:1px solid rgba(108,63,232,.22);
+  background:rgba(108,63,232,.07);color:var(--acc);font-size:.6rem;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:all .18s;white-space:nowrap}
+.mt-copy:hover{background:rgba(108,63,232,.18)}
+.mt-acts{display:flex;gap:.28rem;margin-top:.3rem}
+.mt-btn{flex:1;padding:.42rem .3rem;border-radius:8px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;font-size:.72rem;font-weight:700;
+  font-family:inherit;color:var(--text2);transition:all .2s;text-align:center}
+.mt-btn:hover{background:rgba(108,63,232,.08);color:var(--acc);border-color:rgba(108,63,232,.3)}
+.mt-btn-del{background:rgba(239,68,68,.06);border-color:rgba(239,68,68,.2);color:#ef4444}
+.mt-btn-del:hover{background:rgba(239,68,68,.15)}
+
+/* ─── MY-TEST EXPANDED (barchasi) ─── */
+.my-exp-wrap{margin-top:.6rem;overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(.16,1,.3,1)}
+.my-exp-wrap.open{max-height:9999px}
+
+/* Fan accordion inside my expanded */
+.fan-grp{margin-bottom:.65rem}
+.fan-hdr{display:flex;align-items:center;gap:.5rem;padding:.7rem .85rem;
+  border-radius:12px;cursor:pointer;background:var(--card);
+  border:1.5px solid var(--border);transition:all .2s;user-select:none}
+.fan-hdr:hover{border-color:rgba(108,63,232,.3)}
+.fan-hdr.open{border-color:rgba(108,63,232,.4);background:rgba(108,63,232,.03);
+  border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent}
+.fan-ico{width:32px;height:32px;border-radius:9px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.fan-nm{font-size:.84rem;font-weight:800;flex:1;color:var(--text)}
+.fan-ct{font-size:.68rem;color:var(--text3);font-weight:600;margin-right:.3rem}
+.fan-arr{font-size:.68rem;color:var(--text3);transition:transform .25s}
+.fan-hdr.open .fan-arr{transform:rotate(180deg)}
+.fan-items{display:none;flex-direction:column;gap:.35rem;padding:.45rem .45rem .5rem;
+  background:var(--card);border:1.5px solid rgba(108,63,232,.4);border-top:none;
+  border-bottom-left-radius:12px;border-bottom-right-radius:12px}
+.fan-items.open{display:flex}
+
+/* List item inside fan */
+.fli{display:flex;align-items:center;gap:.5rem;padding:.65rem .75rem;
+  border-radius:10px;background:var(--bg);border:1px solid var(--border);transition:all .2s}
+.fli:hover{border-color:rgba(108,63,232,.28);transform:translateX(2px)}
+.fli-info{flex:1;min-width:0}
+.fli-nm{font-size:.83rem;font-weight:800;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:.12rem}
+.fli-meta{font-size:.67rem;color:var(--text3);display:flex;gap:.35rem;flex-wrap:wrap}
+.fli-r{display:flex;flex-direction:column;align-items:flex-end;gap:.22rem;flex-shrink:0}
+.fli-code{font-family:'Unbounded',sans-serif;font-size:.65rem;font-weight:900;color:var(--acc);
+  background:rgba(108,63,232,.07);padding:.12rem .42rem;border-radius:99px;
+  border:1px solid rgba(108,63,232,.15);white-space:nowrap;cursor:pointer}
+.fli-acts{display:flex;gap:.22rem}
+.fli-btn{padding:.22rem .5rem;border-radius:7px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;font-size:.65rem;font-weight:700;
+  font-family:inherit;color:var(--text2);transition:all .2s}
+.fli-btn:hover{background:rgba(108,63,232,.08);color:var(--acc)}
+.fli-btn-del{border-color:rgba(239,68,68,.2);color:#ef4444}
+.fli-btn-del:hover{background:rgba(239,68,68,.12)}
+
+/* ─── MAXSUS KARUSEL ─── */
+.mx-card{
+  min-width:170px;max-width:170px;flex-shrink:0;scroll-snap-align:start;
+  background:var(--card);border-radius:15px;padding:.85rem;
+  border:1.5px solid var(--gold-border);
+  display:flex;flex-direction:column;gap:.3rem;transition:transform .2s,box-shadow .2s;
+}
+.mx-card:hover{transform:translateY(-2px);box-shadow:0 5px 16px rgba(217,119,6,.2)}
+.mx-card.hidden-card{opacity:.5}
+.mx-card.hidden-card .mx-title{text-decoration:line-through}
+.mx-ico{width:40px;height:40px;border-radius:11px;background:var(--gold-bg);
+  display:flex;align-items:center;justify-content:center;font-size:1.28rem;margin-bottom:.15rem}
+.mx-title{font-size:.8rem;font-weight:800;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.3;min-height:2.1em}
+.mx-meta{font-size:.65rem;color:var(--text3);display:flex;gap:.28rem;flex-wrap:wrap}
+.mx-code-badge{display:flex;align-items:center;gap:.2rem;font-family:'Unbounded',sans-serif;
+  font-size:.62rem;font-weight:900;color:var(--gold);background:var(--gold-bg);
+  border:1px solid var(--gold-border);border-radius:99px;
+  padding:.1rem .42rem;margin-top:.1rem;width:fit-content}
+.mx-acts{display:flex;gap:.25rem;margin-top:.3rem}
+.mx-act{flex:1;padding:.38rem .25rem;border-radius:8px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;font-size:.68rem;font-weight:700;
+  font-family:inherit;color:var(--text2);transition:all .2s;text-align:center}
+.mx-act:hover{background:rgba(108,63,232,.08);color:var(--acc)}
+.mx-act-play{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-color:transparent}
+.mx-act-play:hover{box-shadow:0 3px 10px rgba(108,63,232,.3);color:#fff}
+.mx-act-del{border-color:rgba(239,68,68,.2);color:#ef4444}
+.mx-act-del:hover{background:rgba(239,68,68,.12)}
+
+/* Maxsus expanded (fan bo'yicha) */
+.mx-exp-wrap{margin-top:.55rem;overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(.16,1,.3,1)}
+.mx-exp-wrap.open{max-height:9999px}
+
+
 /* ─── EXPANDED ALL TESTS LIST ─── */
 .all-tests-wrap{
   margin-top:.55rem;overflow:hidden;
@@ -407,9 +520,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
       </div>
       <button class="add-code-btn" onclick="openCode()">+ Kod qo'shish</button>
     </div>
-    <div id="maxsus-list">
-      <div class="mxemp">Hali kod bilan qo'shilgan test yo'q.<br/>
-        <span style="font-size:.7rem">Kod kiritib ulashilgan testlarga kiring</span>
+    <!-- Maxsus karusel -->
+    <div class="scroll" id="maxsus-scroll" style="min-height:40px"></div>
+    <div style="display:none;margin-top:.5rem" id="mx-see-all-wrap">
+      <button id="mx-sab" style="display:flex;align-items:center;gap:.28rem;
+        padding:.34rem .75rem;border-radius:99px;font-size:.74rem;font-weight:700;
+        border:1.5px solid var(--gold-border);background:var(--gold-bg);color:var(--gold);
+        cursor:pointer;font-family:inherit">
+        Barchasini ko'rish ▾
+      </button>
+      <div class="mx-exp-wrap" id="mx-exp">
+        <div id="mx-exp-inner" style="margin-top:.5rem"></div>
       </div>
     </div>
   </div>
@@ -417,10 +538,23 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   <!-- MY TESTS -->
   <div class="sec">
     <div class="sec-hdr">
-      <div class="sec-t">📝 Mening testlarim</div>
+      <div class="sec-t">📝 Mening testlarim <small id="my-cnt"></small></div>
       <button class="sec-new" onclick="goTo('create.html')">+ Yangi</button>
     </div>
-    <div id="my-tests"><div class="sp"></div></div>
+    <!-- Karusel -->
+    <div class="scroll" id="my-scroll"><div class="sp"></div></div>
+    <!-- Barchasini ko'rish tugmasi -->
+    <div style="display:none" id="my-see-all-wrap">
+      <button class="see-all-btn open" id="my-sab" style="margin:.5rem 0;display:flex;align-items:center;gap:.28rem;
+        padding:.38rem .82rem;border-radius:99px;font-size:.76rem;font-weight:700;
+        border:1.5px solid var(--border);background:var(--card);color:var(--acc);
+        cursor:pointer;font-family:inherit">
+        Barchasini ko'rish ▾
+      </button>
+      <div class="my-exp-wrap" id="my-exp">
+        <div id="my-exp-inner"></div>
+      </div>
+    </div>
   </div>
 
   <!-- PUBLIC TESTS -->
@@ -590,38 +724,93 @@ function renderMaxsus(){
   const cnt=document.getElementById('mx-cnt');
   if(cnt)cnt.textContent=arr.length;
 
-  const wrap=document.getElementById('maxsus-list');
-  if(!wrap)return;
+  const scroll=document.getElementById('maxsus-scroll');
+  const seeWrap=document.getElementById('mx-see-all-wrap');
+  const expInner=document.getElementById('mx-exp-inner');
+  if(!scroll)return;
 
   if(!arr.length){
-    wrap.innerHTML=`<div class="mxemp">Hali kod bilan qo'shilgan test yo'q.<br/>
-      <span style="font-size:.7rem">Yuqoridagi "+ Kod qo'shish" tugmasini bosing</span>
+    scroll.innerHTML=`<div style="width:100%;text-align:center;padding:1rem .5rem;color:var(--text3);font-size:.78rem;border:1.5px dashed var(--gold-border);border-radius:11px">
+      Hali kod bilan qo'shilgan test yo'q<br>
+      <span style="font-size:.7rem">+ Kod qo'shish tugmasini bosing</span>
     </div>`;
+    if(seeWrap)seeWrap.style.display='none';
     return;
   }
+  if(seeWrap)seeWrap.style.display='block';
 
-  wrap.innerHTML=arr.map(item=>`
-    <div class="mxi ${item.hidden?'hidden-test':''}">
-      <div class="mxi-row">
-        <div class="mxi-info">
-          <div class="mxi-nm">${esc(item.title)}</div>
-          <div class="mxi-mt">
-            <span>📝 ${item.questionCount||0} savol</span>
-            <span>👤 ${esc(item.authorName||'?')}</span>
-            ${item.timeLimit?`<span>⏱ ${item.timeLimit}daq</span>`:''}
-          </div>
-          <div class="mxi-code">🔑 ${esc(item.code)}</div>
-          ${item.hidden?'<div class="hidden-notice">👁‍🗨 Yashirilgan</div>':''}
-        </div>
-        <div class="mxi-acts">
-          ${!item.hidden?`<button class="mxi-play" onclick="goTo('test.html?id=${item.id}')" title="Boshlash">▶️</button>`:''}
-          <button class="mxi-hide" onclick="mxToggleHide('${item.id}')" title="${item.hidden?'Ko\'rsatish':'Yashirish'}">
-            ${item.hidden?'👁':'🙈'}
-          </button>
-          <button class="mxi-del" onclick="confirmMxRemove('${item.id}','${esc(item.title).replace(/'/g,"\\'")}')">🗑️</button>
-        </div>
+  /* Karusel */
+  scroll.innerHTML='';
+  arr.forEach(item=>{
+    const icon=ICON[item.subject||'other']||'📚';
+    const c=document.createElement('div');
+    c.className='mx-card'+(item.hidden?' hidden-card':'');
+    c.innerHTML=`
+      <div class="mx-ico">${icon}</div>
+      <div class="mx-title">${esc(item.title)}</div>
+      <div class="mx-meta">
+        <span>📝 ${item.questionCount||0}</span>
+        ${item.hidden?'<span style="color:#d97706">🙈</span>':''}
       </div>
-    </div>`).join('');
+      <div class="mx-code-badge">🔑 ${esc(item.code)}</div>
+      <div class="mx-acts">
+        ${!item.hidden?`<button class="mx-act mx-act-play" onclick="goTo('test.html?id=${item.id}')">▶</button>`:''}
+        <button class="mx-act" onclick="mxToggleHide('${item.id}')">${item.hidden?'👁':'🙈'}</button>
+        <button class="mx-act mx-act-del" onclick="confirmMxRemove('${item.id}','${esc(item.title).replace(/'/g,"\\'")}')">🗑</button>
+      </div>`;
+    scroll.appendChild(c);
+  });
+
+  /* Fan accordion */
+  if(expInner) renderMxExp(expInner,arr);
+
+  const mxSab=document.getElementById('mx-sab');
+  const mxExp=document.getElementById('mx-exp');
+  if(mxSab&&!mxSab._bound){
+    mxSab._bound=true;
+    let open=false;
+    mxSab.onclick=()=>{
+      open=!open;
+      mxExp.classList.toggle('open',open);
+      mxSab.textContent=open?'Yopish ▴':"Barchasini ko'rish ▾";
+    };
+  }
+}
+
+function renderMxExp(wrap,arr){
+  const grps={};
+  arr.forEach(item=>{const k=item.subject||'other';if(!grps[k])grps[k]=[];grps[k].push(item);});
+  wrap.innerHTML='';
+  Object.entries(grps).forEach(([subj,items],gi)=>{
+    const sub=getSubject(subj);const icon=ICON[subj]||'📚';const isFirst=gi===0;
+    const gEl=document.createElement('div');gEl.className='fan-grp';
+    const hdr=document.createElement('div');
+    hdr.className='fan-hdr'+(isFirst?' open':'');
+    hdr.innerHTML=`<div class="fan-ico">${icon}</div><div class="fan-nm">${esc(sub.label)}</div>
+      <span class="fan-ct">${items.length} ta</span><span class="fan-arr">▼</span>`;
+    const body=document.createElement('div');
+    body.className='fan-items'+(isFirst?' open':'');
+    items.forEach(item=>{
+      const row=document.createElement('div');row.className='fli';
+      row.style.opacity=item.hidden?'.5':'1';
+      row.innerHTML=`
+        <div class="fli-info">
+          <div class="fli-nm">${esc(item.title)}</div>
+          <div class="fli-meta"><span>📝 ${item.questionCount||0}</span>${item.hidden?'<span style="color:#d97706">🙈</span>':''}</div>
+        </div>
+        <div class="fli-r">
+          <span class="fli-code" onclick="copyCode('${item.code}');event.stopPropagation()">🔑 ${esc(item.code)}</span>
+          <div class="fli-acts">
+            ${!item.hidden?`<button class="fli-btn" onclick="goTo('test.html?id=${item.id}')">▶</button>`:''}
+            <button class="fli-btn" onclick="mxToggleHide('${item.id}')">${item.hidden?'👁':'🙈'}</button>
+            <button class="fli-btn fli-btn-del" onclick="confirmMxRemove('${item.id}','${esc(item.title).replace(/'/g,"\\'")}')">🗑</button>
+          </div>
+        </div>`;
+      body.appendChild(row);
+    });
+    hdr.onclick=()=>{const o=hdr.classList.contains('open');hdr.classList.toggle('open',!o);body.classList.toggle('open',!o);};
+    gEl.appendChild(hdr);gEl.appendChild(body);wrap.appendChild(gEl);
+  });
 }
 
 window.confirmMxRemove=(id,title)=>{
@@ -699,6 +888,53 @@ window.delTest=async(id)=>{
   }catch(e){toast('❌ '+e.message);}
 };
 
+/* ════ RENDER MY TESTS EXPANDED (fan accordion) ════ */
+function renderMyExp(wrap, tests, isAdmin, uid){
+  const grps={};
+  tests.forEach(t=>{const k=t.subject||'other';if(!grps[k])grps[k]=[];grps[k].push(t);});
+  wrap.innerHTML='';
+  Object.entries(grps).forEach(([subj,arr],gi)=>{
+    const sub=getSubject(subj);const icon=ICON[subj]||'📚';const isFirst=gi===0;
+    const gEl=document.createElement('div');gEl.className='fan-grp';
+    const hdr=document.createElement('div');
+    hdr.className='fan-hdr'+(isFirst?' open':'');
+    hdr.innerHTML=`<div class="fan-ico">${icon}</div>
+      <div class="fan-nm">${esc(sub.label)}</div>
+      <span class="fan-ct">${arr.length} ta</span>
+      <span class="fan-arr">▼</span>`;
+    const body=document.createElement('div');
+    body.className='fan-items'+(isFirst?' open':'');
+    arr.forEach(t=>{
+      const owner=t.authorId===uid;
+      const vtag=t.visibility==='public'
+        ?'<span class="mt-vtag mt-pub" style="font-size:.58rem">🌐</span>'
+        :'<span class="mt-vtag mt-priv" style="font-size:.58rem">🔒</span>';
+      const row=document.createElement('div');row.className='fli';
+      row.innerHTML=`
+        <div class="fli-info">
+          <div class="fli-nm">${esc(t.title)}</div>
+          <div class="fli-meta">
+            <span>📝 ${t.questionCount||0}</span>
+            <span>👁 ${t.attempts||0}</span>
+            ${t.timeLimit?`<span>⏱ ${t.timeLimit}d</span>`:''}
+            ${vtag}
+          </div>
+          ${(owner&&t.accessCode)?`<span class="fli-code" onclick="copyCode('${t.accessCode}');event.stopPropagation()" style="margin-top:.2rem;display:inline-flex">📋 ${t.accessCode}</span>`:''}
+        </div>
+        <div class="fli-r">
+          <div class="fli-acts">
+            <button class="fli-btn" onclick="goTo('test.html?id=${t.id}')">▶</button>
+            ${(owner||isAdmin)?`<button class="fli-btn" onclick="goTo('create.html?id=${t.id}')">✏️</button>`:''}
+            ${(owner||isAdmin)?`<button class="fli-btn fli-btn-del" onclick="delTest('${t.id}')">🗑</button>`:''}
+          </div>
+        </div>`;
+      body.appendChild(row);
+    });
+    hdr.onclick=()=>{const o=hdr.classList.contains('open');hdr.classList.toggle('open',!o);body.classList.toggle('open',!o);};
+    gEl.appendChild(hdr);gEl.appendChild(body);wrap.appendChild(gEl);
+  });
+}
+
 /* ════ MAIN ════ */
 let CU=null;
 
@@ -730,54 +966,77 @@ let CU=null;
 
   // My tests
   let myTests=[];
-  const myWrap=document.getElementById('my-tests');
+  const myScroll=document.getElementById('my-scroll');
   try{
     myTests=await DB.getMyTests(CU.uid);
+    const myCnt=document.getElementById('my-cnt');
+    if(myCnt)myCnt.textContent=`(${myTests.length})`;
+
     if(!myTests.length){
-      myWrap.innerHTML=`<div class="emp">Test yaratilmagan.<br>
+      myScroll.innerHTML=`<div class="emp" style="width:100%">Test yaratilmagan.<br>
         <button onclick="goTo('create.html')" style="color:var(--acc);font-weight:700;background:none;
-          border:none;cursor:pointer;font-size:.8rem;margin-top:.3rem">✏️ Yaratish →</button>
-      </div>`;
+          border:none;cursor:pointer;font-size:.8rem;margin-top:.3rem">✏️ Yaratish →</button></div>`;
     }else{
       const isAdmin=profile?.role==='admin';
-      myWrap.innerHTML=myTests.map(t=>{
+
+      /* ── Karusel ── */
+      myScroll.innerHTML='';
+      myTests.forEach(t=>{
         const owner=t.authorId===CU.uid;
+        const subj=t.subject||'other';
+        const icon=ICON[subj]||'📚';
         const vtag=t.visibility==='public'
-          ?'<span class="vtag vt-pub">🌐 Ommaviy</span>'
-          :'<span class="vtag vt-priv">🔒 Shaxsiy</span>';
-        const shareRow=(owner&&t.accessCode)
-          ?`<div class="share-row">
-               <span class="sh-code">${t.accessCode}</span>
-               <button class="cp-btn" onclick="copyCode('${t.accessCode}')">📋 Nusxa</button>
-             </div>`:'';
-        return `<div class="ti">
-          <div class="ti-row">
-            <div class="ti-info">
-              <div class="ti-nm">${esc(t.title)}</div>
-              <div class="ti-mt">
-                <span>📝 ${t.questionCount||0} savol</span>
-                <span>👁 ${t.attempts||0}</span>
-                ${t.timeLimit?`<span>⏱ ${t.timeLimit}daq</span>`:''}
-              </div>
-              ${vtag}
-            </div>
-            <div class="ti-acts">
-              <button class="ab" onclick="goTo('test.html?id=${t.id}')" title="Boshlash">▶️</button>
-              ${(owner||isAdmin)?`<button class="ab" onclick="goTo('create.html?id=${t.id}')" title="Tahrirlash">✏️</button>`:''}
-              ${(owner||isAdmin)?`<button class="ab ab-del" onclick="delTest('${t.id}')" title="O\'chirish">🗑️</button>`:''}
-            </div>
+          ?'<span class="mt-vtag mt-pub">🌐 Ommaviy</span>'
+          :'<span class="mt-vtag mt-priv">🔒 Shaxsiy</span>';
+        const codeRow=(owner&&t.accessCode)
+          ?`<div class="mt-code-row">
+              <span class="mt-code">${t.accessCode}</span>
+              <button class="mt-copy" onclick="copyCode('${t.accessCode}');event.stopPropagation()">📋</button>
+            </div>`:'';
+        const c=document.createElement('div');
+        c.className='mt-card';
+        c.innerHTML=`
+          <div class="mt-icon">${icon}</div>
+          <div class="mt-title">${esc(t.title)}</div>
+          <div class="mt-meta">
+            <span>📝 ${t.questionCount||0}</span>
+            <span>👁 ${t.attempts||0}</span>
+            ${t.timeLimit?`<span>⏱ ${t.timeLimit}d</span>`:''}
           </div>
-          ${shareRow}
-        </div>`;
-      }).join('');
+          ${vtag}
+          ${codeRow}
+          <div class="mt-acts">
+            <button class="mt-btn" onclick="goTo('test.html?id=${t.id}')">▶ Start</button>
+            ${(owner||isAdmin)?`<button class="mt-btn" onclick="goTo('create.html?id=${t.id}')">✏️</button>`:''}
+            ${(owner||isAdmin)?`<button class="mt-btn mt-btn-del" onclick="delTest('${t.id}')">🗑</button>`:''}
+          </div>`;
+        myScroll.appendChild(c);
+      });
+
+      /* ── Barchasini ko'rish: fan accordion ── */
+      document.getElementById('my-see-all-wrap').style.display='block';
+      const myExpInner=document.getElementById('my-exp-inner');
+      renderMyExp(myExpInner,myTests,isAdmin,CU.uid);
+
+      const mySab=document.getElementById('my-sab');
+      const myExp=document.getElementById('my-exp');
+      if(mySab&&!mySab._bound){
+        mySab._bound=true;
+        let open=false;
+        mySab.onclick=()=>{
+          open=!open;
+          myExp.classList.toggle('open',open);
+          mySab.textContent=open?'Yopish ▴':"Barchasini ko'rish ▾";
+        };
+      }
     }
   }catch(e){
     console.error('getMyTests:',e);
-    myWrap.innerHTML=`<div class="err">❌ ${e.message}<br>
+    myScroll.innerHTML=`<div class="err" style="width:100%">❌ ${e.message}<br>
       <small style="color:var(--text3)">Firebase Console → Firestore → Rules yangilang</small></div>`;
   }
 
-  // Results — faqat bugungi
+    // Results — faqat bugungi
   try{
     const allResults=await DB.getMyResults(CU.uid,0);
     document.getElementById('s-t').textContent=myTests.length;

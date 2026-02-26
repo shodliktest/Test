@@ -310,10 +310,11 @@
           <button class="fmtt on" onclick="showFmt(0,this)">A) * format</button>
           <button class="fmtt" onclick="showFmt(1,this)">1) [+] format</button>
           <button class="fmtt" onclick="showFmt(2,this)">Ha/Yo'q</button>
+          <button class="fmtt" onclick="showFmt(3,this)">📝 Matnli</button>
         </div>
         <div class="fmt-preview" id="fmt-preview"></div>
         <div style="font-size:.71rem;color:var(--text-3);margin-bottom:.65rem">
-          💡 <b>*</b> yoki <b>[+]</b> = to'g'ri javob &nbsp;·&nbsp; <b>Izoh:</b> = tushuntirish (ixtiyoriy)
+          💡 <b>*</b> yoki <b>[+]</b> = to'g'ri javob &nbsp;·&nbsp; <b>Izoh:</b> = izoh &nbsp;·&nbsp; <b>Javob:</b> = matnli savol to'g'ri javob
         </div>
         <div class="form-group">
           <label class="form-label">Savollarni kiriting:</label>
@@ -739,7 +740,15 @@ Izoh: Ha, to'g'ri.
 
 2. Yer yumaloqmi?
 Ha *
-Yo'q`
+Yo'q`,
+
+`1. Present Perfect zamonni qachon ishlatamiz?
+Javob: Hozirgi zamonga aloqador o'tgan harakatlar uchun
+Izoh: Have/has + V3 shaklida qo'llanadi.
+
+2. "She ___ already eaten" jumlani to'ldiring.
+Javob: has
+Izoh: She (u) uchun "has" ishlatiladi.`
 ];
 
 function initFmtPreviews() {
@@ -825,17 +834,14 @@ if (dz) {
 function parseTxt(raw) {
   const results = [];
 
-  // Bloklarga ajratish: bo'sh qator bilan ajralgan yoki yangi raqam+nuqta/qavsdan boshlanuvchi
+  // Bloklarga ajratish
   const rawBlocks = raw.split(/\n\s*\n+/);
   const blocks = [];
   for (const rb of rawBlocks) {
     const trimmed = rb.trim();
     if (!trimmed) continue;
-    // Agar blok ichida bir nechta savol bo'lsa (raqamli), yana ajratamiz
     const subBlocks = trimmed.split(/(?=^\s*\d+[\.\)]\s+\S)/m);
-    for (const sb of subBlocks) {
-      if (sb.trim()) blocks.push(sb.trim());
-    }
+    for (const sb of subBlocks) { if (sb.trim()) blocks.push(sb.trim()); }
   }
 
   for (const block of blocks) {
@@ -846,11 +852,11 @@ function parseTxt(raw) {
     let options = [];
     let correctIdx = 0;
     let explanation = '';
+    let textAnswer = ''; // "Javob:" qatori uchun
 
-    // 1-chi qator = savol matni (raqam va nuqtani olib tashlaymiz)
+    // 1-chi qator = savol matni
     qText = lines[0].replace(/^\s*\d+[\.\)\:]\s*/, '').trim();
 
-    // Qolgan qatorlar = variantlar yoki izoh
     for (let li = 1; li < lines.length; li++) {
       const line = lines[li];
 
@@ -860,30 +866,36 @@ function parseTxt(raw) {
         continue;
       }
 
-      /* Variant: A) B) C) D) E) yoki A. B. C. */
-      const optLetterM = line.match(/^([A-Ea-e])\s*[\)\.]\s*(.+)/);
-      if (optLetterM) {
-        let content = optLetterM[2].trim();
-        let isCorr = false;
-        if (/\*\s*$/.test(content))       { isCorr = true; content = content.replace(/\s*\*\s*$/, '').trim(); }
-        if (/\[\+\]/.test(content))       { isCorr = true; content = content.replace(/\s*\[\+\]\s*/g, '').trim(); }
-        if (/\(\+\)/.test(content))       { isCorr = true; content = content.replace(/\s*\(\+\)\s*/g, '').trim(); }
-        if (/\(to.g.ri\)/i.test(content)) { isCorr = true; content = content.replace(/\(to.g.ri\)/gi, '').trim(); }
-        if (isCorr) correctIdx = options.length;
-        options.push(content);
+      /* Javob: — matnli savol to'g'ri javob hint */
+      if (/^javob\s*:/i.test(line)) {
+        textAnswer = line.replace(/^javob\s*:\s*/i, '').trim();
         continue;
       }
 
-      /* Variant raqamli ketma-ket: faqat options boshlanganidan keyin */
+      /* Variant: A) B) C) D) E) */
+      const optLetterM = line.match(/^([A-Ea-e])\s*[\)\.]\s*(.+)/);
+      if (optLetterM) {
+        let content2 = optLetterM[2].trim();
+        let isCorr = false;
+        if (/\*\s*$/.test(content2))       { isCorr = true; content2 = content2.replace(/\s*\*\s*$/, '').trim(); }
+        if (/\[\+\]/.test(content2))       { isCorr = true; content2 = content2.replace(/\s*\[\+\]\s*/g, '').trim(); }
+        if (/\(\+\)/.test(content2))       { isCorr = true; content2 = content2.replace(/\s*\(\+\)\s*/g, '').trim(); }
+        if (/\(to.g.ri\)/i.test(content2)) { isCorr = true; content2 = content2.replace(/\(to.g.ri\)/gi, '').trim(); }
+        if (isCorr) correctIdx = options.length;
+        options.push(content2);
+        continue;
+      }
+
+      /* Variant raqamli ketma-ket */
       if (options.length > 0) {
         const optNumM = line.match(/^\d+[\)\.\s]\s*(.+)/);
         if (optNumM) {
-          let content = optNumM[1].trim();
+          let content2 = optNumM[1].trim();
           let isCorr = false;
-          if (/\*\s*$/.test(content))    { isCorr = true; content = content.replace(/\s*\*\s*$/, '').trim(); }
-          if (/\[\+\]/.test(content))    { isCorr = true; content = content.replace(/\s*\[\+\]\s*/g, '').trim(); }
+          if (/\*\s*$/.test(content2))    { isCorr = true; content2 = content2.replace(/\s*\*\s*$/, '').trim(); }
+          if (/\[\+\]/.test(content2))    { isCorr = true; content2 = content2.replace(/\s*\[\+\]\s*/g, '').trim(); }
           if (isCorr) correctIdx = options.length;
-          options.push(content);
+          options.push(content2);
           continue;
         }
       }
@@ -901,16 +913,24 @@ function parseTxt(raw) {
       }
 
       /* Savol matni davomi */
-      if (options.length === 0) {
+      if (options.length === 0 && !textAnswer) {
         qText += ' ' + line;
       }
     }
 
     if (!qText.trim()) continue;
 
-    /* Tur aniqlash */
+    /* Tur aniqlash:
+       - Javob: bor → text (yozma)
+       - Variantlar bor → multiple yoki truefalse
+       - Hech narsa yo'q → text */
     let type = 'text';
-    if (options.length >= 2) {
+    if (textAnswer && options.length === 0) {
+      type = 'text';
+      // textAnswer ni explanation ga qo'shamiz agar izoh bo'lmasa
+      if (!explanation && textAnswer) explanation = '✅ To\'g\'ri javob: ' + textAnswer;
+      else if (textAnswer) explanation = '✅ To\'g\'ri javob: ' + textAnswer + (explanation ? ' | ' + explanation : '');
+    } else if (options.length >= 2) {
       type = 'multiple';
       const lower = options.map(o => o.toLowerCase());
       if (options.length === 2 &&
