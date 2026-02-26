@@ -7,14 +7,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{--bg:#EEF0FF;--card:#fff;--text:#1a1a2e;--text2:#6b7280;--text3:#9ca3af;
+:root{
+  --bg:#EEF0FF;--card:#fff;--text:#1a1a2e;--text2:#6b7280;--text3:#9ca3af;
   --acc:#6C3FE8;--acc2:#C040C8;--border:rgba(108,63,232,.1);
-  --shadow:0 2px 10px rgba(108,63,232,.07)}
-[data-theme=dark]{--bg:#0d0820;--card:#140d28;--text:#e8e0ff;--text2:#9ca3af;--text3:#6b7280;
-  --border:rgba(108,63,232,.2);--shadow:0 2px 12px rgba(0,0,0,.35)}
+  --shadow:0 2px 10px rgba(108,63,232,.07);
+  --gold:#D97706;--gold-bg:rgba(217,119,6,.08);--gold-border:rgba(217,119,6,.22);
+}
+[data-theme=dark]{
+  --bg:#0d0820;--card:#140d28;--text:#e8e0ff;--text2:#9ca3af;--text3:#6b7280;
+  --border:rgba(108,63,232,.2);--shadow:0 2px 12px rgba(0,0,0,.35);
+  --gold-bg:rgba(217,119,6,.12);
+}
 body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(--bg);color:var(--text);overflow-x:hidden}
 
-/* NAV */
+/* ─── NAV ─── */
 .nav{position:fixed;top:0;left:0;right:0;height:54px;z-index:500;
   display:flex;align-items:center;justify-content:space-between;padding:0 1rem;background:var(--bg)}
 .logo{font-family:'Unbounded',sans-serif;font-size:1.1rem;font-weight:900;cursor:pointer;
@@ -33,15 +39,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center}
 [data-theme=dark] .mbtn{background:rgba(255,255,255,.1)}
 .lines{display:flex;flex-direction:column;gap:4px;pointer-events:none}
-.lines span{width:16px;height:2px;background:var(--text2);border-radius:2px;display:block;transition:all .3s}
+.lines span{width:16px;height:2px;background:var(--text2);border-radius:2px;display:block}
 
-/* MENU */
+/* ─── SLIDE MENU ─── */
 .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:800}
 .ov.on{display:block}
 .panel{position:fixed;top:0;right:-260px;width:240px;height:100vh;z-index:900;
   background:var(--card);border-left:1px solid var(--border);
-  transition:right .28s cubic-bezier(.16,1,.3,1);
-  display:flex;flex-direction:column}
+  transition:right .28s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column}
 .panel.on{right:0}
 .p-head{background:linear-gradient(135deg,var(--acc),var(--acc2));
   padding:1.1rem 1rem .9rem;display:flex;align-items:center;gap:.6rem;position:relative;min-height:88px}
@@ -65,17 +70,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   background:rgba(239,68,68,.07);color:#ef4444;font-weight:700;font-size:.82rem;
   cursor:pointer;font-family:inherit;transition:all .2s}
 .lout:hover{background:rgba(239,68,68,.15)}
+.divider{height:1px;background:var(--border);margin:.45rem 0}
 
-/* PAGE */
+/* ─── PAGE ─── */
 .page{padding:66px 0 3rem}
 .w{padding:0 1rem}
 
-/* GREET */
+/* ─── GREET ─── */
 .greet{padding:.85rem 0 .5rem}
 .greet-h{font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:900;margin-bottom:.08rem}
 .greet-p{font-size:.72rem;color:var(--text3)}
 
-/* STATS */
+/* ─── STATS ─── */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem;margin:.7rem 0}
 .sb{background:var(--card);border-radius:14px;padding:.75rem .5rem;text-align:center;
   border:1px solid var(--border);box-shadow:var(--shadow)}
@@ -84,18 +90,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .sl{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-top:.08rem}
 
-/* SECTION */
+/* ─── SECTION ─── */
 .sec{margin-bottom:1.2rem}
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
 .sec-t{font-size:.88rem;font-weight:800;display:flex;align-items:center;gap:.3rem}
-.sec-t span{font-size:.7rem;font-weight:600;color:var(--text3)}
+.sec-t small{font-size:.7rem;font-weight:600;color:var(--text3)}
 .sec-new{padding:.3rem .75rem;border-radius:99px;font-size:.74rem;font-weight:700;
   cursor:pointer;border:none;font-family:inherit;
   background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;transition:all .2s}
 .sec-new:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(108,63,232,.3)}
 .sec-link{font-size:.74rem;font-weight:700;color:var(--acc);cursor:pointer;background:none;border:none;font-family:inherit}
 
-/* MY TEST ITEM */
+/* ─── MY TEST ITEM ─── */
 .ti{background:var(--card);border:1.5px solid var(--border);border-radius:15px;
   padding:.85rem;margin-bottom:.5rem;transition:all .2s}
 .ti:hover{border-color:rgba(108,63,232,.3);box-shadow:0 4px 14px rgba(108,63,232,.1)}
@@ -107,10 +113,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 .vtag{display:inline-block;padding:.12rem .45rem;border-radius:99px;font-size:.6rem;font-weight:700;margin-top:.28rem}
 .vt-pub{background:rgba(16,185,129,.1);color:#059669;border:1px solid rgba(16,185,129,.2)}
 .vt-priv{background:rgba(245,158,11,.1);color:#d97706;border:1px solid rgba(245,158,11,.22)}
-.vt-code{background:rgba(108,63,232,.1);color:var(--acc);border:1px solid rgba(108,63,232,.22)}
 .ti-acts{display:flex;gap:.28rem;flex-shrink:0}
 .ab{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
-  background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:all .2s}
+  background:var(--card);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;transition:all .2s}
 .ab:hover{background:rgba(108,63,232,.1);border-color:rgba(108,63,232,.3)}
 .ab-del{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.2)}
 .ab-del:hover{background:rgba(239,68,68,.18)}
@@ -124,7 +130,81 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .2s}
 .cp-btn:hover{background:rgba(108,63,232,.18)}
 
-/* PUBLIC CARDS — same as index */
+/* ─── MAXSUS TESTLAR SECTION ─── */
+.maxsus-sec{
+  margin-bottom:1.2rem;
+  background:var(--gold-bg);
+  border:1.5px solid var(--gold-border);
+  border-radius:18px;
+  padding:.9rem .9rem .5rem;
+}
+.maxsus-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem}
+.maxsus-title{
+  font-size:.88rem;font-weight:800;
+  display:flex;align-items:center;gap:.38rem;
+  color:var(--gold);
+}
+.maxsus-title small{font-size:.7rem;font-weight:600;color:var(--text3);color:initial;
+  background:rgba(217,119,6,.12);color:var(--gold);
+  padding:.1rem .42rem;border-radius:99px;border:1px solid var(--gold-border)}
+.add-code-btn{
+  padding:.3rem .72rem;border-radius:99px;font-size:.73rem;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--gold-border);
+  background:var(--gold-bg);color:var(--gold);
+  font-family:inherit;transition:all .2s;white-space:nowrap;
+}
+.add-code-btn:hover{background:rgba(217,119,6,.18)}
+
+/* Maxsus item */
+.mxi{
+  background:var(--card);border:1.5px solid var(--gold-border);border-radius:13px;
+  padding:.8rem .85rem;margin-bottom:.48rem;transition:all .2s;
+}
+.mxi:hover{box-shadow:0 3px 12px rgba(217,119,6,.15)}
+.mxi-row{display:flex;align-items:flex-start;gap:.5rem}
+.mxi-info{flex:1;min-width:0}
+.mxi-nm{font-size:.86rem;font-weight:800;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:.18rem}
+.mxi-mt{font-size:.7rem;color:var(--text3);display:flex;gap:.4rem;flex-wrap:wrap}
+.mxi-code{
+  display:inline-flex;align-items:center;gap:.2rem;
+  font-family:'Unbounded',sans-serif;font-size:.62rem;font-weight:900;
+  color:var(--gold);background:var(--gold-bg);
+  border:1px solid var(--gold-border);border-radius:99px;
+  padding:.1rem .45rem;margin-top:.22rem;
+}
+.mxi-acts{display:flex;gap:.28rem;flex-shrink:0}
+.mxi-play{
+  width:30px;height:30px;border-radius:8px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;color:#fff;transition:all .2s}
+.mxi-play:hover{transform:scale(1.1)}
+.mxi-hide{
+  width:30px;height:30px;border-radius:8px;
+  border:1px solid var(--border);background:var(--card);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;transition:all .2s}
+.mxi-hide:hover{background:rgba(108,63,232,.1);border-color:rgba(108,63,232,.3)}
+.mxi-del{
+  width:30px;height:30px;border-radius:8px;
+  background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;transition:all .2s}
+.mxi-del:hover{background:rgba(239,68,68,.18)}
+
+/* Hidden test (user hid it) */
+.mxi.hidden-test{opacity:.55}
+.mxi.hidden-test .mxi-nm{text-decoration:line-through}
+.hidden-notice{font-size:.65rem;color:var(--text3);margin-top:.18rem;font-style:italic}
+
+/* Empty maxsus */
+.mxemp{
+  text-align:center;padding:1rem .5rem;color:var(--text3);font-size:.78rem;
+  border:1.5px dashed var(--gold-border);border-radius:11px;margin-bottom:.5rem;
+}
+
+/* ─── PUBLIC CARDS ─── */
 .grp{margin-bottom:1.2rem}
 .grp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.55rem}
 .grp-l{display:flex;align-items:center;gap:.58rem}
@@ -159,7 +239,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   font-family:inherit;font-size:.78rem;font-weight:700;text-align:center;transition:all .2s;margin-top:auto}
 .card-btn:hover{box-shadow:0 4px 12px rgba(108,63,232,.3)}
 
-/* RESULTS */
+/* ─── RESULTS ─── */
 .ri{background:var(--card);border:1px solid var(--border);border-radius:12px;
   padding:.7rem .85rem;margin-bottom:.4rem;
   display:flex;align-items:center;justify-content:space-between;gap:.5rem}
@@ -168,7 +248,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 .ri-sc{font-family:'Unbounded',sans-serif;font-size:.88rem;font-weight:900;flex-shrink:0}
 .sc-g{color:#10b981}.sc-a{color:#f59e0b}.sc-r{color:#ef4444}
 
-/* QUICK ACTIONS */
+/* ─── QUICK ACTIONS ─── */
 .qa-wrap{display:flex;flex-direction:column;gap:.45rem}
 .qa{display:flex;align-items:center;justify-content:center;gap:.4rem;width:100%;
   padding:.76rem;border-radius:13px;font-family:inherit;font-size:.84rem;font-weight:700;
@@ -177,8 +257,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 .qa-p:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(108,63,232,.32)}
 .qa-s{background:var(--card);border:1.5px solid var(--border);color:var(--text2)}
 .qa-s:hover{border-color:rgba(108,63,232,.4);color:var(--acc)}
+.qa-gold{background:var(--gold-bg);border:1.5px solid var(--gold-border);color:var(--gold)}
+.qa-gold:hover{background:rgba(217,119,6,.15)}
 
-/* CODE MODAL */
+/* ─── CODE MODAL ─── */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;
   align-items:center;justify-content:center;padding:1rem}
 .modal-bg.on{display:flex}
@@ -188,8 +270,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   font-weight:900;font-size:1rem;border:2px solid rgba(108,63,232,.2);border-radius:8px;
   background:rgba(108,63,232,.04);color:var(--text);outline:none;transition:border-color .2s}
 .ci:focus{border-color:var(--acc)}
+[data-theme=dark] .ci{background:rgba(108,63,232,.12)}
 
-/* THEME SWITCH */
+/* ─── THEME SWITCH ─── */
 .sw{position:relative;display:inline-block;width:38px;height:20px}
 .sw input{opacity:0;width:0;height:0}
 .sw-s{position:absolute;cursor:pointer;inset:0;background:rgba(0,0,0,.15);border-radius:99px;transition:.3s}
@@ -198,20 +281,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 .sw input:checked+.sw-s{background:linear-gradient(135deg,var(--acc),var(--acc2))}
 .sw input:checked+.sw-s::before{transform:translateX(18px)}
 
-/* TOAST */
+/* ─── TOAST ─── */
 .toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);
   background:rgba(10,5,25,.9);color:#fff;padding:.58rem 1rem;border-radius:11px;
   font-size:.78rem;font-weight:600;z-index:9999;backdrop-filter:blur(12px);
   white-space:nowrap;animation:fau .3s ease both}
 @keyframes fau{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-/* LOADER / EMPTY */
+/* ─── LOADER ─── */
 .sp{width:26px;height:26px;border:3px solid rgba(108,63,232,.15);border-top-color:var(--acc);
   border-radius:50%;animation:spin .7s linear infinite;margin:1.5rem auto}
 @keyframes spin{to{transform:rotate(360deg)}}
 .emp{text-align:center;padding:1rem;color:var(--text3);font-size:.78rem}
-.err{color:#ef4444;font-size:.78rem;text-align:center;padding:1rem}
-.divider{height:1px;background:var(--border);margin:.6rem 0}
+.err{color:#ef4444;font-size:.78rem;text-align:center;padding:.8rem}
 </style>
 </head>
 <body>
@@ -261,15 +343,33 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 <div class="page">
 <div class="w">
 
+  <!-- GREETING -->
   <div class="greet">
     <div class="greet-h" id="greet-h">Salom! 👋</div>
     <div class="greet-p">Bugun ham muvaffaqiyat!</div>
   </div>
 
+  <!-- STATS -->
   <div class="stats">
     <div class="sb"><div class="sv" id="s-t">0</div><div class="sl">Testlarim</div></div>
     <div class="sb"><div class="sv" id="s-d">0</div><div class="sl">Ishlangan</div></div>
     <div class="sb"><div class="sv" id="s-a">—</div><div class="sl">O'rtacha</div></div>
+  </div>
+
+  <!-- ══════ MAXSUS TESTLAR ══════ -->
+  <div class="maxsus-sec" id="maxsus-sec">
+    <div class="maxsus-hdr">
+      <div class="maxsus-title">
+        🔑 Maxsus testlar
+        <small id="mx-cnt">0</small>
+      </div>
+      <button class="add-code-btn" onclick="openCode()">+ Kod qo'shish</button>
+    </div>
+    <div id="maxsus-list">
+      <div class="mxemp">Hali kod bilan qo'shilgan test yo'q.<br/>
+        <span style="font-size:.7rem">Kod kiritib ulashilgan testlarga kiring</span>
+      </div>
+    </div>
   </div>
 
   <!-- MY TESTS -->
@@ -284,7 +384,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   <!-- PUBLIC TESTS -->
   <div class="sec">
     <div class="sec-hdr">
-      <div class="sec-t">🌐 Ommaviy testlar <span id="pub-cnt"></span></div>
+      <div class="sec-t">🌐 Ommaviy testlar <small id="pub-cnt"></small></div>
     </div>
     <div id="pub-tests"><div class="sp"></div></div>
   </div>
@@ -303,7 +403,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
     <div class="sec-t" style="margin-bottom:.55rem">⚡ Tezkor</div>
     <div class="qa-wrap">
       <button class="qa qa-p" onclick="goTo('create.html')">✏️ Yangi test yaratish</button>
-      <button class="qa qa-s" onclick="openCode()">🔑 Kod orqali kirish</button>
+      <button class="qa qa-gold" onclick="openCode()">🔑 Maxsus kod kiritish</button>
     </div>
   </div>
 
@@ -321,20 +421,26 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 <div class="modal-bg" id="code-bg">
   <div class="modal">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
-      <div style="font-weight:800;font-size:.9rem">🔑 Kod kiritish</div>
+      <div style="font-weight:800;font-size:.92rem">🔑 Maxsus kod kiritish</div>
       <button onclick="closeCode()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:.9rem">✕</button>
     </div>
-    <p style="font-size:.75rem;color:var(--text3);margin-bottom:.72rem">6 xonali ulashish kodini kiriting:</p>
+    <p style="font-size:.75rem;color:var(--text3);margin-bottom:.72rem">
+      6 xonali ulashish kodini kiriting. Test sizning <b>Maxsus testlar</b> qatoringizga qo'shiladi.
+    </p>
     <div style="display:flex;gap:.28rem;justify-content:center;margin-bottom:.7rem">
-      <input class="ci" maxlength="1"/><input class="ci" maxlength="1"/><input class="ci" maxlength="1"/>
-      <input class="ci" maxlength="1"/><input class="ci" maxlength="1"/><input class="ci" maxlength="1"/>
+      <input class="ci" maxlength="1"/>
+      <input class="ci" maxlength="1"/>
+      <input class="ci" maxlength="1"/>
+      <input class="ci" maxlength="1"/>
+      <input class="ci" maxlength="1"/>
+      <input class="ci" maxlength="1"/>
     </div>
-    <div id="code-msg" style="min-height:14px;font-size:.73rem;text-align:center;margin-bottom:.65rem;font-weight:600;color:var(--text3)"></div>
+    <div id="code-msg" style="min-height:16px;font-size:.73rem;text-align:center;margin-bottom:.65rem;font-weight:600;color:var(--text3)"></div>
     <button onclick="doCode()"
       style="width:100%;padding:.75rem;border-radius:11px;border:none;
         background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
         font-weight:700;font-size:.84rem;cursor:pointer;font-family:inherit">
-      Qidirish →
+      Qo'shish →
     </button>
   </div>
 </div>
@@ -344,14 +450,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase.js"></script>
 <script>
-/* ── THEME ── */
+/* ════ THEME ════ */
 const TH={
   get(){return localStorage.getItem('tp_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')},
   set(t){
     document.documentElement.setAttribute('data-theme',t);localStorage.setItem('tp_theme',t);
     const b=document.getElementById('tbtn');if(b)b.textContent=t==='dark'?'☀️':'🌙';
-    const s1=document.getElementById('sw1');const s2=document.getElementById('sw2');
-    if(s1)s1.checked=t==='dark';if(s2)s2.checked=t==='dark';
+    [document.getElementById('sw1'),document.getElementById('sw2')].forEach(s=>{if(s)s.checked=t==='dark';});
   },
   toggle(){this.set(this.get()==='dark'?'light':'dark')}
 };
@@ -360,37 +465,131 @@ document.getElementById('tbtn').onclick=()=>TH.toggle();
 document.getElementById('sw1').onchange=()=>TH.toggle();
 document.getElementById('sw2').onchange=()=>TH.toggle();
 
-/* ── MENU ── */
-const panel=document.getElementById('panel');
-const ov=document.getElementById('ov');
+/* ════ MENU ════ */
+const panel=document.getElementById('panel'),ov=document.getElementById('ov');
 function openMenu(){panel.classList.add('on');ov.classList.add('on');}
 function closeMenu(){panel.classList.remove('on');ov.classList.remove('on');}
 document.getElementById('mbtn').onclick=openMenu;
 document.getElementById('pcl').onclick=closeMenu;
 ov.onclick=closeMenu;
 
-/* ── LOGOUT ── */
-document.getElementById('lout').onclick=async()=>{
-  await auth.signOut().catch(()=>{});goTo('login.html');
-};
+/* ════ LOGOUT ════ */
+document.getElementById('lout').onclick=async()=>{await auth.signOut().catch(()=>{});goTo('login.html');};
 
-/* ── TOAST ── */
+/* ════ TOAST ════ */
 function toast(msg){
   const t=document.createElement('div');t.className='toast';t.textContent=msg;
   document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
 }
 
-/* ── AVA ── */
+/* ════ AVA ════ */
 function setAva(id,profile,name){
   const el=document.getElementById(id);if(!el)return;
-  if(profile?.avatarUrl){el.innerHTML=`<img src="${profile.avatarUrl}" alt=""/>`;}
-  else{el.textContent=(name||'U')[0].toUpperCase();}
+  if(profile?.avatarUrl)el.innerHTML=`<img src="${profile.avatarUrl}" alt=""/>`;
+  else el.textContent=(name||'U')[0].toUpperCase();
 }
 
-/* ── ICON MAP ── */
+/* ════ ICONS ════ */
 const ICON={english:'🇬🇧',arabic:'🕌',russian:'🇷🇺',turkish:'🇹🇷',math:'🧮',it:'💻',science:'🔬',religion:'📖',other:'📚'};
 
-/* ── CODE MODAL ── */
+/* ════════════════════════════════════════
+   MAXSUS TESTLAR — localStorage bilan
+   Key: tp_maxsus_v2 = [ {id, title, code, authorName, questionCount, addedAt, hidden:false}, ... ]
+════════════════════════════════════════ */
+const MX_KEY = 'tp_maxsus_v2';
+
+function mxLoad(){
+  try{return JSON.parse(localStorage.getItem(MX_KEY)||'[]');}
+  catch{return [];}
+}
+function mxSave(arr){
+  localStorage.setItem(MX_KEY, JSON.stringify(arr));
+}
+
+// Mavjudligini tekshirish
+function mxHas(testId){return mxLoad().some(x=>x.id===testId);}
+
+// Yangi test qo'shish
+function mxAdd(test){
+  const arr=mxLoad();
+  if(!arr.some(x=>x.id===test.id)){
+    arr.unshift({
+      id:          test.id,
+      title:       test.title||'Test',
+      code:        test.accessCode||'',
+      authorName:  test.authorName||'Anonim',
+      questionCount: test.questionCount||0,
+      timeLimit:   test.timeLimit||0,
+      addedAt:     Date.now(),
+      hidden:      false,
+    });
+    mxSave(arr);
+  }
+}
+
+// Ko'rsatish/yashirish (foydalanuvchi uchun lokal)
+function mxToggleHide(testId){
+  const arr=mxLoad();
+  const item=arr.find(x=>x.id===testId);
+  if(item){item.hidden=!item.hidden;mxSave(arr);}
+  renderMaxsus();
+}
+
+// Foydalanuvchi o'zi uchun o'chirish (faqat lokal, bazadan emas)
+function mxRemove(testId){
+  mxSave(mxLoad().filter(x=>x.id!==testId));
+  renderMaxsus();
+  toast('🗑️ Maxsus testdan olib tashlandi');
+}
+
+/* ════ RENDER MAXSUS ════ */
+function renderMaxsus(){
+  const arr=mxLoad();
+  const cnt=document.getElementById('mx-cnt');
+  if(cnt)cnt.textContent=arr.length;
+
+  const wrap=document.getElementById('maxsus-list');
+  if(!wrap)return;
+
+  if(!arr.length){
+    wrap.innerHTML=`<div class="mxemp">Hali kod bilan qo'shilgan test yo'q.<br/>
+      <span style="font-size:.7rem">Yuqoridagi "+ Kod qo'shish" tugmasini bosing</span>
+    </div>`;
+    return;
+  }
+
+  wrap.innerHTML=arr.map(item=>`
+    <div class="mxi ${item.hidden?'hidden-test':''}">
+      <div class="mxi-row">
+        <div class="mxi-info">
+          <div class="mxi-nm">${esc(item.title)}</div>
+          <div class="mxi-mt">
+            <span>📝 ${item.questionCount||0} savol</span>
+            <span>👤 ${esc(item.authorName||'?')}</span>
+            ${item.timeLimit?`<span>⏱ ${item.timeLimit}daq</span>`:''}
+          </div>
+          <div class="mxi-code">🔑 ${esc(item.code)}</div>
+          ${item.hidden?'<div class="hidden-notice">👁‍🗨 Yashirilgan</div>':''}
+        </div>
+        <div class="mxi-acts">
+          ${!item.hidden?`<button class="mxi-play" onclick="goTo('test.html?id=${item.id}')" title="Boshlash">▶️</button>`:''}
+          <button class="mxi-hide" onclick="mxToggleHide('${item.id}')" title="${item.hidden?'Ko\'rsatish':'Yashirish'}">
+            ${item.hidden?'👁':'🙈'}
+          </button>
+          <button class="mxi-del" onclick="confirmMxRemove('${item.id}','${esc(item.title).replace(/'/g,"\\'")}')">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+window.confirmMxRemove=(id,title)=>{
+  if(confirm(`"${title}" ni maxsus testlardan olib tashlaysizmi?\n(Test bazadan o'CHIRMAYDI, faqat sizning ro'yxatingizdan)`))
+    mxRemove(id);
+};
+
+window.mxToggleHide=mxToggleHide;
+
+/* ════ CODE MODAL ════ */
 function openCode(){
   document.getElementById('code-bg').classList.add('on');
   setTimeout(()=>document.querySelectorAll('.ci')[0]?.focus(),100);
@@ -405,51 +604,72 @@ document.querySelectorAll('.ci').forEach((inp,i,all)=>{
   inp.oninput=()=>{inp.value=inp.value.toUpperCase().slice(-1);if(inp.value&&all[i+1])all[i+1].focus();};
   inp.onkeydown=e=>{if(e.key==='Backspace'&&!inp.value&&all[i-1])all[i-1].focus();};
 });
+
 window.doCode=async()=>{
   const code=[...document.querySelectorAll('.ci')].map(i=>i.value).join('');
   const msg=document.getElementById('code-msg');
   if(code.length<6){msg.style.color='#ef4444';msg.textContent='Kodni to\'liq kiriting';return;}
+
   msg.style.color='var(--text3)';msg.textContent='⏳ Qidirilmoqda...';
   try{
     const test=await DB.getTestByCode(code);
     if(!test){msg.style.color='#ef4444';msg.textContent='❌ Kod topilmadi';return;}
-    const ul=JSON.parse(localStorage.getItem('tp_unlocked')||'[]');
-    if(!ul.includes(test.id)){ul.push(test.id);localStorage.setItem('tp_unlocked',JSON.stringify(ul));}
-    msg.style.color='#059669';msg.textContent=`✅ "${test.title}" topildi!`;
-    setTimeout(()=>{closeCode();goTo('test.html?id='+test.id);},800);
+
+    // Allaqachon qo'shilganmi?
+    if(mxHas(test.id)){
+      msg.style.color='#d97706';
+      msg.textContent='⚠️ Bu test allaqachon qo\'shilgan!';
+      setTimeout(()=>closeCode(),1200);
+      return;
+    }
+
+    // Maxsus testlarga qo'sh
+    mxAdd(test);
+    renderMaxsus();
+
+    msg.style.color='#059669';
+    msg.textContent=`✅ "${test.title}" qo'shildi!`;
+    setTimeout(()=>{closeCode();},900);
   }catch(e){msg.style.color='#ef4444';msg.textContent='❌ '+e.message;}
 };
 
-/* ── COPY CODE ── */
+/* ════ COPY CODE ════ */
 window.copyCode=(code)=>{
   navigator.clipboard.writeText(code)
     .then(()=>toast('📋 Nusxalandi: '+code))
-    .catch(()=>{try{const ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('📋 Nusxalandi: '+code);}catch(e){alert('Kod: '+code);}});
+    .catch(()=>{
+      try{const ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);
+        ta.select();document.execCommand('copy');ta.remove();toast('📋 Nusxalandi: '+code);}
+      catch(e){alert('Kod: '+code);}
+    });
 };
 
-/* ── DELETE TEST ── */
+/* ════ DELETE MY TEST (bazadan, faqat yaratuvchi/admin) ════ */
 window.delTest=async(id)=>{
-  if(!confirm('Testni o\'chirishni xohlaysizmi?'))return;
-  try{await DB.deleteTest(id);toast('✅ O\'chirildi');setTimeout(()=>location.reload(),700);}
-  catch(e){toast('❌ '+e.message);}
+  if(!confirm('Testni BAZADAN o\'chirishni xohlaysizmi?\nBu testni hamma ko\'ra olmaydi!'))return;
+  try{
+    await DB.deleteTest(id);
+    // Maxsus testlardan ham olib tashla
+    mxSave(mxLoad().filter(x=>x.id!==id));
+    renderMaxsus();
+    toast('✅ Test o\'chirildi');
+    setTimeout(()=>location.reload(),700);
+  }catch(e){toast('❌ '+e.message);}
 };
 
-/* ════════════════════════════════
-   MAIN LOAD
-════════════════════════════════ */
+/* ════ MAIN ════ */
 let CU=null;
 
 (async()=>{
-  /* Auth */
   try{CU=await AuthHelpers.requireAuth('login.html');if(!CU)return;}
   catch(e){goTo('login.html');return;}
 
-  /* Profile */
+  // Profile
   let profile=null;
   try{profile=await DB.getUser(CU.uid);}catch(e){}
   const name=profile?.name||CU.displayName||'Foydalanuvchi';
 
-  /* UI update */
+  // UI
   setAva('nav-ava',profile,name);
   setAva('p-ava',profile,name);
   document.getElementById('p-nm').textContent=name;
@@ -463,16 +683,20 @@ let CU=null;
       </button>`;
   }
 
-  /* ── MY TESTS ── */
+  // Maxsus testlarni render
+  renderMaxsus();
+
+  // My tests
   let myTests=[];
   const myWrap=document.getElementById('my-tests');
   try{
     myTests=await DB.getMyTests(CU.uid);
     if(!myTests.length){
-      myWrap.innerHTML=`<div class="emp">Test yaratilmagan.
-        <br><button onclick="goTo('create.html')" style="color:var(--acc);font-weight:700;background:none;border:none;cursor:pointer;font-size:.8rem;margin-top:.3rem">✏️ Yaratish →</button>
+      myWrap.innerHTML=`<div class="emp">Test yaratilmagan.<br>
+        <button onclick="goTo('create.html')" style="color:var(--acc);font-weight:700;background:none;
+          border:none;cursor:pointer;font-size:.8rem;margin-top:.3rem">✏️ Yaratish →</button>
       </div>`;
-    } else {
+    }else{
       const isAdmin=profile?.role==='admin';
       myWrap.innerHTML=myTests.map(t=>{
         const owner=t.authorId===CU.uid;
@@ -480,9 +704,10 @@ let CU=null;
           ?'<span class="vtag vt-pub">🌐 Ommaviy</span>'
           :'<span class="vtag vt-priv">🔒 Shaxsiy</span>';
         const shareRow=(owner&&t.accessCode)
-          ?`<div class="share-row"><span class="sh-code">${t.accessCode}</span>
-              <button class="cp-btn" onclick="copyCode('${t.accessCode}')">📋 Nusxa</button>
-            </div>`:'';
+          ?`<div class="share-row">
+               <span class="sh-code">${t.accessCode}</span>
+               <button class="cp-btn" onclick="copyCode('${t.accessCode}')">📋 Nusxa</button>
+             </div>`:'';
         return `<div class="ti">
           <div class="ti-row">
             <div class="ti-info">
@@ -496,8 +721,8 @@ let CU=null;
             </div>
             <div class="ti-acts">
               <button class="ab" onclick="goTo('test.html?id=${t.id}')" title="Boshlash">▶️</button>
-              ${(owner||isAdmin)?`<button class="ab" onclick="goTo('create.html?id=${t.id}')" title="Tahrirlash">✏️</button>`:'' }
-              ${(owner||isAdmin)?`<button class="ab ab-del" onclick="delTest('${t.id}')" title="O'chirish">🗑️</button>`:''}
+              ${(owner||isAdmin)?`<button class="ab" onclick="goTo('create.html?id=${t.id}')" title="Tahrirlash">✏️</button>`:''}
+              ${(owner||isAdmin)?`<button class="ab ab-del" onclick="delTest('${t.id}')" title="O\'chirish">🗑️</button>`:''}
             </div>
           </div>
           ${shareRow}
@@ -505,14 +730,12 @@ let CU=null;
       }).join('');
     }
   }catch(e){
-    console.error('getMyTests error:',e);
-    myWrap.innerHTML=`<div class="err">
-      ❌ ${e.message}
-      <br><small style="color:var(--text3)">Firebase Console → Firestore → Rules yangilang</small>
-    </div>`;
+    console.error('getMyTests:',e);
+    myWrap.innerHTML=`<div class="err">❌ ${e.message}<br>
+      <small style="color:var(--text3)">Firebase Console → Firestore → Rules yangilang</small></div>`;
   }
 
-  /* ── RESULTS ── */
+  // Results
   try{
     const results=await DB.getMyResults(CU.uid,10);
     document.getElementById('s-t').textContent=myTests.length;
@@ -531,7 +754,7 @@ let CU=null;
     }
   }catch(e){}
 
-  /* ── PUBLIC TESTS ── */
+  // Public tests
   const pubWrap=document.getElementById('pub-tests');
   try{
     const all=await DB.getPublicTests();
@@ -540,7 +763,6 @@ let CU=null;
 
     if(!pub.length){pubWrap.innerHTML='<div class="emp">Ommaviy test yo\'q</div>';return;}
 
-    /* Group by subject */
     const grps={};
     pub.forEach(t=>{const k=t.subject||'other';if(!grps[k])grps[k]=[];grps[k].push(t);});
 
@@ -581,7 +803,7 @@ let CU=null;
       pubWrap.appendChild(g);
     });
   }catch(e){
-    console.error('getPublicTests error:',e);
+    console.error('getPublicTests:',e);
     pubWrap.innerHTML=`<div class="err">❌ ${e.message}</div>`;
   }
 
