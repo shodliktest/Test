@@ -80,6 +80,31 @@
   background:rgba(79,70,229,.03);margin-top:.85rem}
 .add-area-label{font-size:.82rem;color:#6b7280;font-weight:600;margin-bottom:.85rem}
 .add-q-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.45rem}
+.aqbtn-r{border-color:rgba(236,72,153,.22);background:rgba(236,72,153,.07);color:#db2777}
+.aqbtn-r:hover{background:rgba(236,72,153,.16)}
+.aqbtn-o{border-color:rgba(99,102,241,.22);background:rgba(99,102,241,.07);color:#6366f1}
+.aqbtn-o:hover{background:rgba(99,102,241,.16)}
+.aqbtn-g{border-color:rgba(20,184,166,.22);background:rgba(20,184,166,.07);color:#0d9488}
+.aqbtn-g:hover{background:rgba(20,184,166,.16)}
+
+/* ─── MATCH pairs ─── */
+.match-pair{display:grid;grid-template-columns:1fr auto 1fr;gap:.4rem;align-items:center;margin-bottom:.42rem}
+.match-sep{color:var(--text-3);font-size:.9rem;font-weight:700;text-align:center}
+.match-add{width:100%;padding:.45rem;border-radius:8px;border:1.5px dashed var(--border-2);
+  background:transparent;font-size:.74rem;color:var(--text-3);cursor:pointer;
+  font-family:inherit;font-weight:600;transition:all .18s;margin-top:.25rem}
+.match-add:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ─── ORDER words ─── */
+.order-words-wrap{display:flex;flex-wrap:wrap;gap:.38rem;margin-top:.45rem}
+.order-word-chip{display:flex;align-items:center;gap:.28rem;
+  padding:.3rem .6rem;border-radius:8px;border:1.5px solid var(--border-2);
+  background:var(--bg-card);font-size:.8rem;font-weight:600;cursor:default}
+.order-word-chip input{flex:1;min-width:70px;border:none;background:transparent;
+  font-family:inherit;font-size:.8rem;font-weight:600;color:var(--text);outline:none}
+.order-word-chip input::placeholder{color:var(--text-3)}
+.order-rm{background:none;border:none;cursor:pointer;color:var(--text-3);font-size:.85rem;padding:0;line-height:1}
+.order-rm:hover{color:#ef4444}
 .aqbtn{padding:.72rem .35rem;border-radius:12px;cursor:pointer;
   font-weight:700;font-size:.76rem;font-family:'Plus Jakarta Sans',sans-serif;
   transition:all .2s;border:2px solid;display:flex;
@@ -282,6 +307,15 @@
       <button class="aqbtn aqbtn-x" onclick="addQ('text')">
         <span style="font-size:1.3rem">📝</span>Matn
       </button>
+      <button class="aqbtn aqbtn-r" onclick="addQ('match')">
+        <span style="font-size:1.3rem">🔗</span>Moslashtirish
+      </button>
+      <button class="aqbtn aqbtn-o" onclick="addQ('order')">
+        <span style="font-size:1.3rem">🔀</span>Tartiblash
+      </button>
+      <button class="aqbtn aqbtn-g" onclick="addQ('translate')">
+        <span style="font-size:1.3rem">🌐</span>Tarjima
+      </button>
     </div>
   </div>
 
@@ -444,14 +478,19 @@ window.setVis = (vis) => {
 ═══════════════════════════════════════ */
 window.addQ = (type = 'multiple') => {
   const q = {
-    _id:         Date.now() + Math.random(),
+    _id:           Date.now() + Math.random(),
     type,
-    text:        '',
-    options:     type === 'multiple'  ? ['', '', '', ''] :
-                 type === 'truefalse' ? ["Ha", "Yo'q"] : [],
-    correct:     0,
-    explanation: '',
-    points:      1,
+    text:          '',
+    options:       type === 'multiple'  ? ['', '', '', ''] :
+                   type === 'truefalse' ? ["Ha", "Yo'q"] :
+                   type === 'translate' ? ['', '', '', ''] : [],
+    correct:       0,
+    correctAnswer: '',
+    // match: [{left:'',right:''},...], order: ['so'z1','so'z2',...]
+    pairs:         type === 'match'   ? [{left:'',right:''},{left:'',right:''},{left:'',right:''},{left:'',right:''}] : [],
+    words:         type === 'order'   ? ['','','',''] : [],
+    explanation:   '',
+    points:        1,
   };
   questions.push(q);
   renderAll();
@@ -473,7 +512,7 @@ function renderCard(q, idx) {
   card.className = 'q-card';
   card.dataset.id = String(q._id);
 
-  const typeLabels = { multiple: 'Ko\'p tanlov', truefalse: 'Ha/Yo\'q', text: 'Matn' };
+  const typeLabels = { multiple: "Ko'p tanlov", truefalse: "Ha/Yo'q", text: 'Matn', match: '🔗 Moslashtirish', order: '🔀 Tartiblash', translate: '🌐 Tarjima' };
 
   card.innerHTML = `
     <div class="q-header">
@@ -533,9 +572,83 @@ function renderCard(q, idx) {
 }
 
 function buildOpts(q) {
+  /* ─── MATCH ─── */
+  if (q.type === 'match') {
+    const pairs = q.pairs || [];
+    let html = `<div style="font-size:.72rem;color:var(--text-3);margin-bottom:.5rem;font-weight:600">
+      🔗 Chap tomonga so'z, o'ng tomonga tarjimasi/ta'rifini yozing</div>`;
+    pairs.forEach((p, i) => {
+      html += `<div class="match-pair">
+        <input class="form-input" placeholder="Chap ${i+1}" value="${escHtml(p.left)}"
+          data-id="${q._id}" data-pi="${i}" data-side="left" oninput="updPair(this)"/>
+        <div class="match-sep">↔</div>
+        <input class="form-input" placeholder="O'ng ${i+1}" value="${escHtml(p.right)}"
+          data-id="${q._id}" data-pi="${i}" data-side="right" oninput="updPair(this)"/>
+      </div>`;
+    });
+    html += `<button class="match-add" onclick="addPair('${q._id}')">+ Juft qo'shish</button>`;
+    return html;
+  }
+
+  /* ─── ORDER ─── */
+  if (q.type === 'order') {
+    const words = q.words || [];
+    let html = `<div style="font-size:.72rem;color:var(--text-3);margin-bottom:.5rem;font-weight:600">
+      🔀 So'zlarni to'g'ri tartibda yozing — foydalanuvchi tartibini o'zi yig'adi</div>
+    <div class="order-words-wrap" id="ow-${q._id}">`;
+    words.forEach((w, i) => {
+      html += `<div class="order-word-chip">
+        <input placeholder="So'z ${i+1}" value="${escHtml(w)}"
+          data-id="${q._id}" data-wi="${i}" oninput="updWord(this)"/>
+        ${words.length > 2 ? `<button class="order-rm" onclick="rmWord('${q._id}',${i})">✕</button>` : ''}
+      </div>`;
+    });
+    html += `</div>
+    <button class="match-add" onclick="addWord('${q._id}')">+ So'z qo'shish</button>
+    <div style="font-size:.7rem;color:var(--text-3);margin-top:.4rem">
+      💡 So'zlar foydalanuvchiga aralashtirilgan holda beriladi</div>`;
+    return html;
+  }
+
+  /* ─── TRANSLATE ─── */
+  if (q.type === 'translate') {
+    const opts = q.options || ['','','',''];
+    let html = `<div style="font-size:.72rem;color:var(--text-3);margin-bottom:.5rem;font-weight:600">
+      🌐 Savol matni — so'z/ibora, variantlar — tarjimalari. To'g'risini belgilang:</div>`;
+    opts.forEach((o, i) => {
+      html += `<div class="opt-row">
+        <input type="radio" name="r-${q._id}" class="opt-radio"
+          ${q.correct === i ? 'checked' : ''} onchange="setCorr('${q._id}',${i})"/>
+        <input type="text" class="form-input opt-input ${q.correct === i ? 'correct' : ''}"
+          value="${escHtml(o)}" placeholder="Tarjima ${i+1}"
+          data-id="${q._id}" data-idx="${i}" oninput="updOpt(this)"/>
+        ${opts.length > 2 ? `<button class="btn btn-ghost btn-sm" onclick="rmOpt('${q._id}',${i})" style="flex-shrink:0;color:var(--text-3)">✕</button>` : ''}
+      </div>`;
+    });
+    html += `<button class="add-opt-btn" onclick="addOpt('${q._id}')">+ Tarjima qo'shish</button>
+    <div style="font-size:.72rem;color:var(--text-3);margin-top:.35rem">☝️ To'g'ri tarjimani radio orqali belgilang</div>`;
+    return html;
+  }
+
   if (q.type === 'text') {
-    return `<p style="font-size:.78rem;color:var(--text-3);font-style:italic;padding:.3rem 0">
-      Foydalanuvchi o'z javobini yozadi (erkin matn)</p>`;
+    const ca = q.correctAnswer || '';
+    return `
+      <div style="margin-bottom:.55rem">
+        <label style="font-size:.72rem;font-weight:700;color:var(--text-2);display:block;margin-bottom:.35rem">
+          ✅ To'g'ri javob <span style="color:#ef4444">*</span>
+          <span style="font-size:.65rem;font-weight:500;color:var(--text-3)"> — foydalanuvchi shu javobga solishtiriladi</span>
+        </label>
+        <input type="text" class="form-input"
+          style="font-weight:600"
+          placeholder="Masalan: have, Present Perfect, 1991..."
+          value="${escHtml(ca)}"
+          data-id="${q._id}"
+          oninput="updCorrectAnswer(this)"/>
+      </div>
+      <div style="font-size:.72rem;color:var(--text-3);padding:.35rem .55rem;
+        background:rgba(108,63,232,.05);border-radius:8px;border-left:3px solid var(--accent)">
+        💡 Foydalanuvchi javob yozadi → sizning javobingiz bilan taqqoslanadi (katta-kichik harf ahamiyatsiz)
+      </div>`;
   }
   const opts = q.options.map((o, i) => `
     <div class="opt-row">
@@ -575,8 +688,12 @@ window.chType = (id, type) => {
   if (!q) return;
   q.type    = type;
   q.options = type === 'multiple'  ? ['', '', '', ''] :
-              type === 'truefalse' ? ["Ha", "Yo'q"] : [];
+              type === 'truefalse' ? ["Ha", "Yo'q"] :
+              type === 'translate' ? ['', '', '', ''] : [];
+  q.pairs   = type === 'match' ? [{left:'',right:''},{left:'',right:''},{left:'',right:''},{left:'',right:''}] : [];
+  q.words   = type === 'order' ? ['','','',''] : [];
   q.correct = 0;
+  q.correctAnswer = '';
   renderAll();
 };
 
@@ -603,6 +720,49 @@ window.setCorr = (id, idx) => {
   document.querySelectorAll(`[data-id="${id}"].opt-input`).forEach((inp, i) => {
     inp.classList.toggle('correct', i === idx);
   });
+};
+
+/* ─── MATCH helpers ─── */
+window.updPair = (inp) => {
+  const q = findQ(inp.dataset.id);
+  if (!q) return;
+  const i = +inp.dataset.pi;
+  const side = inp.dataset.side;
+  if (!q.pairs) q.pairs = [];
+  if (!q.pairs[i]) q.pairs[i] = {left:'',right:''};
+  q.pairs[i][side] = inp.value;
+};
+window.addPair = (id) => {
+  const q = findQ(id);
+  if (!q || (q.pairs||[]).length >= 8) return;
+  q.pairs = [...(q.pairs||[]), {left:'',right:''}];
+  document.getElementById('opts-' + id).innerHTML = buildOpts(q);
+};
+
+/* ─── ORDER helpers ─── */
+window.updWord = (inp) => {
+  const q = findQ(inp.dataset.id);
+  if (!q) return;
+  if (!q.words) q.words = [];
+  q.words[+inp.dataset.wi] = inp.value;
+};
+window.addWord = (id) => {
+  const q = findQ(id);
+  if (!q || (q.words||[]).length >= 12) return;
+  q.words = [...(q.words||[]), ''];
+  document.getElementById('opts-' + id).innerHTML = buildOpts(q);
+};
+window.rmWord = (id, idx) => {
+  const q = findQ(id);
+  if (!q || (q.words||[]).length <= 2) return;
+  q.words.splice(idx, 1);
+  document.getElementById('opts-' + id).innerHTML = buildOpts(q);
+};
+
+window.updCorrectAnswer = (inp) => {
+  const q = findQ(inp.dataset.id);
+  if (!q) return;
+  q.correctAnswer = inp.value.trim();
 };
 
 window.updOpt = (inp) => {
@@ -637,7 +797,17 @@ async function doSave() {
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
     if (!q.text.trim()) { showAlert(`${i + 1}-savol matni bo'sh!`, 'error'); return; }
-    if (q.type !== 'text' && q.options.some(o => !o.trim())) {
+    if (q.type === 'text' && !q.correctAnswer?.trim()) {
+      return showAlert(`${i + 1}-savol (matnli): to'g'ri javob kiritilmagan!`, 'error');
+    }
+    if (q.type === 'match') {
+      if (!q.pairs || q.pairs.length < 2) { showAlert(`${i+1}-savol (moslashtirish): kamida 2 juft kerak!`, 'error'); return; }
+      if (q.pairs.some(p => !p.left.trim() || !p.right.trim())) { showAlert(`${i+1}-savol (moslashtirish): barcha juftlar to'ldirilsin!`, 'error'); return; }
+    }
+    if (q.type === 'order') {
+      if (!q.words || q.words.filter(w=>w.trim()).length < 2) { showAlert(`${i+1}-savol (tartiblash): kamida 2 so'z kerak!`, 'error'); return; }
+    }
+    if (q.type !== 'text' && q.type !== 'match' && q.type !== 'order' && q.options.some(o => !o.trim())) {
       showAlert(`${i + 1}-savoldagi variant bo'sh!`, 'error'); return;
     }
   }

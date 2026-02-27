@@ -264,8 +264,16 @@ function elapsed2s(s){s=s||0;return Math.floor(s/60)+'daq '+String(s%60).padStar
       const isOk=!isText&&!isSkip&&ua===q.correct;
       const isErr=!isText&&!isSkip&&ua!==q.correct;
 
-      const cls=isSkip?'q-skip':isOk?'q-ok':'q-err';
-      const badge=isSkip?'⏭':isOk?'✓':'✗';
+      // For text type: determine ok/err based on correct answer comparison
+      let textOk=false,textErr=false;
+      if(isText){
+        function normStr0(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ');}
+        const ca0=q.correctAnswer||(q.explanation&&/^✅ To.g.ri javob:/i.test(q.explanation)?q.explanation.replace(/^✅ To\.g\.ri javob:\s*/i,'').split('|')[0].trim():'');
+        const ua0=ua!==-1?String(ua):'';
+        if(ua0&&ca0){textOk=normStr0(ua0)===normStr0(ca0);textErr=!textOk;}
+      }
+      const cls=isText?(ua===-1?'q-skip':textOk?'q-ok':'q-err'):isSkip?'q-skip':isOk?'q-ok':'q-err';
+      const badge=isText?(ua===-1?'⏭':textOk?'✓':'✗'):isSkip?'⏭':isOk?'✓':'✗';
 
       const card=document.createElement('div');
       card.className=`qc ${cls}`;
@@ -278,12 +286,26 @@ function elapsed2s(s){s=s||0;return Math.floor(s/60)+'daq '+String(s%60).padStar
         </div>`;
 
       if(isText){
-        /* Text answer */
-        body+=`<div class="txt-ans">
+        /* Text answer — to'g'ri javob bilan taqqoslash */
+        function normStr(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
+        const correctAns = q.correctAnswer || (q.explanation && /^✅ To.g.ri javob:/i.test(q.explanation)
+          ? q.explanation.replace(/^✅ To\.g\.ri javob:\s*/i,'').split('|')[0].trim() : '');
+        const userAns = ua !== -1 ? String(ua) : '';
+        const tIsCorr = userAns && correctAns && normStr(userAns) === normStr(correctAns);
+        const tIsWrong = userAns && correctAns && !tIsCorr;
+        const realExpl = (q.explanation||'').replace(/^✅ To\.g\.ri javob:[^|]*/i,'').replace(/^\s*\|\s*/,'').trim();
+
+        const taStyle = tIsCorr
+          ? 'border-color:#059669;background:rgba(5,150,105,.07)'
+          : tIsWrong ? 'border-color:#ef4444;background:rgba(239,68,68,.06)' : '';
+
+        body+=`<div class="txt-ans" style="${taStyle}">
           <span style="font-size:.65rem;font-weight:700;color:var(--acc)">Sizning javobingiz:</span><br/>
-          ${esc(ua!==-1?String(ua):'(yozilmadi')}
+          ${esc(userAns||'(yozilmadi)')}
         </div>`;
-        if(q.explanation) body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
+        if(tIsCorr) body+=`<div class="expl" style="border-left-color:#059669;background:rgba(5,150,105,.07);color:#059669">✅ To'g'ri javob!</div>`;
+        if(tIsWrong&&correctAns) body+=`<div class="expl" style="border-left-color:#ef4444;background:rgba(239,68,68,.06);color:#ef4444">❌ To'g'ri: <b>${esc(correctAns)}</b></div>`;
+        if(realExpl) body+=`<div class="expl">💡 ${esc(realExpl)}</div>`;
       } else {
         /* Options */
         const opts=q.options||[];

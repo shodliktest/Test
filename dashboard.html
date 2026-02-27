@@ -618,6 +618,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
         font-weight:700;font-size:.84rem;cursor:pointer;font-family:inherit">
       Qo'shish →
     </button>
+    <div id="code-share" style="display:none;margin-top:.65rem;background:var(--bg);
+      border-radius:11px;border:1px solid var(--border);padding:.7rem .85rem">
+      <div style="font-size:.7rem;color:var(--text3);margin-bottom:.45rem;font-weight:600">🔗 Ushbu testga kirish uchun:</div>
+      <div style="display:flex;gap:.4rem;align-items:center">
+        <code id="code-share-val" style="font-size:.72rem;color:var(--acc);font-weight:700;
+          flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;word-break:break-all"></code>
+        <button onclick="copyLinkFromModal()"
+          style="flex-shrink:0;padding:.35rem .7rem;border-radius:8px;
+            background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
+            font-size:.7rem;font-weight:700;border:none;cursor:pointer;font-family:inherit">
+          📋 Nusxa
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -829,6 +843,8 @@ function closeCode(){
   document.getElementById('code-bg').classList.remove('on');
   document.getElementById('code-msg').textContent='';
   document.querySelectorAll('.ci').forEach(i=>i.value='');
+  const sd=document.getElementById('code-share');
+  if(sd)sd.style.display='none';
 }
 document.getElementById('code-bg').addEventListener('click',function(e){if(e.target===this)closeCode();});
 document.querySelectorAll('.ci').forEach((inp,i,all)=>{
@@ -860,20 +876,40 @@ window.doCode=async()=>{
 
     msg.style.color='#059669';
     msg.textContent=`✅ "${test.title}" qo'shildi!`;
-    setTimeout(()=>{closeCode();},900);
+    // Share link ko'rsatamiz
+    const shareDiv=document.getElementById('code-share');
+    const shareVal=document.getElementById('code-share-val');
+    if(shareDiv&&shareVal&&test.accessCode){
+      const link=location.origin+location.pathname.replace('dashboard.html','')+'test.html?code='+test.accessCode;
+      shareVal.textContent=link;
+      shareDiv.style.display='block';
+      window._lastShareCode=test.accessCode;
+    }
+    setTimeout(()=>{closeCode();},3000);
   }catch(e){msg.style.color='#ef4444';msg.textContent='❌ '+e.message;}
 };
 
+window.copyLinkFromModal=()=>{
+  const code=window._lastShareCode;
+  if(code)copyLink(code);
+};
+
 /* ════ COPY CODE ════ */
-window.copyCode=(code)=>{
-  navigator.clipboard.writeText(code)
-    .then(()=>toast('📋 Nusxalandi: '+code))
+window.copyCode=(code, includeLink=false)=>{
+  const link=location.origin+location.pathname.replace('dashboard.html','')+'test.html?code='+code;
+  const text=includeLink?`Kod: ${code}\nLink: ${link}`:code;
+  navigator.clipboard.writeText(text)
+    .then(()=>toast(includeLink?'🔗 Kod va link nusxalandi!':'📋 Nusxalandi: '+code))
     .catch(()=>{
-      try{const ta=document.createElement('textarea');ta.value=code;document.body.appendChild(ta);
-        ta.select();document.execCommand('copy');ta.remove();toast('📋 Nusxalandi: '+code);}
-      catch(e){alert('Kod: '+code);}
+      try{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);
+        ta.select();document.execCommand('copy');ta.remove();
+        toast(includeLink?'🔗 Nusxalandi!':'📋 Nusxalandi: '+code);}
+      catch(e){alert('Kod: '+code+'\nLink: '+link);}
     });
 };
+
+/* Ko'd va link nusxa olish */
+window.copyLink=(code)=>copyCode(code,true);
 
 /* ════ DELETE MY TEST (bazadan, faqat yaratuvchi/admin) ════ */
 window.delTest=async(id)=>{
@@ -919,7 +955,7 @@ function renderMyExp(wrap, tests, isAdmin, uid){
             ${t.timeLimit?`<span>⏱ ${t.timeLimit}d</span>`:''}
             ${vtag}
           </div>
-          ${(owner&&t.accessCode)?`<span class="fli-code" onclick="copyCode('${t.accessCode}');event.stopPropagation()" style="margin-top:.2rem;display:inline-flex">📋 ${t.accessCode}</span>`:''}
+          ${(owner&&t.accessCode)?`<span class="fli-code" onclick="copyLink('${t.accessCode}');event.stopPropagation()" style="margin-top:.2rem;display:inline-flex" title="Kod va link nusxalash">🔗 ${t.accessCode}</span>`:''}
         </div>
         <div class="fli-r">
           <div class="fli-acts">
@@ -991,7 +1027,7 @@ let CU=null;
         const codeRow=(owner&&t.accessCode)
           ?`<div class="mt-code-row">
               <span class="mt-code">${t.accessCode}</span>
-              <button class="mt-copy" onclick="copyCode('${t.accessCode}');event.stopPropagation()">📋</button>
+              <button class="mt-copy" onclick="copyLink('${t.accessCode}');event.stopPropagation()" title="Kod va link nusxalash">🔗</button>
             </div>`:'';
         const c=document.createElement('div');
         c.className='mt-card';
