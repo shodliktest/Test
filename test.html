@@ -89,60 +89,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   font-size:.78rem;color:var(--text2);line-height:1.55}
 [data-theme=dark] .expl{color:#c4b5fd;background:rgba(108,63,232,.14)}
 
-/* ─── MATCH type ─── */
-.match-wrap{display:flex;flex-direction:column;gap:.55rem}
-.match-row{display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:center}
-.match-left{padding:.6rem .8rem;border-radius:10px;border:2px solid var(--border);
-  background:rgba(108,63,232,.05);font-size:.84rem;font-weight:700;color:var(--acc);text-align:center}
-.match-right-wrap{display:flex;flex-direction:column;gap:.32rem}
-.match-option{padding:.52rem .7rem;border-radius:9px;border:2px solid var(--border);
-  background:var(--card);font-size:.8rem;font-weight:600;cursor:pointer;
-  transition:all .2s;color:var(--text);text-align:center;user-select:none}
-.match-option:hover:not(.disabled){border-color:rgba(108,63,232,.4);background:rgba(108,63,232,.06);transform:translateX(2px)}
-.match-option.selected{border-color:var(--acc);background:rgba(108,63,232,.1);color:var(--acc)}
-.match-option.correct{border-color:#059669!important;background:rgba(5,150,105,.08)!important;color:#059669!important}
-.match-option.wrong{border-color:#ef4444!important;background:rgba(239,68,68,.07)!important;color:#ef4444!important}
-.match-option.disabled{cursor:default}
-.match-conn{font-size:1.1rem;text-align:center;color:var(--text3)}
-
-/* ─── ORDER type ─── */
-.order-area{display:flex;flex-direction:column;gap:.75rem}
-.order-pool-label,.order-answer-label{font-size:.72rem;font-weight:700;color:var(--text3);margin-bottom:.35rem}
-.order-pool{display:flex;flex-wrap:wrap;gap:.42rem;min-height:42px;
-  padding:.5rem;border-radius:12px;background:rgba(108,63,232,.04);
-  border:2px dashed rgba(108,63,232,.18)}
-.order-answer{display:flex;flex-wrap:wrap;gap:.42rem;min-height:48px;
-  padding:.5rem;border-radius:12px;background:rgba(5,150,105,.04);
-  border:2px dashed rgba(5,150,105,.25)}
-.order-answer.done{border-color:#059669}
-.order-chip{padding:.45rem .88rem;border-radius:9px;font-size:.84rem;font-weight:700;
-  cursor:pointer;transition:all .2s;user-select:none;border:2px solid;white-space:nowrap}
-.order-chip.pool-chip{background:var(--card);border-color:rgba(108,63,232,.28);color:var(--acc)}
-.order-chip.pool-chip:hover{background:rgba(108,63,232,.1);transform:translateY(-2px);box-shadow:0 3px 10px rgba(108,63,232,.2)}
-.order-chip.ans-chip{background:rgba(5,150,105,.08);border-color:rgba(5,150,105,.35);color:#059669}
-.order-chip.ans-chip:hover{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.35);color:#ef4444}
-.order-chip.correct-chip{background:rgba(5,150,105,.12)!important;border-color:#059669!important;color:#059669!important;cursor:default}
-.order-chip.wrong-chip{background:rgba(239,68,68,.09)!important;border-color:#ef4444!important;color:#ef4444!important;cursor:default}
-.order-result-row{display:flex;flex-wrap:wrap;gap:.38rem;margin-top:.35rem;align-items:center}
-.order-correct-label{font-size:.72rem;font-weight:700;color:#059669;width:100%;margin-bottom:.2rem}
-.order-correct-chip{padding:.38rem .72rem;border-radius:9px;font-size:.82rem;font-weight:700;
-  background:rgba(5,150,105,.1);border:2px solid #059669;color:#059669}
-
-/* ─── TRANSLATE type ─── */
-.tr-opts{display:flex;flex-direction:column;gap:.42rem}
-.tr-opt{padding:.82rem 1rem;border-radius:12px;border:2px solid var(--border);
-  background:var(--card);font-size:.88rem;font-weight:600;cursor:pointer;
-  transition:all .22s;color:var(--text);display:flex;align-items:center;gap:.65rem}
-.tr-opt:hover:not(.disabled){border-color:rgba(108,63,232,.35);background:rgba(108,63,232,.04)}
-.tr-opt.sel{border-color:var(--acc);background:rgba(108,63,232,.08);color:var(--acc)}
-.tr-opt.correct{border-color:#059669!important;background:rgba(5,150,105,.08)!important;color:#059669!important}
-.tr-opt.wrong{border-color:#ef4444!important;background:rgba(239,68,68,.07)!important;color:#ef4444!important}
-.tr-opt.disabled{cursor:default}
-.tr-badge{width:28px;height:28px;border-radius:50%;border:2px solid currentColor;
-  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;
-  flex-shrink:0;transition:all .22s}
-.tr-opt.sel .tr-badge,.tr-opt.correct .tr-badge,.tr-opt.wrong .tr-badge{background:currentColor;color:#fff}
-
 /* NAV BUTTONS */
 .btns{display:flex;gap:.55rem;justify-content:flex-end;margin-top:.85rem}
 .nbtn{padding:.7rem 1.25rem;border-radius:11px;font-size:.83rem;font-weight:700;
@@ -269,23 +215,8 @@ function showErr(title,msg){
 /* INIT */
 (async()=>{
   CU=await AuthHelpers.getCurrentUser().catch(()=>null);
-  const params=new URLSearchParams(location.search);
-  let id=params.get('id');
-  const code=params.get('code');
-
-  // Agar ?code=XXXXXX bo'lsa, avval test topamiz
-  if(!id && code){
-    try{
-      const t=await DB.getTestByCode(code.toUpperCase());
-      if(!t){showErr('Kod topilmadi','Bu kod bilan test yo\'q');return;}
-      id=t.id;
-      // Unlock qilamiz
-      const ul=JSON.parse(localStorage.getItem('tp_unlocked')||'[]');
-      if(!ul.includes(id)){ul.push(id);localStorage.setItem('tp_unlocked',JSON.stringify(ul));}
-    }catch(e){showErr('Xatolik',e.message);return;}
-  }
-
-  if(!id){showErr('Test topilmadi','URL da ?id= yoki ?code= bo\'lishi kerak');return;}
+  const id=new URLSearchParams(location.search).get('id');
+  if(!id){showErr('Test ID yo\'q','URL da ?id= yo\'q');return;}
 
   try{
     testData=await DB.getTest(id);
@@ -349,181 +280,9 @@ function renderQ(){
   const showResult=ans!==undefined&&testData.showResult!==false;
 
   let body='';
-  /* ─── MATCH ─── */
-  if(q.type==='match'){
-    const pairs=(q.pairs||[]);
-    // answers[curIdx] = { 0: rightIdx, 1: rightIdx, ... }
-    const sel = typeof ans==='object'&&ans!==null&&!Array.isArray(ans) ? ans : {};
-    const done = Object.keys(sel).length===pairs.length && pairs.every((_,i)=>sel[i]!==undefined);
-
-    // Shuffle right side once, store in q._shuffled
-    if(!q._shuffled){
-      q._shuffled=[...pairs.map((_,i)=>i)].sort(()=>Math.random()-.5);
-    }
-    const shuffled=q._shuffled;
-
-    let rows='';
-    pairs.forEach((p,li)=>{
-      const chosenRi=sel[li];
-      const isAnswered=chosenRi!==undefined;
-      let optHtml='';
-      shuffled.forEach((ri)=>{
-        let cls='match-option';
-        if(showResult&&done){
-          // ri === li means correct pairing
-          if(ri===li&&chosenRi===ri){cls+=' correct disabled';}
-          else if(chosenRi===ri&&ri!==li){cls+=' wrong disabled';}
-          else if(ri===li&&chosenRi!==ri){cls+=' wrong disabled';}
-          else{cls+=' disabled';}
-        } else {
-          if(chosenRi===ri)cls+=' selected';
-        }
-        optHtml+=`<div class="${cls}" onclick="matchSel(${li},${ri})">${esc(pairs[ri].right)}</div>`;
-      });
-      rows+=`<div class="match-row">
-        <div class="match-left">${esc(p.left)}</div>
-        <div class="match-conn">${isAnswered&&!showResult?'✓':'→'}</div>
-        <div class="match-right-wrap">${optHtml}</div>
-      </div>`;
-    });
-
-    body=`<div class="match-wrap">${rows}</div>`;
-    if(showResult&&done&&q.explanation) body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
-    document.getElementById('q-area').innerHTML=`<div class="q-card">
-      <div class="q-num">${curIdx+1} / ${questions.length}</div>
-      <div class="q-text">${esc(q.text||'Har bir juftni moslashtiring:')}</div>
-      ${body}
-    </div>`;
-    return;
-  }
-
-  /* ─── ORDER ─── */
-  if(q.type==='order'){
-    const words=(q.words||[]).filter(w=>w.trim());
-    // answers[curIdx] = [] — foydalanuvchi tanlagan tartib
-    if(!q._pool){
-      q._pool=[...words].sort(()=>Math.random()-.5);
-    }
-    const userOrder = Array.isArray(ans) ? ans : [];
-    const remaining = q._pool.filter(w=>!userOrder.includes(w)|| userOrder.indexOf(w)<userOrder.lastIndexOf(w) ? false : !userOrder.includes(w));
-    // pool: hali tanlanmaganlar
-    const usedSet=new Set(userOrder);
-    const pool=q._pool.filter(w=>{
-      const cnt=userOrder.filter(u=>u===w).length;
-      const total=words.filter(ww=>ww===w).length;
-      return cnt<total;
-    });
-    const done=userOrder.length===words.length;
-
-    // Result check
-    let isCorrect=false;
-    if(showResult&&done){
-      isCorrect=userOrder.join(' ')===words.join(' ');
-    }
-
-    let poolHtml=pool.map(w=>`<div class="order-chip pool-chip" onclick="orderPick('${esc(w).replace(/'/g,"\'")}')"> ${esc(w)}</div>`).join('');
-    let ansHtml=userOrder.map(w=>`<div class="order-chip ans-chip" onclick="orderRemove('${esc(w).replace(/'/g,"\'")}')"> ${esc(w)}</div>`).join('');
-
-    let resultHtml='';
-    if(showResult&&done){
-      if(isCorrect){
-        resultHtml=`<div class="expl" style="border-left-color:#059669;background:rgba(5,150,105,.07);color:#059669">✅ To'g'ri tartib!</div>`;
-      } else {
-        const correctStr=words.join(' ');
-        resultHtml=`<div class="expl" style="border-left-color:#ef4444;background:rgba(239,68,68,.06);color:#ef4444">
-          ❌ Noto'g'ri. To'g'ri tartib:</div>
-          <div class="order-result-row">${words.map(w=>`<div class="order-correct-chip">${esc(w)}</div>`).join('')}</div>`;
-      }
-      if(q.explanation) resultHtml+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
-      // Make chips non-clickable
-      ansHtml=userOrder.map((w,wi)=>{
-        const corr=w===words[wi];
-        return `<div class="order-chip ${corr?'correct-chip':'wrong-chip'}">${esc(w)}</div>`;
-      }).join('');
-      poolHtml='';
-    }
-
-    body=`<div class="order-area">
-      ${!done||!showResult?`<div>
-        <div class="order-pool-label">📦 So'zlar:</div>
-        <div class="order-pool">${poolHtml||'<span style="color:var(--text3);font-size:.75rem;padding:.2rem">Hammasi tanlandi</span>'}</div>
-      </div>`:''}
-      <div>
-        <div class="order-answer-label">✏️ Sizning tartibingiz: ${done?'(to'liq)':userOrder.length+'/'+words.length}</div>
-        <div class="order-answer${done?' done':''}">${ansHtml||'<span style="color:var(--text3);font-size:.75rem;padding:.2rem">So'z bosing →</span>'}</div>
-      </div>
-      ${resultHtml}
-    </div>`;
-
-    document.getElementById('q-area').innerHTML=`<div class="q-card">
-      <div class="q-num">${curIdx+1} / ${questions.length}</div>
-      <div class="q-text">${esc(q.text||'So'zlarni to'g'ri tartibda joylashtiring:')}</div>
-      ${body}
-    </div>`;
-    return;
-  }
-
-  /* ─── TRANSLATE ─── */
-  if(q.type==='translate'){
-    body=q.options.map((o,i)=>{
-      let cls='tr-opt';
-      if(showResult){
-        if(i===q.correct)cls+=' correct disabled';
-        else if(i===ans&&i!==q.correct)cls+=' wrong disabled';
-        else cls+=' disabled';
-      } else if(ans===i){cls+=' sel';}
-      return `<div class="${cls}" onclick="selOpt(${i})">
-        <span class="tr-badge">${String.fromCharCode(65+i)}</span>${esc(o)}
-      </div>`;
-    }).join('');
-    if(showResult&&q.explanation) body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
-    document.getElementById('q-area').innerHTML=`<div class="q-card">
-      <div class="q-num">${curIdx+1} / ${questions.length}</div>
-      <div class="q-text" style="font-size:1.15rem;text-align:center;letter-spacing:.02em">${esc(q.text)}</div>
-      <div style="font-size:.72rem;color:var(--text3);text-align:center;margin-bottom:.7rem;margin-top:-.3rem">
-        To'g'ri tarjimani tanlang</div>
-      <div class="tr-opts">${body}</div>
-    </div>`;
-    return;
-  }
-
   if(q.type==='text'){
-    // To'g'ri javob explanation dan olamiz: "✅ To'g'ri javob: ..." yoki q.correctAnswer
-    const correctAns = q.correctAnswer || (q.explanation && /^✅ To.g.ri javob:\s*/i.test(q.explanation)
-      ? q.explanation.replace(/^✅ To.g.ri javob:\s*/i,'').split('|')[0].trim() : '');
-    
-    // Foydalanuvchi javobini tekshirish (katta-kichik harf va probel hisobga olinmaydi)
-    function normStr(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
-    const isAnswered = ans !== undefined && ans !== '';
-    const isCorrect  = isAnswered && correctAns && normStr(ans) === normStr(correctAns);
-    const isWrong    = isAnswered && correctAns && normStr(ans) !== normStr(correctAns);
-    
-    let taStyle = '';
-    if(showResult && isAnswered){
-      taStyle = isCorrect
-        ? 'border-color:#059669!important;background:rgba(5,150,105,.07)!important'
-        : 'border-color:#ef4444!important;background:rgba(239,68,68,.06)!important';
-    }
-    
-    body = `<textarea class="t-ans" id="ta" rows="3"
-      placeholder="Javobingizni yozing..."
-      style="${taStyle}"
-      ${showResult && isAnswered ? 'readonly' : ''}>${esc(ans||'')}</textarea>`;
-    
-    if(showResult && isAnswered){
-      if(isCorrect){
-        body += `<div class="expl" style="border-left-color:#059669;background:rgba(5,150,105,.07);color:#059669">
-          ✅ To'g'ri javob!
-        </div>`;
-      } else if(isWrong){
-        body += `<div class="expl" style="border-left-color:#ef4444;background:rgba(239,68,68,.06);color:#ef4444">
-          ❌ Xato. To'g'ri javob: <b>${esc(correctAns)}</b>
-        </div>`;
-      }
-    }
-    // Izoh har doim ko'rsatamiz (agar mavjud va to'g'ri javob emas bo'lsa)
-    const realExpl = (q.explanation||'').replace(/^✅ To.g.ri javob:[^|]*/i,'').replace(/^\s*\|\s*/,'').trim();
-    if(showResult && realExpl) body+=`<div class="expl">💡 ${esc(realExpl)}</div>`;
+    body=`<textarea class="t-ans" id="ta" rows="3" placeholder="Javobingizni yozing...">${esc(ans||'')}</textarea>`;
+    if(showResult&&q.explanation) body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
   } else {
     body=q.options.map((o,i)=>{
       let cls='opt';
@@ -551,54 +310,10 @@ function renderQ(){
   }
 }
 
-/* SELECT — multiple/truefalse/translate */
+/* SELECT */
 window.selOpt=(i)=>{
   if(answers[curIdx]!==undefined)return;
   answers[curIdx]=i;renderQ();
-};
-
-/* MATCH select */
-window.matchSel=(leftIdx, rightIdx)=>{
-  const q=questions[curIdx];
-  if(!q||q.type!=='match')return;
-  const pairs=q.pairs||[];
-  // Agar allaqachon ko'rsatilgan bo'lsa — ignore
-  if(typeof answers[curIdx]==='object'&&answers[curIdx]!==null){
-    const sel=answers[curIdx];
-    // Agar bu leftIdx uchun allaqachon tanlangan bo'lsa — o'zgartirishga ruxsat
-    if(Object.keys(sel).length===pairs.length) return; // done
-  }
-  const prev = typeof answers[curIdx]==='object'&&answers[curIdx]!==null ? {...answers[curIdx]} : {};
-  prev[leftIdx]=rightIdx;
-  answers[curIdx]=prev;
-  renderQ();
-};
-
-/* ORDER pick from pool */
-window.orderPick=(w)=>{
-  const q=questions[curIdx];
-  if(!q||q.type!=='order')return;
-  const words=(q.words||[]).filter(ww=>ww.trim());
-  const cur=Array.isArray(answers[curIdx])?[...answers[curIdx]]:[];
-  if(cur.length>=words.length)return;
-  cur.push(w);
-  answers[curIdx]=cur;
-  renderQ();
-};
-
-/* ORDER remove from answer */
-window.orderRemove=(w)=>{
-  const q=questions[curIdx];
-  if(!q||q.type!=='order')return;
-  const cur=Array.isArray(answers[curIdx])?[...answers[curIdx]]:[];
-  // showResult holatida o'chirish mumkin emas
-  const done=cur.length===(q.words||[]).filter(ww=>ww.trim()).length;
-  const showing=done&&(questions[curIdx]===q);
-  // Remove last occurrence
-  const idx=cur.lastIndexOf(w);
-  if(idx>=0){cur.splice(idx,1);}
-  answers[curIdx]=cur;
-  renderQ();
 };
 
 /* PREV / NEXT */
@@ -606,22 +321,6 @@ window.prev=()=>{if(curIdx>0){curIdx--;renderQ();}};
 window.next=()=>{
   const q=questions[curIdx];
   if(q.type==='text'){const ta=document.getElementById('ta');if(ta&&ta.value.trim())answers[curIdx]=ta.value.trim();}
-  // Match: tugab bo'lmaganlikni ogohlantir
-  if(q.type==='match'){
-    const pairs=q.pairs||[];
-    const sel=typeof answers[curIdx]==='object'&&answers[curIdx]!==null?answers[curIdx]:{};
-    if(Object.keys(sel).length<pairs.length){
-      if(!confirm('Barcha juftlar moslanmadi. Baribir davom etasizmi?'))return;
-    }
-  }
-  // Order: tugab bo'lmaganlikni ogohlantir
-  if(q.type==='order'){
-    const words=(q.words||[]).filter(w=>w.trim());
-    const cur=Array.isArray(answers[curIdx])?answers[curIdx]:[];
-    if(cur.length<words.length){
-      if(!confirm('Barcha so'zlar tartiblanmadi. Baribir davom etasizmi?'))return;
-    }
-  }
   if(curIdx<questions.length-1){curIdx++;renderQ();}
   else{if(confirm('Testni tugatmoqchimisiz?'))finish();}
 };
@@ -630,28 +329,9 @@ window.next=()=>{
 function finish(){
   clearInterval(timerInt);
   const elapsed=Math.floor((Date.now()-startTime)/1000);
-  function normStr(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
-  const allQ = questions.length || 1;
-  let correct = 0;
-  questions.forEach((q, i) => {
-    if(q.type === 'text'){
-      const correctAns = q.correctAnswer || (q.explanation && /^✅ To.g.ri javob:.*/i.test(q.explanation)
-        ? q.explanation.replace(/^✅ To.g.ri javob:\s*/i,'').split('|')[0].trim() : '');
-      if(correctAns && normStr(answers[i]) === normStr(correctAns)) correct++;
-    } else if(q.type === 'match'){
-      const pairs=q.pairs||[];
-      const sel=typeof answers[i]==='object'&&answers[i]!==null?answers[i]:{};
-      const allOk=pairs.every((_,li)=>sel[li]===li);
-      if(allOk) correct++;
-    } else if(q.type === 'order'){
-      const words=(q.words||[]).filter(w=>w.trim());
-      const ua=Array.isArray(answers[i])?answers[i]:[];
-      if(ua.join(' ')===words.join(' ')) correct++;
-    } else {
-      if(answers[i] === q.correct) correct++;
-    }
-  });
-  const tot = allQ;
+  const tot=questions.filter(q=>q.type!=='text').length||1;
+  let correct=0;
+  questions.forEach((q,i)=>{if(q.type!=='text'&&answers[i]===q.correct)correct++;});
   const score=Math.round(correct/tot*100);
   const pass=score>=(testData.passScore||60);
 
@@ -682,60 +362,11 @@ window.toggleReview=()=>{
   document.getElementById('review-wrap').style.display=reviewOpen?'block':'none';
   if(reviewOpen){
     document.getElementById('review-list').innerHTML=questions.map((q,i)=>{
-      /* ─── MATCH review ─── */
-      if(q.type==='match'){
-        const pairs=q.pairs||[];
-        const sel=typeof ua==='object'&&ua!==null?ua:{};
-        const allOk=pairs.length>0&&pairs.every((_,li)=>sel[li]===li);
-        let mHtml=`<div style="display:flex;flex-direction:column;gap:.38rem;margin-top:.4rem">`;
-        pairs.forEach((p,li)=>{
-          const chosenRi=sel[li];
-          const isOkM=chosenRi===li;
-          const chosen=chosenRi!==undefined?pairs[chosenRi]?.right:'?';
-          mHtml+=`<div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem">
-            <span style="font-weight:700;color:var(--acc);min-width:80px;text-align:right">${esc(p.left)}</span>
-            <span style="color:var(--text3)">→</span>
-            <span style="font-weight:600;color:${isOkM?'#059669':'#ef4444'}">${isOkM?'✅':'❌'} ${esc(chosen)}</span>
-            ${!isOkM?`<span style="color:#059669;font-size:.72rem">(To'g'risi: ${esc(p.right)})</span>`:''}
-          </div>`;
-        });
-        mHtml+='</div>';
-        return `<div class="rv-item ${allOk?'rv-c':'rv-w'}">
-          <div class="rv-q">${i+1}. ${esc(q.text||'Moslashtirish')}</div>
-          ${mHtml}
-          ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}
-        </div>`;
-      }
-
-      /* ─── ORDER review ─── */
-      if(q.type==='order'){
-        const words=(q.words||[]).filter(w=>w.trim());
-        const uaO=Array.isArray(ua)?ua:[];
-        const isOkO=uaO.join(' ')===words.join(' ');
-        return `<div class="rv-item ${isOkO?'rv-c':'rv-w'}">
-          <div class="rv-q">${i+1}. ${esc(q.text||'Tartiblash')}</div>
-          <div class="rv-a ${isOkO?'a-c':'a-w'}">
-            ${isOkO?'✅':'❌'} Sizning: ${esc(uaO.join(' ')||'(berilmadi)')}
-          </div>
-          ${!isOkO?`<div class="rv-a a-r">✅ To'g'ri: ${esc(words.join(' '))}</div>`:''}
-          ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}
-        </div>`;
-      }
-
       if(q.type==='text'){
-        function normStr2(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
-        const correctAns2 = q.correctAnswer || (q.explanation && /^✅ To.g.ri javob:\s*/i.test(q.explanation)
-          ? q.explanation.replace(/^✅ To.g.ri javob:\s*/i,'').split('|')[0].trim() : '');
-        const ua2 = answers[i];
-        const isC2 = ua2 && correctAns2 && normStr2(ua2) === normStr2(correctAns2);
-        const realExpl2 = (q.explanation||'').replace(/^✅ To.g.ri javob:[^|]*/i,'').replace(/^\s*\|\s*/,'').trim();
-        return `<div class="rv-item ${ua2?(isC2?'rv-c':'rv-w'):''}">
+        return `<div class="rv-item">
           <div class="rv-q">${i+1}. ${esc(q.text)}</div>
-          ${ua2
-            ? `<div class="rv-a ${isC2?'a-c':'a-w'}">${isC2?'✅':'❌'} Sizning: ${esc(ua2)}</div>`
-            : `<div class="rv-a a-w">⏭ O'tkazildi</div>`}
-          ${!isC2 && correctAns2 ? `<div class="rv-a a-r">✅ To'g'ri: ${esc(correctAns2)}</div>` : ''}
-          ${realExpl2 ? `<div class="expl">💡 ${esc(realExpl2)}</div>` : ''}
+          <div class="rv-a a-r">📝 Sizning: ${esc(answers[i]||'(berilmadi)')}</div>
+          ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}
         </div>`;
       }
       const ua=answers[i];const ok=ua===q.correct;
