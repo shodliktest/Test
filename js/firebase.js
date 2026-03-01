@@ -25,23 +25,8 @@ function goTo(page) { window.location.href = BASE_PATH + page; }
 /* ── Auth ── */
 const AuthHelpers = {
   getCurrentUser() {
-    // Telegram WebView va ba'zi brauzerlarda onAuthStateChanged hang bo'lishi mumkin
-    // 4 soniya timeout bilan — agar auth ishlamasa null qaytaramiz
-    return new Promise((res) => {
-      let done = false;
-      const timer = setTimeout(() => {
-        if (!done) { done = true; res(null); }
-      }, 4000);
-      const unsub = auth.onAuthStateChanged(user => {
-        if (!done) {
-          done = true;
-          clearTimeout(timer);
-          unsub();
-          res(user);
-        }
-      }, () => {
-        if (!done) { done = true; clearTimeout(timer); res(null); }
-      });
+    return new Promise((res, rej) => {
+      const u = auth.onAuthStateChanged(user => { u(); res(user); }, rej);
     });
   },
   async requireAuth(fallback = 'login.html') {
@@ -212,16 +197,13 @@ const DB = {
         const { id: _id, ...clean } = q;
         b.set(col.doc(), {
           ...clean,
-          order:         i + j,
-          text:          clean.text          || '',
-          type:          clean.type          || 'multiple',
-          options:       clean.options       || [],
-          correct:       clean.correct       ?? 0,
-          correctAnswer: clean.correctAnswer || '',
-          pairs:         clean.pairs         || [],
-          words:         clean.words         || [],
-          explanation:   clean.explanation   || '',
-          points:        clean.points        || 1,
+          order:       i + j,
+          text:        clean.text        || '',
+          type:        clean.type        || 'multiple',
+          options:     clean.options     || [],
+          correct:     clean.correct     ?? 0,
+          explanation: clean.explanation || '',
+          points:      clean.points      || 1,
         });
       });
       await b.commit();
