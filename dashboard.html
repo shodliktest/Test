@@ -880,7 +880,7 @@ window.doCode=async()=>{
     const shareDiv=document.getElementById('code-share');
     const shareVal=document.getElementById('code-share-val');
     if(shareDiv&&shareVal&&test.accessCode){
-      const link=location.origin+location.pathname.replace('dashboard.html','')+'test.html?code='+test.accessCode;
+      const link=location.origin+location.pathname.replace('dashboard.html','')+'test.html?id='+test.id;
       shareVal.textContent=link;
       shareDiv.style.display='block';
       window._lastShareCode=test.accessCode;
@@ -890,13 +890,20 @@ window.doCode=async()=>{
 };
 
 window.copyLinkFromModal=()=>{
-  const code=window._lastShareCode;
-  if(code)copyLink(code);
+  const link=document.getElementById('code-share-val')?.textContent;
+  if(link){
+    navigator.clipboard.writeText(link).then(()=>toast('🔗 Link nusxalandi!')).catch(()=>{
+      const ta=document.createElement('textarea');ta.value=link;document.body.appendChild(ta);
+      ta.select();document.execCommand('copy');ta.remove();toast('🔗 Link nusxalandi!');
+    });
+  }
 };
 
 /* ════ COPY CODE ════ */
-window.copyCode=(code, includeLink=false)=>{
-  const link=location.origin+location.pathname.replace('dashboard.html','')+'test.html?code='+code;
+const _testById={};
+window.copyCode=(code, id='', includeLink=false)=>{
+  const base=location.origin+location.pathname.replace('dashboard.html','')+'test.html';
+  const link=id?base+'?id='+id:base+'?code='+code;
   const text=includeLink?`Kod: ${code}\nLink: ${link}`:code;
   navigator.clipboard.writeText(text)
     .then(()=>toast(includeLink?'🔗 Kod va link nusxalandi!':'📋 Nusxalandi: '+code))
@@ -909,7 +916,7 @@ window.copyCode=(code, includeLink=false)=>{
 };
 
 /* Ko'd va link nusxa olish */
-window.copyLink=(code)=>copyCode(code,true);
+window.copyLink=(code,id='')=>copyCode(code,id,true);
 
 /* ════ DELETE MY TEST (bazadan, faqat yaratuvchi/admin) ════ */
 window.delTest=async(id)=>{
@@ -955,7 +962,7 @@ function renderMyExp(wrap, tests, isAdmin, uid){
             ${t.timeLimit?`<span>⏱ ${t.timeLimit}d</span>`:''}
             ${vtag}
           </div>
-          ${(owner&&t.accessCode)?`<span class="fli-code" onclick="copyLink('${t.accessCode}');event.stopPropagation()" style="margin-top:.2rem;display:inline-flex" title="Kod va link nusxalash">🔗 ${t.accessCode}</span>`:''}
+          ${(owner&&t.accessCode)?`<span class="fli-code" onclick="copyLink('${t.accessCode}','${t.id}');event.stopPropagation()" style="margin-top:.2rem;display:inline-flex" title="Kod va link nusxalash">🔗 ${t.accessCode}</span>`:''}
         </div>
         <div class="fli-r">
           <div class="fli-acts">
@@ -1027,7 +1034,7 @@ let CU=null;
         const codeRow=(owner&&t.accessCode)
           ?`<div class="mt-code-row">
               <span class="mt-code">${t.accessCode}</span>
-              <button class="mt-copy" onclick="copyLink('${t.accessCode}');event.stopPropagation()" title="Kod va link nusxalash">🔗</button>
+              <button class="mt-copy" onclick="copyLink('${t.accessCode}','${t.id}');event.stopPropagation()" title="Kod va link nusxalash">🔗</button>
             </div>`:'';
         const c=document.createElement('div');
         c.className='mt-card';

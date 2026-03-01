@@ -272,7 +272,7 @@
   <!-- ADD QUESTION -->
   <div class="add-area">
     <div class="add-area-label">➕ Savol turi tanlang</div>
-    <div class="add-q-grid">
+    <div class="add-q-grid" style="grid-template-columns:repeat(3,1fr)">
       <button class="aqbtn aqbtn-m" onclick="addQ('multiple')">
         <span style="font-size:1.3rem">⭕</span>Ko'p tanlov
       </button>
@@ -281,6 +281,15 @@
       </button>
       <button class="aqbtn aqbtn-x" onclick="addQ('text')">
         <span style="font-size:1.3rem">📝</span>Matn
+      </button>
+      <button class="aqbtn" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.07);color:#d97706" onclick="addQ('fill')">
+        <span style="font-size:1.3rem">✏️</span>Bo'sh to'ldirish
+      </button>
+      <button class="aqbtn" style="border-color:rgba(192,64,200,.3);background:rgba(192,64,200,.07);color:#a21caf" onclick="addQ('order')">
+        <span style="font-size:1.3rem">↕️</span>Tartib
+      </button>
+      <button class="aqbtn" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.07);color:#dc2626" onclick="addQ('sequence')">
+        <span style="font-size:1.3rem">🔢</span>Ketma-ketlik
       </button>
     </div>
   </div>
@@ -448,8 +457,12 @@ window.addQ = (type = 'multiple') => {
     type,
     text:        '',
     options:     type === 'multiple'  ? ['', '', '', ''] :
-                 type === 'truefalse' ? ["Ha", "Yo'q"] : [],
+                 type === 'truefalse' ? ["Ha", "Yo'q"] :
+                 type === 'order'     ? ['', '', '', ''] :
+                 type === 'sequence'  ? ['', '', '', ''] : [],
     correct:     0,
+    correctOrder: [],
+    blanks:      [],
     explanation: '',
     points:      1,
   };
@@ -473,13 +486,13 @@ function renderCard(q, idx) {
   card.className = 'q-card';
   card.dataset.id = String(q._id);
 
-  const typeLabels = { multiple: 'Ko\'p tanlov', truefalse: 'Ha/Yo\'q', text: 'Matn' };
+  const typeLabels = { multiple: 'Ko\'p tanlov', truefalse: 'Ha/Yo\'q', text: 'Matn', fill: 'Bo\'sh to\'ldirish', order: 'Tartib', sequence: 'Ketma-ketlik' };
 
   card.innerHTML = `
     <div class="q-header">
       <div class="q-num">${idx + 1}</div>
       <div class="q-type-tabs">
-        ${['multiple', 'truefalse', 'text'].map(t =>
+        ${['multiple', 'truefalse', 'text', 'fill', 'order', 'sequence'].map(t =>
           `<button class="qtt ${q.type === t ? 'active' : ''}" onclick="chType('${q._id}','${t}')">${typeLabels[t]}</button>`
         ).join('')}
       </div>
@@ -537,6 +550,46 @@ function buildOpts(q) {
     return `<p style="font-size:.78rem;color:var(--text-3);font-style:italic;padding:.3rem 0">
       Foydalanuvchi o'z javobini yozadi (erkin matn)</p>`;
   }
+
+  if (q.type === 'fill') {
+    return `<div style="font-size:.82rem;color:var(--text-3);margin-bottom:.5rem">
+      ⬇️ Savol matnida "___" (uch pastki chiziq) yozing. Har bir ___ uchun to'g'ri javobni quyida yozing:</div>
+      <div id="blanks-${q._id}">
+        ${(q.blanks||[]).map((b,i)=>`
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
+            <span style="font-size:.78rem;font-weight:700;color:var(--accent);min-width:24px">${i+1}.</span>
+            <input type="text" class="form-input fill-blank" data-id="${q._id}" data-idx="${i}"
+              value="${escHtml(b)}" placeholder="To'g'ri javob ${i+1}" style="flex:1"
+              oninput="updBlank(this)"/>
+            <button class="btn btn-ghost btn-sm" onclick="rmBlank('${q._id}',${i})" style="color:var(--text-3)">✕</button>
+          </div>`).join('')}
+      </div>
+      <button class="add-opt-btn" onclick="addBlank('${q._id}')">+ Bo'sh joy qo'shish</button>
+      <div style="font-size:.72rem;color:var(--text-3);margin-top:.35rem">
+        💡 Savol matniga ___ yozing, keyin bu yerda to'g'ri javobni yozing</div>`;
+  }
+
+  if (q.type === 'order' || q.type === 'sequence') {
+    const label = q.type === 'order' ? 'Drag-drop tartib' : 'Ketma-ketlik';
+    return `<div style="font-size:.82rem;color:var(--text-3);margin-bottom:.5rem">
+      ↕️ Variantlarni to'g'ri tartibda yozing (yuqoridan pastga):</div>
+      <div id="opts-order-${q._id}">
+        ${(q.options||[]).map((o,i)=>`
+          <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem">
+            <span style="font-size:.78rem;font-weight:800;color:var(--accent);min-width:24px;font-family:'Unbounded',sans-serif">${i+1}</span>
+            <input type="text" class="form-input order-opt" data-id="${q._id}" data-idx="${i}"
+              value="${escHtml(o)}" placeholder="${label} elementi ${i+1}" style="flex:1"
+              oninput="updOrderOpt(this)"/>
+            ${(q.options||[]).length > 2
+              ? `<button class="btn btn-ghost btn-sm" onclick="rmOrderOpt('${q._id}',${i})" style="color:var(--text-3)">✕</button>`
+              : ''}
+          </div>`).join('')}
+      </div>
+      <button class="add-opt-btn" onclick="addOrderOpt('${q._id}')">+ Element qo'shish</button>
+      <div style="font-size:.72rem;color:var(--text-3);margin-top:.35rem">
+        ☝️ Bu tartib to'g'ri tartib deb saqlanadi</div>`;
+  }
+
   const opts = q.options.map((o, i) => `
     <div class="opt-row">
       <input type="radio" name="r-${q._id}" class="opt-radio"
@@ -570,13 +623,62 @@ window.toggleExpl = (btn, id) => {
   if (arrow) arrow.textContent = open ? '▲' : '▼';
 };
 
+/* Fill in blank handlers */
+window.addBlank = (id) => {
+  const q = findQ(id);
+  if (!q) return;
+  if (!q.blanks) q.blanks = [];
+  q.blanks.push('');
+  renderAll();
+};
+window.rmBlank = (id, idx) => {
+  const q = findQ(id);
+  if (!q || !q.blanks) return;
+  q.blanks.splice(idx, 1);
+  renderAll();
+};
+window.updBlank = (inp) => {
+  const q = findQ(inp.dataset.id);
+  if (!q) return;
+  if (!q.blanks) q.blanks = [];
+  q.blanks[+inp.dataset.idx] = inp.value;
+};
+
+/* Order / sequence handlers */
+window.addOrderOpt = (id) => {
+  const q = findQ(id);
+  if (!q) return;
+  if (!q.options) q.options = [];
+  q.options.push('');
+  q.correctOrder = [...q.options];
+  renderAll();
+};
+window.rmOrderOpt = (id, idx) => {
+  const q = findQ(id);
+  if (!q || !q.options) return;
+  q.options.splice(idx, 1);
+  q.correctOrder = [...q.options];
+  renderAll();
+};
+window.updOrderOpt = (inp) => {
+  const q = findQ(inp.dataset.id);
+  if (!q) return;
+  if (!q.options) q.options = [];
+  q.options[+inp.dataset.idx] = inp.value;
+  q.correctOrder = [...q.options];
+};
+
 window.chType = (id, type) => {
   const q = findQ(id);
   if (!q) return;
   q.type    = type;
   q.options = type === 'multiple'  ? ['', '', '', ''] :
-              type === 'truefalse' ? ["Ha", "Yo'q"] : [];
+              type === 'truefalse' ? ["Ha", "Yo'q"] :
+              type === 'order'     ? ['', '', '', ''] :
+              type === 'sequence'  ? ['', '', '', ''] : [];
   q.correct = 0;
+  q.correctOrder = [];
+  q.blanks = [];
   renderAll();
 };
 
@@ -637,8 +739,19 @@ async function doSave() {
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
     if (!q.text.trim()) { showAlert(`${i + 1}-savol matni bo'sh!`, 'error'); return; }
-    if (q.type !== 'text' && q.options.some(o => !o.trim())) {
-      showAlert(`${i + 1}-savoldagi variant bo'sh!`, 'error'); return;
+    if (q.type === 'multiple' || q.type === 'truefalse') {
+      if (q.options.some(o => !o.trim())) {
+        showAlert(`${i + 1}-savoldagi variant bo'sh!`, 'error'); return;
+      }
+    }
+    if (q.type === 'fill' && (!q.blanks || q.blanks.length === 0)) {
+      showAlert(`${i + 1}-savol: Bo'sh joy va to'g'ri javob qo'shing!`, 'error'); return;
+    }
+    if ((q.type === 'order' || q.type === 'sequence') && q.options.length < 2) {
+      showAlert(`${i + 1}-savol: Kamida 2 ta element kerak!`, 'error'); return;
+    }
+    if ((q.type === 'order' || q.type === 'sequence') && q.options.some(o => !o.trim())) {
+      showAlert(`${i + 1}-savoldagi element bo'sh!`, 'error'); return;
     }
   }
 
@@ -703,7 +816,12 @@ async function loadEdit(id) {
     });
     showSelSubj(selectedSubj);
 
-    questions = qs.map((q, i) => ({ ...q, _id: q.id || Date.now() + i }));
+    questions = qs.map((q, i) => ({ 
+      ...q, 
+      _id: q.id || Date.now() + i,
+      blanks: q.blanks || [],
+      correctOrder: q.correctOrder || (q.type === 'order' || q.type === 'sequence' ? [...(q.options||[])] : [])
+    }));
     renderAll();
   } catch (e) { showAlert('❌ ' + e.message, 'error'); }
 }
