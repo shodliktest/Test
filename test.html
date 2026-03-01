@@ -12,8 +12,6 @@
 [data-theme=dark]{--bg:#0d0820;--card:#140d28;--text:#e8e0ff;--text2:#9ca3af;--text3:#6b7280;
   --border:rgba(108,63,232,.2)}
 body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(--bg);color:var(--text)}
-
-/* NAV */
 .nav{position:fixed;top:0;left:0;right:0;height:52px;z-index:500;
   display:flex;align-items:center;justify-content:space-between;padding:0 1rem;background:var(--bg)}
 .logo{font-family:'Unbounded',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;
@@ -26,43 +24,26 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   background:rgba(108,63,232,.08);border-radius:8px;padding:.28rem .6rem}
 .timer.warn{color:#ef4444;background:rgba(239,68,68,.1);animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.6}}
-
-/* PAGE */
 .page{padding:62px 1rem 3rem;max-width:640px;margin:0 auto}
-
-/* LOADING */
 .loading{text-align:center;padding:3rem 1rem}
 .sp{width:32px;height:32px;border:3px solid rgba(108,63,232,.15);border-top-color:var(--acc);
   border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem}
 @keyframes spin{to{transform:rotate(360deg)}}
-.err-card{background:var(--card);border-radius:18px;padding:2rem;text-align:center;
-  border:1px solid var(--border)}
+.err-card{background:var(--card);border-radius:18px;padding:2rem;text-align:center;border:1px solid var(--border)}
 .err-card h3{font-size:1rem;font-weight:800;margin-bottom:.5rem}
 .err-card p{font-size:.8rem;color:var(--text2);margin-bottom:1rem}
 .err-btn{padding:.65rem 1.5rem;border-radius:11px;border:none;cursor:pointer;
-  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
-  font-weight:700;font-size:.84rem;font-family:inherit}
-
-/* TEST HEADER */
-.t-hdr{background:var(--card);border-radius:16px;padding:.9rem;margin-bottom:.85rem;
-  border:1px solid var(--border)}
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font-weight:700;font-size:.84rem;font-family:inherit}
+.t-hdr{background:var(--card);border-radius:16px;padding:.9rem;margin-bottom:.85rem;border:1px solid var(--border)}
 .t-title{font-family:'Unbounded',sans-serif;font-size:.95rem;font-weight:900;margin-bottom:.35rem}
 .chips{display:flex;gap:.3rem;flex-wrap:wrap}
 .ch{display:inline-flex;align-items:center;padding:.15rem .42rem;border-radius:99px;
-  font-size:.64rem;font-weight:600;background:rgba(108,63,232,.07);color:var(--acc);
-  border:1px solid rgba(108,63,232,.1)}
-
-/* PROGRESS */
+  font-size:.64rem;font-weight:600;background:rgba(108,63,232,.07);color:var(--acc);border:1px solid rgba(108,63,232,.1)}
 .prog-wrap{background:rgba(108,63,232,.1);border-radius:99px;height:5px;margin-bottom:.85rem;overflow:hidden}
 .prog-bar{height:100%;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:99px;transition:width .3s}
-
-/* QUESTION */
-.q-card{background:var(--card);border-radius:16px;padding:1.1rem;margin-bottom:.75rem;
-  border:1px solid var(--border)}
+.q-card{background:var(--card);border-radius:16px;padding:1.1rem;margin-bottom:.75rem;border:1px solid var(--border)}
 .q-num{font-size:.7rem;color:var(--text3);font-weight:700;margin-bottom:.42rem}
 .q-text{font-size:.92rem;font-weight:700;line-height:1.5;margin-bottom:.85rem;color:var(--text)}
-
-/* OPTIONS */
 .opt{display:flex;align-items:center;gap:.7rem;padding:.78rem .9rem;
   border-radius:12px;border:2px solid var(--border);background:var(--card);
   cursor:pointer;transition:all .22s;margin-bottom:.45rem;text-align:left;
@@ -72,78 +53,60 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 .opt.correct{border-color:#059669!important;background:rgba(5,150,105,.08)!important;color:#059669!important}
 .opt.wrong{border-color:#ef4444!important;background:rgba(239,68,68,.07)!important;color:#ef4444!important}
 .opt-lt{width:26px;height:26px;border-radius:50%;border:2px solid currentColor;
-  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;
-  flex-shrink:0;transition:all .22s}
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;flex-shrink:0}
 .opt.sel .opt-lt,.opt.correct .opt-lt,.opt.wrong .opt-lt{background:currentColor;color:#fff}
-
-/* TEXT ANSWER */
-.t-ans{width:100%;padding:.7rem .85rem;border-radius:11px;
-  border:2px solid var(--border);background:var(--card);
-  font-family:inherit;font-size:.86rem;color:var(--text);outline:none;
+.t-ans{width:100%;padding:.7rem .85rem;border-radius:11px;border:2px solid var(--border);
+  background:var(--card);font-family:inherit;font-size:.86rem;color:var(--text);outline:none;
   transition:border-color .2s;resize:vertical;min-height:80px}
 .t-ans:focus{border-color:var(--acc)}
-
-/* EXPLANATION */
 .expl{margin-top:.6rem;padding:.65rem .8rem;border-radius:10px;
   background:rgba(108,63,232,.06);border-left:3px solid var(--acc);
   font-size:.78rem;color:var(--text2);line-height:1.55}
 [data-theme=dark] .expl{color:#c4b5fd;background:rgba(108,63,232,.14)}
-
-/* ─── MATCH type ─── */
-.match-wrap{display:flex;flex-direction:column;gap:.55rem}
-.match-row{display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:center}
-.match-left{padding:.6rem .8rem;border-radius:10px;border:2px solid var(--border);
-  background:rgba(108,63,232,.05);font-size:.84rem;font-weight:700;color:var(--acc);text-align:center}
-.match-right-wrap{display:flex;flex-direction:column;gap:.32rem}
-.match-option{padding:.52rem .7rem;border-radius:9px;border:2px solid var(--border);
-  background:var(--card);font-size:.8rem;font-weight:600;cursor:pointer;
-  transition:all .2s;color:var(--text);text-align:center;user-select:none}
-.match-option:hover:not(.disabled){border-color:rgba(108,63,232,.4);background:rgba(108,63,232,.06);transform:translateX(2px)}
-.match-option.selected{border-color:var(--acc);background:rgba(108,63,232,.1);color:var(--acc)}
-.match-option.correct{border-color:#059669!important;background:rgba(5,150,105,.08)!important;color:#059669!important}
-.match-option.wrong{border-color:#ef4444!important;background:rgba(239,68,68,.07)!important;color:#ef4444!important}
-.match-option.disabled{cursor:default}
-.match-conn{font-size:1.1rem;text-align:center;color:var(--text3)}
-
-/* ─── ORDER type ─── */
-.order-area{display:flex;flex-direction:column;gap:.75rem}
-.order-pool-label,.order-answer-label{font-size:.72rem;font-weight:700;color:var(--text3);margin-bottom:.35rem}
-.order-pool{display:flex;flex-wrap:wrap;gap:.42rem;min-height:42px;
-  padding:.5rem;border-radius:12px;background:rgba(108,63,232,.04);
-  border:2px dashed rgba(108,63,232,.18)}
-.order-answer{display:flex;flex-wrap:wrap;gap:.42rem;min-height:48px;
-  padding:.5rem;border-radius:12px;background:rgba(5,150,105,.04);
-  border:2px dashed rgba(5,150,105,.25)}
-.order-answer.done{border-color:#059669}
-.order-chip{padding:.45rem .88rem;border-radius:9px;font-size:.84rem;font-weight:700;
-  cursor:pointer;transition:all .2s;user-select:none;border:2px solid;white-space:nowrap}
-.order-chip.pool-chip{background:var(--card);border-color:rgba(108,63,232,.28);color:var(--acc)}
-.order-chip.pool-chip:hover{background:rgba(108,63,232,.1);transform:translateY(-2px);box-shadow:0 3px 10px rgba(108,63,232,.2)}
-.order-chip.ans-chip{background:rgba(5,150,105,.08);border-color:rgba(5,150,105,.35);color:#059669}
-.order-chip.ans-chip:hover{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.35);color:#ef4444}
-.order-chip.correct-chip{background:rgba(5,150,105,.12)!important;border-color:#059669!important;color:#059669!important;cursor:default}
-.order-chip.wrong-chip{background:rgba(239,68,68,.09)!important;border-color:#ef4444!important;color:#ef4444!important;cursor:default}
-.order-result-row{display:flex;flex-wrap:wrap;gap:.38rem;margin-top:.35rem;align-items:center}
-.order-correct-label{font-size:.72rem;font-weight:700;color:#059669;width:100%;margin-bottom:.2rem}
-.order-correct-chip{padding:.38rem .72rem;border-radius:9px;font-size:.82rem;font-weight:700;
-  background:rgba(5,150,105,.1);border:2px solid #059669;color:#059669}
-
-/* ─── TRANSLATE type ─── */
-.tr-opts{display:flex;flex-direction:column;gap:.42rem}
-.tr-opt{padding:.82rem 1rem;border-radius:12px;border:2px solid var(--border);
-  background:var(--card);font-size:.88rem;font-weight:600;cursor:pointer;
-  transition:all .22s;color:var(--text);display:flex;align-items:center;gap:.65rem}
-.tr-opt:hover:not(.disabled){border-color:rgba(108,63,232,.35);background:rgba(108,63,232,.04)}
+.tr-opt{display:flex;align-items:center;gap:.65rem;padding:.82rem 1rem;
+  border-radius:12px;border:2px solid var(--border);background:var(--card);
+  font-size:.88rem;font-weight:600;cursor:pointer;transition:all .22s;
+  color:var(--text);margin-bottom:.45rem;width:100%;font-family:inherit;text-align:left}
+.tr-opt:hover:not(.tdis){border-color:rgba(108,63,232,.35);background:rgba(108,63,232,.04)}
 .tr-opt.sel{border-color:var(--acc);background:rgba(108,63,232,.08);color:var(--acc)}
 .tr-opt.correct{border-color:#059669!important;background:rgba(5,150,105,.08)!important;color:#059669!important}
 .tr-opt.wrong{border-color:#ef4444!important;background:rgba(239,68,68,.07)!important;color:#ef4444!important}
-.tr-opt.disabled{cursor:default}
-.tr-badge{width:28px;height:28px;border-radius:50%;border:2px solid currentColor;
-  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;
-  flex-shrink:0;transition:all .22s}
+.tr-opt.tdis{cursor:default}
+.tr-badge{width:28px;height:28px;border-radius:50%;border:2px solid currentColor;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800}
 .tr-opt.sel .tr-badge,.tr-opt.correct .tr-badge,.tr-opt.wrong .tr-badge{background:currentColor;color:#fff}
-
-/* NAV BUTTONS */
+.match-area{display:flex;flex-direction:column;gap:.55rem}
+.match-row{display:grid;grid-template-columns:1fr 26px 1fr;gap:.35rem;align-items:start}
+.mleft{padding:.55rem .7rem;border-radius:10px;border:2px solid rgba(108,63,232,.28);
+  background:rgba(108,63,232,.06);font-size:.82rem;font-weight:700;color:var(--acc);
+  text-align:center;min-height:38px;display:flex;align-items:center;justify-content:center}
+.marrow{text-align:center;color:var(--text3);padding-top:.55rem;font-size:.9rem}
+.mright-col{display:flex;flex-direction:column;gap:.28rem}
+.mchip{padding:.48rem .65rem;border-radius:9px;border:2px solid var(--border);
+  background:var(--card);font-size:.79rem;font-weight:600;cursor:pointer;
+  transition:all .2s;color:var(--text);text-align:center;user-select:none}
+.mchip:hover:not(.mdis){border-color:rgba(108,63,232,.4);background:rgba(108,63,232,.06)}
+.mchip.msel{border-color:var(--acc);background:rgba(108,63,232,.1);color:var(--acc)}
+.mchip.mok{border-color:#059669!important;background:rgba(5,150,105,.08)!important;color:#059669!important;cursor:default}
+.mchip.merr{border-color:#ef4444!important;background:rgba(239,68,68,.07)!important;color:#ef4444!important;cursor:default}
+.mchip.mdis{cursor:default;opacity:.55}
+.order-area{display:flex;flex-direction:column;gap:.6rem}
+.olabel{font-size:.72rem;font-weight:700;color:var(--text3);margin-bottom:.28rem}
+.opool{display:flex;flex-wrap:wrap;gap:.38rem;min-height:44px;padding:.45rem;
+  border-radius:11px;background:rgba(108,63,232,.04);border:2px dashed rgba(108,63,232,.2)}
+.oans{display:flex;flex-wrap:wrap;gap:.38rem;min-height:48px;padding:.45rem;
+  border-radius:11px;background:rgba(5,150,105,.04);border:2px dashed rgba(5,150,105,.28)}
+.oans.ofull{border-color:#059669}
+.ochip{padding:.42rem .82rem;border-radius:9px;font-size:.83rem;font-weight:700;
+  cursor:pointer;transition:all .2s;user-select:none;border:2px solid;white-space:nowrap}
+.ochip.opool{background:var(--card);border-color:rgba(108,63,232,.28);color:var(--acc)}
+.ochip.opool:hover{background:rgba(108,63,232,.1);transform:translateY(-2px)}
+.ochip.oa{background:rgba(5,150,105,.08);border-color:rgba(5,150,105,.35);color:#059669}
+.ochip.oa:hover{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.35);color:#ef4444}
+.ochip.ook{background:rgba(5,150,105,.12)!important;border-color:#059669!important;color:#059669!important;cursor:default}
+.ochip.oerr{background:rgba(239,68,68,.09)!important;border-color:#ef4444!important;color:#ef4444!important;cursor:default}
+.ochip.oref{background:rgba(5,150,105,.08);border-color:#059669;color:#059669;cursor:default}
+.ohint{color:var(--text3);font-size:.73rem;padding:.25rem .15rem;width:100%}
 .btns{display:flex;gap:.55rem;justify-content:flex-end;margin-top:.85rem}
 .nbtn{padding:.7rem 1.25rem;border-radius:11px;font-size:.83rem;font-weight:700;
   cursor:pointer;border:none;font-family:inherit;transition:all .2s}
@@ -151,11 +114,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 .nbtn-s:hover{border-color:rgba(108,63,232,.4);color:var(--acc)}
 .nbtn-p{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
 .nbtn-p:hover{transform:translateY(-1px);box-shadow:0 5px 16px rgba(108,63,232,.32)}
-.nbtn-p:disabled{opacity:.5;cursor:not-allowed;transform:none}
-
-/* RESULT */
-.res-card{background:var(--card);border-radius:20px;padding:1.5rem;text-align:center;
-  border:1px solid var(--border)}
+.res-card{background:var(--card);border-radius:20px;padding:1.5rem;text-align:center;border:1px solid var(--border)}
 .sc-circle{width:110px;height:110px;border-radius:50%;margin:0 auto 1rem;
   display:flex;flex-direction:column;align-items:center;justify-content:center}
 .sc-pass{border:4px solid #059669;background:rgba(5,150,105,.08);color:#059669}
@@ -174,21 +133,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
 .rbtn-s{background:var(--card);color:var(--text2);border:1.5px solid var(--border)}
 .rbtn-s:hover{border-color:rgba(108,63,232,.4);color:var(--acc)}
 .rbtn-p{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
-
-/* REVIEW */
 .rv-item{background:var(--card);border:1px solid var(--border);border-radius:13px;
   padding:.9rem;margin-bottom:.6rem;text-align:left}
-.rv-c{border-left:3px solid #059669}
-.rv-w{border-left:3px solid #ef4444}
+.rv-c{border-left:3px solid #059669}.rv-w{border-left:3px solid #ef4444}
 .rv-q{font-size:.86rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
 .rv-a{font-size:.78rem;padding:.3rem .6rem;border-radius:8px;margin-bottom:.25rem;font-weight:600}
 .a-c{background:rgba(5,150,105,.1);color:#059669}
 .a-w{background:rgba(239,68,68,.1);color:#ef4444}
 .a-r{background:rgba(108,63,232,.08);color:var(--acc)}
+.txt-ans{background:rgba(108,63,232,.05);border-radius:10px;padding:.6rem .75rem;
+  border:2px solid rgba(108,63,232,.15);font-size:.84rem;font-weight:600;margin-bottom:.3rem}
 </style>
 </head>
 <body>
-
 <nav class="nav">
   <div class="logo" onclick="goTo('index.html')">TestPro</div>
   <div style="display:flex;align-items:center;gap:.45rem">
@@ -196,7 +153,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
     <button class="ibtn" id="tbtn">🌙</button>
   </div>
 </nav>
-
 <div class="page">
   <div id="scr-load">
     <div class="loading"><div class="sp"></div><div style="font-size:.82rem;color:var(--text2)">Yuklanmoqda...</div></div>
@@ -215,20 +171,17 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
   </div>
   <div id="scr-result" style="display:none">
     <div class="res-card">
-      <div class="sc-circle" id="sc-circle">
-        <div class="sc-pct" id="sc-pct">0%</div>
-        <div class="sc-lbl" id="sc-lbl">NATIJA</div>
-      </div>
+      <div class="sc-circle" id="sc-circle"><div class="sc-pct" id="sc-pct">0%</div><div class="sc-lbl" id="sc-lbl">NATIJA</div></div>
       <div class="res-title" id="res-title"></div>
       <div class="res-sub" id="res-sub"></div>
       <div class="res-stats">
         <div class="rs"><div class="rsv" id="r-c">0</div><div class="rsl">To'g'ri</div></div>
-        <div class="rs"><div class="rsv" id="r-w">0</div><div class="rsl">Noto'g'ri</div></div>
+        <div class="rs"><div class="rsv" id="r-w">0</div><div class="rsl">Xato</div></div>
         <div class="rs"><div class="rsv" id="r-t">0:00</div><div class="rsl">Vaqt</div></div>
       </div>
       <div class="res-btns">
         <button class="rbtn rbtn-s" onclick="goTo('dashboard.html')">🏠 Dashboard</button>
-        <button class="rbtn rbtn-p" onclick="toggleReview()">📋 Ko'rish</button>
+        <button class="rbtn rbtn-p" onclick="toggleReview()">📋 Tahlil</button>
       </div>
       <div id="review-wrap" style="display:none;text-align:left;margin-top:.75rem">
         <div style="font-size:.86rem;font-weight:800;margin-bottom:.75rem">📊 Javoblar tahlili:</div>
@@ -237,13 +190,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;background:var(
     </div>
   </div>
 </div>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="js/firebase.js"></script>
 <script>
-/* Theme */
 const TH={
   get(){return localStorage.getItem('tp_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')},
   set(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('tp_theme',t);
@@ -253,421 +204,284 @@ const TH={
 TH.set(TH.get());
 document.getElementById('tbtn').onclick=()=>TH.toggle();
 
-/* State */
-let testData=null,questions=[],answers={},curIdx=0,startTime=Date.now(),timerInt=null,CU=null;
+/* Global normStr */
+function normStr(s){return String(s||'').trim().toLowerCase().replace(/\s+/g,' ');}
+
 const ICON={english:'🇬🇧',arabic:'🕌',russian:'🇷🇺',turkish:'🇹🇷',math:'🧮',it:'💻',science:'🔬',religion:'📖',other:'📚'};
+let testData=null,questions=[],answers={},curIdx=0,startTime=Date.now(),timerInt=null,CU=null;
 
 function showErr(title,msg){
   document.getElementById('scr-load').innerHTML=`<div class="err-card" style="margin-top:1rem">
     <div style="font-size:2rem;margin-bottom:.5rem">❌</div>
-    <h3>${title}</h3>
-    <p>${msg||''}</p>
+    <h3>${title}</h3><p>${msg||''}</p>
     <button class="err-btn" onclick="goTo('index.html')">← Orqaga</button>
   </div>`;
 }
 
-/* INIT */
 (async()=>{
-  CU=await AuthHelpers.getCurrentUser().catch(()=>null);
-  const params=new URLSearchParams(location.search);
-  let id=params.get('id');
-  const code=params.get('code');
-
-  // Agar ?code=XXXXXX bo'lsa, avval test topamiz
-  if(!id && code){
-    try{
+  try{
+    // Timeout bilan auth — Telegram WebView da hang bo'lmasin
+    CU = await Promise.race([
+      AuthHelpers.getCurrentUser().catch(()=>null),
+      new Promise(res=>setTimeout(()=>res(null), 3000))
+    ]);
+    const params=new URLSearchParams(location.search);
+    let id=params.get('id');
+    const code=params.get('code');
+    if(!id&&code){
       const t=await DB.getTestByCode(code.toUpperCase());
-      if(!t){showErr('Kod topilmadi','Bu kod bilan test yo\'q');return;}
+      if(!t){showErr('Kod topilmadi','Bu kod bilan test mavjud emas');return;}
       id=t.id;
-      // Unlock qilamiz
       const ul=JSON.parse(localStorage.getItem('tp_unlocked')||'[]');
       if(!ul.includes(id)){ul.push(id);localStorage.setItem('tp_unlocked',JSON.stringify(ul));}
-    }catch(e){showErr('Xatolik',e.message);return;}
-  }
-
-  if(!id){showErr('Test topilmadi','URL da ?id= yoki ?code= bo\'lishi kerak');return;}
-
-  try{
+    }
+    if(!id){showErr('Test topilmadi',"URL da ?id= yoki ?code= bo'lishi kerak");return;}
     testData=await DB.getTest(id);
-    if(!testData){showErr('Test topilmadi','Bu test mavjud emas yoki o\'chirilgan');return;}
-
-    /* Access control */
+    if(!testData){showErr('Test topilmadi',"Bu test mavjud emas yoki o'chirilgan");return;}
     if(testData.visibility==='private'){
       const unlocked=JSON.parse(localStorage.getItem('tp_unlocked')||'[]');
       const isOwner=CU&&CU.uid===testData.authorId;
       if(!isOwner&&!unlocked.includes(id)){
         let isAdmin=false;
         if(CU){const p=await DB.getUser(CU.uid).catch(()=>null);isAdmin=p?.role==='admin';}
-        if(!isAdmin){showErr('Ruxsat yo\'q','Bu test shaxsiy. Kod orqali kiring.');return;}
+        if(!isAdmin){showErr("Ruxsat yo'q","Bu test shaxsiy. Kod orqali kiring.");return;}
       }
     }
-
     let qs=await DB.getQuestions(id);
-    if(!qs.length){showErr('Savollar yo\'q','Bu testda savol qo\'shilmagan');return;}
+    if(!qs.length){showErr("Savollar yo'q","Bu testda savol qo'shilmagan");return;}
     if(testData.shuffleQuestions)qs=qs.sort(()=>Math.random()-.5);
-    questions=qs;
-
-    /* Timer */
+    questions=qs;startTime=Date.now();
     if(testData.timeLimit>0){
       let rem=testData.timeLimit*60;
       const tw=document.getElementById('timer-wrap');
-      const upd=()=>{
-        const w=document.createElement('div');w.className='timer'+(rem<60?' warn':'');
-        w.textContent=fmtTime(rem);tw.replaceChildren(w);
-      };
-      upd();
-      timerInt=setInterval(()=>{rem--;upd();if(rem<=0){clearInterval(timerInt);finish();}},1000);
+      const tick=()=>{const d=document.createElement('div');d.className='timer'+(rem<60?' warn':'');d.textContent=fmtTime(rem);tw.replaceChildren(d);};
+      tick();timerInt=setInterval(()=>{rem--;tick();if(rem<=0){clearInterval(timerInt);finish();}},1000);
     }
-
-    /* Show */
     document.getElementById('scr-load').style.display='none';
     document.getElementById('scr-test').style.display='block';
     const sub=getSubject(testData.subject||'other');
     const icon=ICON[testData.subject||'other']||'📚';
     document.getElementById('t-title').textContent=testData.title||'Test';
-    document.getElementById('t-chips').innerHTML=`
-      <span class="ch">${icon} ${sub.label}</span>
-      <span class="ch">📝 ${questions.length} savol</span>
-      ${testData.timeLimit?`<span class="ch">⏱ ${testData.timeLimit} daq</span>`:''}`;
+    document.getElementById('t-chips').innerHTML=
+      `<span class="ch">${icon} ${sub.label}</span><span class="ch">📝 ${questions.length} savol</span>`+
+      (testData.timeLimit?`<span class="ch">⏱ ${testData.timeLimit} daq</span>`:'');
     renderQ();
-  }catch(e){
-    console.error('Test load:',e);
-    showErr('Xatolik',e.message);
-  }
+  }catch(e){console.error('Test load:',e);showErr('Xatolik',e.message||"Noma'lum xatolik");}
 })();
 
-/* RENDER QUESTION */
 function renderQ(){
-  const q=questions[curIdx];
-  const prog=(curIdx+1)/questions.length*100;
-  document.getElementById('pbar').style.width=prog+'%';
+  const q=questions[curIdx];if(!q)return;
+  document.getElementById('pbar').style.width=((curIdx+1)/questions.length*100)+'%';
   document.getElementById('prev-btn').disabled=curIdx===0;
-  const last=curIdx===questions.length-1;
-  document.getElementById('next-btn').textContent=last?'✅ Tugatish':'Keyingi →';
-
+  document.getElementById('next-btn').textContent=curIdx===questions.length-1?'✅ Tugatish':'Keyingi →';
   const ans=answers[curIdx];
-  const showResult=ans!==undefined&&testData.showResult!==false;
+  const showR=ans!==undefined&&testData.showResult!==false;
 
-  let body='';
-  /* ─── MATCH ─── */
-  if(q.type==='match'){
-    const pairs=(q.pairs||[]);
-    // answers[curIdx] = { 0: rightIdx, 1: rightIdx, ... }
-    const sel = typeof ans==='object'&&ans!==null&&!Array.isArray(ans) ? ans : {};
-    const done = Object.keys(sel).length===pairs.length && pairs.every((_,i)=>sel[i]!==undefined);
+  /* MULTIPLE / TRUEFALSE */
+  if(!q.type||q.type==='multiple'||q.type==='truefalse'){
+    let body=(q.options||[]).map((o,i)=>{
+      let c='opt';
+      if(showR){if(i===q.correct)c+=' correct';else if(i===ans&&i!==q.correct)c+=' wrong';c+=' disabled';}
+      else if(ans===i)c+=' sel';
+      return `<button class="${c}" onclick="selOpt(${i})" ${showR?'disabled':''}><span class="opt-lt">${String.fromCharCode(65+i)}</span>${esc(o)}</button>`;
+    }).join('');
+    if(showR&&q.explanation)body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
+    setArea(q,body);return;
+  }
 
-    // Shuffle right side once, store in q._shuffled
-    if(!q._shuffled){
-      q._shuffled=[...pairs.map((_,i)=>i)].sort(()=>Math.random()-.5);
+  /* TEXT */
+  if(q.type==='text'){
+    const ca=q.correctAnswer||'';
+    const isAns=ans!==undefined&&ans!=='';
+    const isOk=isAns&&ca&&normStr(ans)===normStr(ca);
+    const isErr=isAns&&ca&&!isOk;
+    let ts='';
+    if(showR&&isAns)ts=isOk?'border-color:#059669!important;background:rgba(5,150,105,.07)!important':'border-color:#ef4444!important;background:rgba(239,68,68,.06)!important';
+    let body=`<textarea class="t-ans" id="ta" rows="3" placeholder="Javobingizni yozing..." style="${ts}" ${showR&&isAns?'readonly':''}>${esc(ans||'')}</textarea>`;
+    if(showR&&isAns){
+      if(isOk)body+=`<div class="expl" style="border-left-color:#059669;background:rgba(5,150,105,.07);color:#059669">✅ To'g'ri!</div>`;
+      else if(isErr)body+=`<div class="expl" style="border-left-color:#ef4444;background:rgba(239,68,68,.06);color:#ef4444">❌ Xato. To'g'ri: <b>${esc(ca)}</b></div>`;
     }
-    const shuffled=q._shuffled;
+    if(showR&&q.explanation)body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
+    setArea(q,body);
+    const ta=document.getElementById('ta');
+    if(ta)ta.oninput=()=>{answers[curIdx]=ta.value;};
+    return;
+  }
 
+  /* TRANSLATE */
+  if(q.type==='translate'){
+    let body=(q.options||[]).map((o,i)=>{
+      let c='tr-opt';
+      if(showR){if(i===q.correct)c+=' correct tdis';else if(i===ans&&i!==q.correct)c+=' wrong tdis';else c+=' tdis';}
+      else if(ans===i)c+=' sel';
+      return `<button class="${c}" onclick="selOpt(${i})"><span class="tr-badge">${String.fromCharCode(65+i)}</span>${esc(o)}</button>`;
+    }).join('');
+    if(showR&&q.explanation)body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
+    document.getElementById('q-area').innerHTML=`<div class="q-card">
+      <div class="q-num">${curIdx+1} / ${questions.length}</div>
+      <div class="q-text" style="font-size:1.1rem;text-align:center">${esc(q.text)}</div>
+      <div style="font-size:.7rem;color:var(--text3);text-align:center;margin:-.35rem 0 .72rem">To'g'ri tarjimani tanlang</div>
+      ${body}</div>`;
+    return;
+  }
+
+  /* MATCH */
+  if(q.type==='match'){
+    const pairs=q.pairs||[];
+    const sel=(typeof ans==='object'&&ans!==null&&!Array.isArray(ans))?ans:{};
+    const allDone=Object.keys(sel).length===pairs.length&&pairs.every((_,i)=>sel[i]!==undefined);
+    if(!q._sh)q._sh=pairs.map((_,i)=>i).sort(()=>Math.random()-.5);
     let rows='';
     pairs.forEach((p,li)=>{
-      const chosenRi=sel[li];
-      const isAnswered=chosenRi!==undefined;
-      let optHtml='';
-      shuffled.forEach((ri)=>{
-        let cls='match-option';
-        if(showResult&&done){
-          // ri === li means correct pairing
-          if(ri===li&&chosenRi===ri){cls+=' correct disabled';}
-          else if(chosenRi===ri&&ri!==li){cls+=' wrong disabled';}
-          else if(ri===li&&chosenRi!==ri){cls+=' wrong disabled';}
-          else{cls+=' disabled';}
-        } else {
-          if(chosenRi===ri)cls+=' selected';
-        }
-        optHtml+=`<div class="${cls}" onclick="matchSel(${li},${ri})">${esc(pairs[ri].right)}</div>`;
+      const cri=sel[li];
+      let chips='';
+      q._sh.forEach(ri=>{
+        let c='mchip';
+        if(showR&&allDone){
+          if(ri===li&&cri===ri)c+=' mok';
+          else if(cri===ri&&ri!==li)c+=' merr';
+          else if(ri===li&&cri!==ri)c+=' merr';
+          else c+=' mdis';
+        }else{if(cri===ri)c+=' msel';}
+        chips+=`<div class="${c}" onclick="matchSel(${li},${ri})">${esc(pairs[ri].right)}</div>`;
       });
       rows+=`<div class="match-row">
-        <div class="match-left">${esc(p.left)}</div>
-        <div class="match-conn">${isAnswered&&!showResult?'✓':'→'}</div>
-        <div class="match-right-wrap">${optHtml}</div>
+        <div class="mleft">${esc(p.left)}</div>
+        <div class="marrow">${cri!==undefined?'✓':'→'}</div>
+        <div class="mright-col">${chips}</div>
       </div>`;
     });
-
-    body=`<div class="match-wrap">${rows}</div>`;
-    if(showResult&&done&&q.explanation) body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
+    let extra=showR&&allDone&&q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:'';
     document.getElementById('q-area').innerHTML=`<div class="q-card">
       <div class="q-num">${curIdx+1} / ${questions.length}</div>
       <div class="q-text">${esc(q.text||'Har bir juftni moslashtiring:')}</div>
-      ${body}
-    </div>`;
+      <div class="match-area">${rows}</div>${extra}</div>`;
     return;
   }
 
-  /* ─── ORDER ─── */
+  /* ORDER */
   if(q.type==='order'){
     const words=(q.words||[]).filter(w=>w.trim());
-    // answers[curIdx] = [] — foydalanuvchi tanlagan tartib
-    if(!q._pool){
-      q._pool=[...words].sort(()=>Math.random()-.5);
-    }
-    const userOrder = Array.isArray(ans) ? ans : [];
-    const remaining = q._pool.filter(w=>!userOrder.includes(w)|| userOrder.indexOf(w)<userOrder.lastIndexOf(w) ? false : !userOrder.includes(w));
-    // pool: hali tanlanmaganlar
-    const usedSet=new Set(userOrder);
+    const uo=Array.isArray(ans)?[...ans]:[];
+    const isDone=uo.length===words.length;
+    if(!q._pool)q._pool=[...words].sort(()=>Math.random()-.5);
     const pool=q._pool.filter(w=>{
-      const cnt=userOrder.filter(u=>u===w).length;
-      const total=words.filter(ww=>ww===w).length;
-      return cnt<total;
+      const used=uo.filter(u=>u===w).length;
+      const tot=words.filter(ww=>ww===w).length;
+      return used<tot;
     });
-    const done=userOrder.length===words.length;
-
-    // Result check
-    let isCorrect=false;
-    if(showResult&&done){
-      isCorrect=userOrder.join(' ')===words.join(' ');
+    const isOk=isDone&&uo.join(' ')===words.join(' ');
+    let poolH='',ansH='',resH='';
+    if(showR&&isDone){
+      ansH=uo.map((w,wi)=>`<div class="ochip ${w===words[wi]?'ook':'oerr'}">${esc(w)}</div>`).join('');
+      resH=isOk
+        ?`<div class="expl" style="border-left-color:#059669;background:rgba(5,150,105,.07);color:#059669">✅ To'g'ri tartib!</div>`
+        :`<div class="expl" style="border-left-color:#ef4444;background:rgba(239,68,68,.06);color:#ef4444">❌ Noto'g'ri. To'g'ri tartib:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin:.4rem 0">${words.map(w=>`<div class="ochip oref">${esc(w)}</div>`).join('')}</div>`;
+      if(q.explanation)resH+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
+    }else{
+      poolH=pool.map(w=>`<div class="ochip opool" onclick="orderPick(${JSON.stringify(w)})">${esc(w)}</div>`).join('');
+      ansH=uo.map(w=>`<div class="ochip oa" onclick="orderRemove(${JSON.stringify(w)})">${esc(w)}</div>`).join('');
     }
-
-    let poolHtml=pool.map(w=>`<div class="order-chip pool-chip" onclick="orderPick('${esc(w).replace(/'/g,"\'")}')"> ${esc(w)}</div>`).join('');
-    let ansHtml=userOrder.map(w=>`<div class="order-chip ans-chip" onclick="orderRemove('${esc(w).replace(/'/g,"\'")}')"> ${esc(w)}</div>`).join('');
-
-    let resultHtml='';
-    if(showResult&&done){
-      if(isCorrect){
-        resultHtml=`<div class="expl" style="border-left-color:#059669;background:rgba(5,150,105,.07);color:#059669">✅ To'g'ri tartib!</div>`;
-      } else {
-        const correctStr=words.join(' ');
-        resultHtml=`<div class="expl" style="border-left-color:#ef4444;background:rgba(239,68,68,.06);color:#ef4444">
-          ❌ Noto'g'ri. To'g'ri tartib:</div>
-          <div class="order-result-row">${words.map(w=>`<div class="order-correct-chip">${esc(w)}</div>`).join('')}</div>`;
-      }
-      if(q.explanation) resultHtml+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
-      // Make chips non-clickable
-      ansHtml=userOrder.map((w,wi)=>{
-        const corr=w===words[wi];
-        return `<div class="order-chip ${corr?'correct-chip':'wrong-chip'}">${esc(w)}</div>`;
-      }).join('');
-      poolHtml='';
-    }
-
-    body=`<div class="order-area">
-      ${!done||!showResult?`<div>
-        <div class="order-pool-label">📦 So'zlar:</div>
-        <div class="order-pool">${poolHtml||'<span style="color:var(--text3);font-size:.75rem;padding:.2rem">Hammasi tanlandi</span>'}</div>
-      </div>`:''}
-      <div>
-        <div class="order-answer-label">✏️ Sizning tartibingiz: ${done?'(to'liq)':userOrder.length+'/'+words.length}</div>
-        <div class="order-answer${done?' done':''}">${ansHtml||'<span style="color:var(--text3);font-size:.75rem;padding:.2rem">So'z bosing →</span>'}</div>
-      </div>
-      ${resultHtml}
-    </div>`;
-
     document.getElementById('q-area').innerHTML=`<div class="q-card">
       <div class="q-num">${curIdx+1} / ${questions.length}</div>
-      <div class="q-text">${esc(q.text||'So'zlarni to'g'ri tartibda joylashtiring:')}</div>
-      ${body}
-    </div>`;
+      <div class="q-text">${esc(q.text||"So'zlarni to'g'ri tartibda joylashtiring:")}</div>
+      <div class="order-area">
+        ${(!isDone||!showR)?`<div><div class="olabel">📦 So'zlar — bosib tanlang:</div>
+          <div class="opool">${poolH||'<span class="ohint">Hammasi tanlandi ✓</span>'}</div></div>`:''}
+        <div><div class="olabel">✏️ Tartibingiz (${uo.length}/${words.length}):</div>
+          <div class="oans${isDone?' ofull':''}">${ansH||'<span class="ohint">So'z bosing →</span>'}</div></div>
+        ${resH}
+      </div></div>`;
     return;
   }
 
-  /* ─── TRANSLATE ─── */
-  if(q.type==='translate'){
-    body=q.options.map((o,i)=>{
-      let cls='tr-opt';
-      if(showResult){
-        if(i===q.correct)cls+=' correct disabled';
-        else if(i===ans&&i!==q.correct)cls+=' wrong disabled';
-        else cls+=' disabled';
-      } else if(ans===i){cls+=' sel';}
-      return `<div class="${cls}" onclick="selOpt(${i})">
-        <span class="tr-badge">${String.fromCharCode(65+i)}</span>${esc(o)}
-      </div>`;
-    }).join('');
-    if(showResult&&q.explanation) body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
-    document.getElementById('q-area').innerHTML=`<div class="q-card">
-      <div class="q-num">${curIdx+1} / ${questions.length}</div>
-      <div class="q-text" style="font-size:1.15rem;text-align:center;letter-spacing:.02em">${esc(q.text)}</div>
-      <div style="font-size:.72rem;color:var(--text3);text-align:center;margin-bottom:.7rem;margin-top:-.3rem">
-        To'g'ri tarjimani tanlang</div>
-      <div class="tr-opts">${body}</div>
-    </div>`;
-    return;
-  }
-
-  if(q.type==='text'){
-    // To'g'ri javob explanation dan olamiz: "✅ To'g'ri javob: ..." yoki q.correctAnswer
-    const correctAns = q.correctAnswer || (q.explanation && /^✅ To.g.ri javob:\s*/i.test(q.explanation)
-      ? q.explanation.replace(/^✅ To.g.ri javob:\s*/i,'').split('|')[0].trim() : '');
-    
-    // Foydalanuvchi javobini tekshirish (katta-kichik harf va probel hisobga olinmaydi)
-    function normStr(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
-    const isAnswered = ans !== undefined && ans !== '';
-    const isCorrect  = isAnswered && correctAns && normStr(ans) === normStr(correctAns);
-    const isWrong    = isAnswered && correctAns && normStr(ans) !== normStr(correctAns);
-    
-    let taStyle = '';
-    if(showResult && isAnswered){
-      taStyle = isCorrect
-        ? 'border-color:#059669!important;background:rgba(5,150,105,.07)!important'
-        : 'border-color:#ef4444!important;background:rgba(239,68,68,.06)!important';
-    }
-    
-    body = `<textarea class="t-ans" id="ta" rows="3"
-      placeholder="Javobingizni yozing..."
-      style="${taStyle}"
-      ${showResult && isAnswered ? 'readonly' : ''}>${esc(ans||'')}</textarea>`;
-    
-    if(showResult && isAnswered){
-      if(isCorrect){
-        body += `<div class="expl" style="border-left-color:#059669;background:rgba(5,150,105,.07);color:#059669">
-          ✅ To'g'ri javob!
-        </div>`;
-      } else if(isWrong){
-        body += `<div class="expl" style="border-left-color:#ef4444;background:rgba(239,68,68,.06);color:#ef4444">
-          ❌ Xato. To'g'ri javob: <b>${esc(correctAns)}</b>
-        </div>`;
-      }
-    }
-    // Izoh har doim ko'rsatamiz (agar mavjud va to'g'ri javob emas bo'lsa)
-    const realExpl = (q.explanation||'').replace(/^✅ To.g.ri javob:[^|]*/i,'').replace(/^\s*\|\s*/,'').trim();
-    if(showResult && realExpl) body+=`<div class="expl">💡 ${esc(realExpl)}</div>`;
-  } else {
-    body=q.options.map((o,i)=>{
-      let cls='opt';
-      if(showResult){
-        if(i===q.correct)cls+=' correct';
-        else if(i===ans&&i!==q.correct)cls+=' wrong';
-        cls+=' disabled';
-      } else if(ans===i){cls+=' sel';}
-      return `<button class="${cls}" onclick="selOpt(${i})" ${showResult?'disabled':''}>
-        <span class="opt-lt">${String.fromCharCode(65+i)}</span>${esc(o)}
-      </button>`;
-    }).join('');
-    if(showResult&&q.explanation) body+=`<div class="expl">💡 ${esc(q.explanation)}</div>`;
-  }
-
-  document.getElementById('q-area').innerHTML=`<div class="q-card">
-    <div class="q-num">${curIdx+1} / ${questions.length}</div>
-    <div class="q-text">${esc(q.text)}</div>
-    ${body}
-  </div>`;
-
-  if(q.type==='text'){
-    const ta=document.getElementById('ta');
-    if(ta)ta.oninput=()=>{answers[curIdx]=ta.value;};
-  }
+  /* FALLBACK */
+  setArea(q,`<div class="expl">❓ Noma'lum savol turi: ${esc(q.type||'')}</div>`);
 }
 
-/* SELECT — multiple/truefalse/translate */
-window.selOpt=(i)=>{
-  if(answers[curIdx]!==undefined)return;
-  answers[curIdx]=i;renderQ();
-};
+function setArea(q,body){
+  document.getElementById('q-area').innerHTML=`<div class="q-card">
+    <div class="q-num">${curIdx+1} / ${questions.length}</div>
+    <div class="q-text">${esc(q.text)}</div>${body}</div>`;
+}
 
-/* MATCH select */
-window.matchSel=(leftIdx, rightIdx)=>{
-  const q=questions[curIdx];
-  if(!q||q.type!=='match')return;
+window.selOpt=(i)=>{if(answers[curIdx]!==undefined)return;answers[curIdx]=i;renderQ();};
+
+window.matchSel=(li,ri)=>{
+  const q=questions[curIdx];if(!q||q.type!=='match')return;
   const pairs=q.pairs||[];
-  // Agar allaqachon ko'rsatilgan bo'lsa — ignore
-  if(typeof answers[curIdx]==='object'&&answers[curIdx]!==null){
-    const sel=answers[curIdx];
-    // Agar bu leftIdx uchun allaqachon tanlangan bo'lsa — o'zgartirishga ruxsat
-    if(Object.keys(sel).length===pairs.length) return; // done
-  }
-  const prev = typeof answers[curIdx]==='object'&&answers[curIdx]!==null ? {...answers[curIdx]} : {};
-  prev[leftIdx]=rightIdx;
-  answers[curIdx]=prev;
-  renderQ();
+  const prev=(typeof answers[curIdx]==='object'&&answers[curIdx]!==null&&!Array.isArray(answers[curIdx]))?{...answers[curIdx]}:{};
+  if(Object.keys(prev).length===pairs.length&&prev[li]!==undefined)return;
+  prev[li]=ri;answers[curIdx]=prev;renderQ();
 };
 
-/* ORDER pick from pool */
 window.orderPick=(w)=>{
-  const q=questions[curIdx];
-  if(!q||q.type!=='order')return;
+  const q=questions[curIdx];if(!q||q.type!=='order')return;
   const words=(q.words||[]).filter(ww=>ww.trim());
   const cur=Array.isArray(answers[curIdx])?[...answers[curIdx]]:[];
   if(cur.length>=words.length)return;
-  cur.push(w);
-  answers[curIdx]=cur;
-  renderQ();
+  cur.push(w);answers[curIdx]=cur;renderQ();
 };
 
-/* ORDER remove from answer */
 window.orderRemove=(w)=>{
-  const q=questions[curIdx];
-  if(!q||q.type!=='order')return;
+  const q=questions[curIdx];if(!q||q.type!=='order')return;
   const cur=Array.isArray(answers[curIdx])?[...answers[curIdx]]:[];
-  // showResult holatida o'chirish mumkin emas
-  const done=cur.length===(q.words||[]).filter(ww=>ww.trim()).length;
-  const showing=done&&(questions[curIdx]===q);
-  // Remove last occurrence
-  const idx=cur.lastIndexOf(w);
-  if(idx>=0){cur.splice(idx,1);}
-  answers[curIdx]=cur;
-  renderQ();
+  const idx=cur.lastIndexOf(w);if(idx>=0)cur.splice(idx,1);
+  answers[curIdx]=cur;renderQ();
 };
 
-/* PREV / NEXT */
 window.prev=()=>{if(curIdx>0){curIdx--;renderQ();}};
+
 window.next=()=>{
   const q=questions[curIdx];
   if(q.type==='text'){const ta=document.getElementById('ta');if(ta&&ta.value.trim())answers[curIdx]=ta.value.trim();}
-  // Match: tugab bo'lmaganlikni ogohlantir
   if(q.type==='match'){
     const pairs=q.pairs||[];
     const sel=typeof answers[curIdx]==='object'&&answers[curIdx]!==null?answers[curIdx]:{};
-    if(Object.keys(sel).length<pairs.length){
-      if(!confirm('Barcha juftlar moslanmadi. Baribir davom etasizmi?'))return;
-    }
+    if(Object.keys(sel).length<pairs.length&&!confirm("Barcha juftlar moslanmadi. Davom etasizmi?"))return;
   }
-  // Order: tugab bo'lmaganlikni ogohlantir
   if(q.type==='order'){
     const words=(q.words||[]).filter(w=>w.trim());
     const cur=Array.isArray(answers[curIdx])?answers[curIdx]:[];
-    if(cur.length<words.length){
-      if(!confirm('Barcha so'zlar tartiblanmadi. Baribir davom etasizmi?'))return;
-    }
+    if(cur.length<words.length&&!confirm("Barcha so'zlar tartiblanmadi. Davom etasizmi?"))return;
   }
   if(curIdx<questions.length-1){curIdx++;renderQ();}
-  else{if(confirm('Testni tugatmoqchimisiz?'))finish();}
+  else{if(confirm("Testni tugatmoqchimisiz?"))finish();}
 };
 
-/* FINISH */
 function finish(){
   clearInterval(timerInt);
   const elapsed=Math.floor((Date.now()-startTime)/1000);
-  function normStr(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
-  const allQ = questions.length || 1;
-  let correct = 0;
-  questions.forEach((q, i) => {
-    if(q.type === 'text'){
-      const correctAns = q.correctAnswer || (q.explanation && /^✅ To.g.ri javob:.*/i.test(q.explanation)
-        ? q.explanation.replace(/^✅ To.g.ri javob:\s*/i,'').split('|')[0].trim() : '');
-      if(correctAns && normStr(answers[i]) === normStr(correctAns)) correct++;
-    } else if(q.type === 'match'){
-      const pairs=q.pairs||[];
-      const sel=typeof answers[i]==='object'&&answers[i]!==null?answers[i]:{};
-      const allOk=pairs.every((_,li)=>sel[li]===li);
-      if(allOk) correct++;
-    } else if(q.type === 'order'){
-      const words=(q.words||[]).filter(w=>w.trim());
-      const ua=Array.isArray(answers[i])?answers[i]:[];
-      if(ua.join(' ')===words.join(' ')) correct++;
-    } else {
-      if(answers[i] === q.correct) correct++;
+  const tot=questions.length||1;
+  let correct=0;
+  questions.forEach((q,i)=>{
+    const a=answers[i];
+    if(q.type==='text'){const ca=q.correctAnswer||'';if(ca&&normStr(a)===normStr(ca))correct++;}
+    else if(q.type==='match'){
+      const pairs=q.pairs||[];const sel=typeof a==='object'&&a!==null?a:{};
+      if(pairs.length>0&&pairs.every((_,li)=>sel[li]===li))correct++;
     }
+    else if(q.type==='order'){
+      const words=(q.words||[]).filter(w=>w.trim());const ua=Array.isArray(a)?a:[];
+      if(words.length>0&&ua.join(' ')===words.join(' '))correct++;
+    }
+    else{if(a===q.correct)correct++;}
   });
-  const tot = allQ;
   const score=Math.round(correct/tot*100);
   const pass=score>=(testData.passScore||60);
-
   document.getElementById('scr-test').style.display='none';
   document.getElementById('scr-result').style.display='block';
-
   const sc=document.getElementById('sc-circle');
   sc.className='sc-circle '+(pass?'sc-pass':'sc-fail');
   document.getElementById('sc-pct').textContent=score+'%';
-  document.getElementById('sc-lbl').textContent=pass?'O\'TDINGIZ':'MUVAFFAQIYATSIZ';
+  document.getElementById('sc-lbl').textContent=pass?'O'TDINGIZ':'MUVAFFAQIYATSIZ';
   document.getElementById('res-title').textContent=testData.title||'Test';
-  document.getElementById('res-sub').textContent=pass?'🎉 Tabriklaymiz! Ajoyib natija!':'💪 Yana urinib ko\'ring!';
+  document.getElementById('res-sub').textContent=pass?'🎉 Tabriklaymiz!':'💪 Yana urinib ko'ring!';
   document.getElementById('r-c').textContent=correct;
   document.getElementById('r-w').textContent=tot-correct;
   document.getElementById('r-t').textContent=fmtTime(elapsed);
-
   if(CU){
     const uaArr=questions.map((_,i)=>answers[i]!==undefined?answers[i]:-1);
     DB.saveResult({userId:CU.uid,testId:testData.id,testTitle:testData.title||'Test',
@@ -675,80 +489,55 @@ function finish(){
   }
 }
 
-/* REVIEW */
 let reviewOpen=false;
 window.toggleReview=()=>{
   reviewOpen=!reviewOpen;
   document.getElementById('review-wrap').style.display=reviewOpen?'block':'none';
-  if(reviewOpen){
-    document.getElementById('review-list').innerHTML=questions.map((q,i)=>{
-      /* ─── MATCH review ─── */
-      if(q.type==='match'){
-        const pairs=q.pairs||[];
-        const sel=typeof ua==='object'&&ua!==null?ua:{};
-        const allOk=pairs.length>0&&pairs.every((_,li)=>sel[li]===li);
-        let mHtml=`<div style="display:flex;flex-direction:column;gap:.38rem;margin-top:.4rem">`;
-        pairs.forEach((p,li)=>{
-          const chosenRi=sel[li];
-          const isOkM=chosenRi===li;
-          const chosen=chosenRi!==undefined?pairs[chosenRi]?.right:'?';
-          mHtml+=`<div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem">
-            <span style="font-weight:700;color:var(--acc);min-width:80px;text-align:right">${esc(p.left)}</span>
-            <span style="color:var(--text3)">→</span>
-            <span style="font-weight:600;color:${isOkM?'#059669':'#ef4444'}">${isOkM?'✅':'❌'} ${esc(chosen)}</span>
-            ${!isOkM?`<span style="color:#059669;font-size:.72rem">(To'g'risi: ${esc(p.right)})</span>`:''}
-          </div>`;
-        });
-        mHtml+='</div>';
-        return `<div class="rv-item ${allOk?'rv-c':'rv-w'}">
-          <div class="rv-q">${i+1}. ${esc(q.text||'Moslashtirish')}</div>
-          ${mHtml}
-          ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}
+  if(!reviewOpen)return;
+  document.getElementById('review-list').innerHTML=questions.map((q,i)=>{
+    const ua=answers[i];
+    if(q.type==='match'){
+      const pairs=q.pairs||[];const sel=typeof ua==='object'&&ua!==null?ua:{};
+      const allOk=pairs.length>0&&pairs.every((_,li)=>sel[li]===li);
+      let rows='';
+      pairs.forEach((p,li)=>{
+        const ri=sel[li];const ok=ri===li;
+        const chosen=ri!==undefined?(pairs[ri]?.right||'?'):'(tanlanmadi)';
+        rows+=`<div style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;margin-bottom:.22rem">
+          <span style="font-weight:700;color:var(--acc)">${esc(p.left)}</span>
+          <span style="color:var(--text3)">→</span>
+          <span style="color:${ok?'#059669':'#ef4444'};font-weight:600">${ok?'✅':'❌'} ${esc(chosen)}</span>
+          ${!ok?`<span style="color:#059669;font-size:.7rem">(${esc(p.right)})</span>`:''}
         </div>`;
-      }
-
-      /* ─── ORDER review ─── */
-      if(q.type==='order'){
-        const words=(q.words||[]).filter(w=>w.trim());
-        const uaO=Array.isArray(ua)?ua:[];
-        const isOkO=uaO.join(' ')===words.join(' ');
-        return `<div class="rv-item ${isOkO?'rv-c':'rv-w'}">
-          <div class="rv-q">${i+1}. ${esc(q.text||'Tartiblash')}</div>
-          <div class="rv-a ${isOkO?'a-c':'a-w'}">
-            ${isOkO?'✅':'❌'} Sizning: ${esc(uaO.join(' ')||'(berilmadi)')}
-          </div>
-          ${!isOkO?`<div class="rv-a a-r">✅ To'g'ri: ${esc(words.join(' '))}</div>`:''}
-          ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}
-        </div>`;
-      }
-
-      if(q.type==='text'){
-        function normStr2(s){ return String(s||'').trim().toLowerCase().replace(/\s+/g,' '); }
-        const correctAns2 = q.correctAnswer || (q.explanation && /^✅ To.g.ri javob:\s*/i.test(q.explanation)
-          ? q.explanation.replace(/^✅ To.g.ri javob:\s*/i,'').split('|')[0].trim() : '');
-        const ua2 = answers[i];
-        const isC2 = ua2 && correctAns2 && normStr2(ua2) === normStr2(correctAns2);
-        const realExpl2 = (q.explanation||'').replace(/^✅ To.g.ri javob:[^|]*/i,'').replace(/^\s*\|\s*/,'').trim();
-        return `<div class="rv-item ${ua2?(isC2?'rv-c':'rv-w'):''}">
-          <div class="rv-q">${i+1}. ${esc(q.text)}</div>
-          ${ua2
-            ? `<div class="rv-a ${isC2?'a-c':'a-w'}">${isC2?'✅':'❌'} Sizning: ${esc(ua2)}</div>`
-            : `<div class="rv-a a-w">⏭ O'tkazildi</div>`}
-          ${!isC2 && correctAns2 ? `<div class="rv-a a-r">✅ To'g'ri: ${esc(correctAns2)}</div>` : ''}
-          ${realExpl2 ? `<div class="expl">💡 ${esc(realExpl2)}</div>` : ''}
-        </div>`;
-      }
-      const ua=answers[i];const ok=ua===q.correct;
+      });
+      return `<div class="rv-item ${allOk?'rv-c':'rv-w'}"><div class="rv-q">${i+1}. ${esc(q.text||'Moslashtirish')}</div>${rows}${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}</div>`;
+    }
+    if(q.type==='order'){
+      const words=(q.words||[]).filter(w=>w.trim());
+      const uaO=Array.isArray(ua)?ua:[];const ok=uaO.join(' ')===words.join(' ');
       return `<div class="rv-item ${ok?'rv-c':'rv-w'}">
+        <div class="rv-q">${i+1}. ${esc(q.text||'Tartiblash')}</div>
+        <div class="rv-a ${ok?'a-c':'a-w'}">${ok?'✅':'❌'} ${esc(uaO.join(' ')||'(berilmadi)')}</div>
+        ${!ok?`<div class="rv-a a-r">✅ To'g'ri: ${esc(words.join(' '))}</div>`:''}
+        ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}</div>`;
+    }
+    if(q.type==='text'){
+      const ca=q.correctAnswer||'';const uaS=ua!==undefined&&ua!==-1?String(ua):'';
+      const ok=ca&&normStr(uaS)===normStr(ca);
+      return `<div class="rv-item ${uaS?ok?'rv-c':'rv-w':''}">
         <div class="rv-q">${i+1}. ${esc(q.text)}</div>
-        ${ua!==undefined
-          ?`<div class="rv-a ${ok?'a-c':'a-w'}">${ok?'✅':'❌'} Sizning: ${esc(q.options[ua]||'?')}</div>`
-          :`<div class="rv-a a-w">⏭ O'tkazildi</div>`}
-        ${!ok?`<div class="rv-a a-r">✅ To'g'ri: ${esc(q.options[q.correct]||'?')}</div>`:''}
-        ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}
-      </div>`;
-    }).join('');
-  }
+        <div class="txt-ans">${esc(uaS||'(yozilmadi)')}</div>
+        ${ok?`<div class="rv-a a-c">✅ To'g'ri!</div>`:''}
+        ${!ok&&ca?`<div class="rv-a a-r">✅ To'g'ri javob: ${esc(ca)}</div>`:''}
+        ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}</div>`;
+    }
+    const isSkip=ua===undefined||ua===-1;const isOk=!isSkip&&ua===q.correct;const opts=q.options||[];
+    return `<div class="rv-item ${isSkip?'':isOk?'rv-c':'rv-w'}">
+      <div class="rv-q">${i+1}. ${esc(q.text)}</div>
+      ${isSkip?`<div class="rv-a a-w">⏭ O'tkazildi</div>`:`<div class="rv-a ${isOk?'a-c':'a-w'}">${isOk?'✅':'❌'} ${esc(opts[ua]||'?')}</div>`}
+      ${!isOk&&!isSkip?`<div class="rv-a a-r">✅ To'g'ri: ${esc(opts[q.correct]||'?')}</div>`:''}
+      ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}</div>`;
+  }).join('');
 };
 </script>
 </body>
