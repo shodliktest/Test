@@ -814,10 +814,35 @@ document.getElementById('imp-modal').addEventListener('click', function (e) {
   if (e.target === this) closeImport();
 });
 
+// Aktiv format indeksini olish
+function getActiveFmtIdx() {
+  const btns = document.querySelectorAll('.fmtt');
+  for (let i = 0; i < btns.length; i++) {
+    if (btns[i].classList.contains('on')) return i;
+  }
+  return 0;
+}
+
+// Format indeksiga qarab majburiy tur
+function forcedTypeByFmt(idx) {
+  // 0: A)* → multiple
+  // 1: 1)[+] → multiple
+  // 2: Ha/Yo'q → truefalse
+  // 3: Matnli (Javob:) → text
+  // 4: Yozma → text
+  // 5: Tartib → order
+  // 6: Ketma-ketlik → sequence
+  // 7: Bo'sh to'ldirish → fill
+  const map = {0:'multiple', 1:'multiple', 2:'truefalse', 3:'text', 4:'text', 5:'order', 6:'sequence', 7:'fill'};
+  return map[idx] || null;
+}
+
 window.doImport = () => {
   const raw = document.getElementById('imp-textarea').value.trim();
   if (!raw) { Toast.error('Matn kiriting!'); return; }
-  const imported = parseTxt(raw);
+  const fmtIdx    = getActiveFmtIdx();
+  const forcedType = forcedTypeByFmt(fmtIdx);
+  const imported  = parseTxt(raw, forcedType);
   if (!imported.length) { Toast.error('Format noto\'g\'ri. Namunaga qarang.'); return; }
   questions.push(...imported);
   renderAll();
@@ -831,7 +856,9 @@ window.handleFile = (inp) => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    const imported = parseTxt(e.target.result);
+    const fmtIdx     = getActiveFmtIdx();
+    const forcedType = forcedTypeByFmt(fmtIdx);
+    const imported   = parseTxt(e.target.result, forcedType);
     const res = document.getElementById('file-result');
     if (!imported.length) {
       res.innerHTML = '<div class="alert alert-error">Format noto\'g\'ri</div>';
@@ -867,7 +894,7 @@ if (dz) {
    TEXT PARSER — barcha turlar
    Ko'p tanlov | Ha/Yo'q | Matnli | Yozma | Tartib | Ketma-ketlik | Bo'sh to'ldirish
 ═══════════════════════════════════════ */
-function parseTxt(raw) {
+function parseTxt(raw, forcedType) {
   const results = [];
 
   // Bloklarga ajratish — Tartib/Ketma-ketlik ichidagi raqamlarga tegmaymiz
@@ -1006,6 +1033,19 @@ function parseTxt(raw) {
     }
 
     if (!qText.trim()) continue;
+
+    // Agar forcedType berilgan bo'lsa, turni majburan o'zgartir
+    if (forcedType === 'truefalse') {
+      type = 'truefalse';
+      if (options.length === 0) options = ["Ha", "Yo'q"];
+      if (options.length > 2)   options = options.slice(0, 2);
+      if (correctIdx >= options.length) correctIdx = 0;
+    } else if (forcedType === 'text') {
+      type = 'text';
+      options = [];
+    } else if (forcedType === 'multiple' && options.length >= 2) {
+      type = 'multiple';
+    }
 
     let type = 'text';
     if (isYozma) {
