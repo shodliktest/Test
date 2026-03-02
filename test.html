@@ -327,6 +327,38 @@ function showToast(msg,dur=2500){
 let testData=null,questions=[],answers={},orderStates={},seqStates={},
     curIdx=0,startTime=Date.now(),timerInt=null,CU=null,testId=null;
 let dragSrcIdx=null;
+let sessionFinished=false;
+
+/* ── Session (jarayon) saqlash/yuklash ── */
+const Session={
+  key(id){return 'tp_session_'+id;},
+  save(){
+    if(!testId||sessionFinished)return;
+    try{
+      localStorage.setItem(this.key(testId),JSON.stringify({
+        answers,orderStates,seqStates,curIdx,
+        elapsed:Math.floor((Date.now()-startTime)/1000),
+        savedAt:Date.now()
+      }));
+    }catch(e){}
+  },
+  load(id){
+    try{
+      const raw=localStorage.getItem(this.key(id));
+      return raw?JSON.parse(raw):null;
+    }catch{return null;}
+  },
+  clear(id){
+    localStorage.removeItem(this.key(id));
+  },
+  hasFinished(id){
+    // Natijalar orasida shu test bormi?
+    try{
+      const all=JSON.parse(localStorage.getItem('tp_results')||'[]');
+      return all.find(r=>r.testId===id)||null;
+    }catch{return null;}
+  }
+};
 
 const ICON={english:'🇬🇧',arabic:'🕌',russian:'🇷🇺',turkish:'🇹🇷',math:'🧮',it:'💻',science:'🔬',religion:'📖',other:'📚'};
 const TYPE_LABELS={multiple:'Test',truefalse:'Ha/Yo\'q',text:'Yozma',fill:'Bo\'sh to\'ldirish',order:'Tartib',sequence:'Ketma-ketlik'};
@@ -400,6 +432,58 @@ window.shareTest=async()=>{
       orderStates[i]=null;
       seqStates[i]=null;
     });
+
+    // ── Oldingi natija bormi? ──
+    const prevResult=Session.hasFinished(id);
+    if(prevResult){
+      // Natija ekranini ko'rsat, qayta yechish imkoni bilan
+      document.getElementById('scr-load').style.display='none';
+      const pass=prevResult.score>=(testData.passScore||60);
+      document.getElementById('scr-result').style.display='block';
+      document.getElementById('sc-circle').className='sc-circle '+(pass?'sc-pass':'sc-fail');
+      document.getElementById('sc-pct').textContent=prevResult.score+'%';
+      document.getElementById('sc-lbl').textContent=pass?"✅ O'tdingiz!":"❌ O'tmadingiz";
+      document.getElementById('sc-correct').textContent=prevResult.correct||0;
+      document.getElementById('sc-wrong').textContent=(prevResult.total||0)-(prevResult.correct||0);
+      document.getElementById('sc-total').textContent=prevResult.total||0;
+      document.getElementById('sc-time').textContent=fmtTime(prevResult.elapsed||0);
+      // Qayta yechish tugmasi
+      const retryBtn=document.getElementById('retry-btn');
+      if(retryBtn){
+        retryBtn.style.display='inline-flex';
+        retryBtn.onclick=()=>{
+          Session.clear(id);
+          // Natijani o'chirmasdan, faqat sessionni tozalab yangi test boshlash
+          answers={};orderStates={};seqStates={};curIdx=0;
+          questions.forEach((_,i)=>{orderStates[i]=null;seqStates[i]=null;});
+          startTime=Date.now();sessionFinished=false;
+          document.getElementById('scr-result').style.display='none';
+          document.getElementById('scr-test').style.display='block';
+          renderDots();renderQ();
+        };
+      }
+      return;
+    }
+
+    // ── Yarim qolgan sessiya bormi? ──
+    const savedSession=Session.load(id);
+    if(savedSession){
+      answers=savedSession.answers||{};
+      curIdx=savedSession.curIdx||0;
+      // orderStates va seqStates ni tiklash
+      if(savedSession.orderStates){
+        Object.keys(savedSession.orderStates).forEach(k=>{
+          orderStates[+k]=savedSession.orderStates[k];
+        });
+      }
+      if(savedSession.seqStates){
+        Object.keys(savedSession.seqStates).forEach(k=>{
+          seqStates[+k]=savedSession.seqStates[k];
+        });
+      }
+      // Vaqtni tiklash (qolgan vaqtni hisobga olish)
+      startTime=Date.now()-(savedSession.elapsed||0)*1000;
+    }
 
     // Timer
     if(testData.timeLimit>0){
@@ -607,6 +691,7 @@ function initInteractive(q,idx,type,showResult){
         const i=+btn.dataset.opt;
         if(answers[idx]!==undefined)return;
         answers[idx]=i;
+        Session.save();
         renderQ();
       };
     });
@@ -615,7 +700,7 @@ function initInteractive(q,idx,type,showResult){
   if(type==='text'){
     const ta=document.getElementById('ta');
     if(ta){
-      ta.oninput=()=>{answers[idx]=ta.value;};
+      ta.oninput=()=>{answers[idx]=ta.value;Session.save();};
       ta.onfocus=()=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';};
     }
   }
@@ -626,6 +711,7 @@ function initInteractive(q,idx,type,showResult){
         const bi=+inp.dataset.blank;
         if(!answers[idx])answers[idx]={};
         answers[idx][bi]=inp.value;
+        Session.save();
       };
     });
   }
@@ -656,6 +742,7 @@ function initDragDrop(idx){
       items.splice(toI,0,moved);
       orderStates[idx]=items;
       answers[idx]=[...items];
+      Session.save();
       renderQ();
     };
   });
@@ -669,6 +756,7 @@ window.seqPick=(idx,poolIdx)=>{
   state.pool.splice(poolIdx,1);
   state.chosen.push(item);
   answers[idx]=[...state.chosen];
+  Session.save();
   renderQ();
 };
 window.seqRemove=(idx,chosenIdx)=>{
@@ -678,6 +766,7 @@ window.seqRemove=(idx,chosenIdx)=>{
   state.chosen.splice(chosenIdx,1);
   state.pool.push(item);
   answers[idx]=[...state.chosen];
+  Session.save();
   renderQ();
 };
 
@@ -698,6 +787,8 @@ window.next=()=>{
 /* FINISH */
 function finish(){
   clearInterval(timerInt);
+  sessionFinished=true;
+  Session.clear(testId);
   const elapsed=Math.floor((Date.now()-startTime)/1000);
   let correct=0,total=0;
 

@@ -167,7 +167,7 @@ window.setFilter=(f,el)=>{
 /* helpers */
 function getTs(ts){
   if(!ts)return null;
-  try{return ts.toDate?ts.toDate():new Date(ts.seconds?ts.seconds*1000:ts);}catch{return null;}
+  try{if(!ts)return null;if(typeof ts==='number')return new Date(ts);if(ts?.toDate)return ts.toDate();if(ts?.seconds)return new Date(ts.seconds*1000);return new Date(ts);}catch{return null;}
 }
 function dayKey(ts){
   const d=getTs(ts);if(!d)return '0';
@@ -273,8 +273,7 @@ function render(results){
 /* MAIN */
 (async()=>{
   let CU=null;
-  try{CU=await AuthHelpers.requireAuth('login.html');if(!CU)return;}
-  catch(e){goTo('login.html');return;}
+  try{CU=await AuthHelpers.getCurrentUser();}catch(e){CU=null;}
 
   /* Check for subject filter from URL (from dashboard "Barchasini ko'rish") */
   const urlSubj=new URLSearchParams(location.search).get('subject');

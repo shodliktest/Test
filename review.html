@@ -164,7 +164,7 @@ const ICON={english:'🇬🇧',arabic:'🕌',russian:'🇷🇺',turkish:'🇹�
 
 function getTs(ts){
   if(!ts)return null;
-  try{return ts.toDate?ts.toDate():new Date(ts.seconds?ts.seconds*1000:ts);}catch{return null;}
+  try{if(!ts)return null;if(typeof ts==='number')return new Date(ts);if(ts?.toDate)return ts.toDate();if(ts?.seconds)return new Date(ts.seconds*1000);return new Date(ts);}catch{return null;}
 }
 function timeStr(ts){
   const d=getTs(ts);if(!d)return '';
@@ -184,19 +184,18 @@ function elapsed2s(s){s=s||0;return Math.floor(s/60)+'daq '+String(s%60).padStar
   }
 
   let CU=null;
-  try{CU=await AuthHelpers.getCurrentUser();}catch(e){}
-  if(!CU){goTo('login.html');return;}
+  try{CU=await AuthHelpers.getCurrentUser();}catch(e){CU=null;}
 
   try{
-    /* 1. Result olish */
-    const rDoc=await db.collection('results').doc(id).get();
-    if(!rDoc.exists){
+    /* 1. Result olish — localStorage dan */
+    const allResults=JSON.parse(localStorage.getItem('tp_results')||'[]');
+    const R=allResults.find(r=>r.id===id);
+    if(!R){
       wrap.innerHTML=`<div class="err-box"><h3>Natija topilmadi</h3>
-        <p>Bu natija o'chirilgan yoki mavjud emas</p>
+        <p>Bu natija mavjud emas yoki o'chirilgan</p>
         <button class="err-btn" onclick="goTo('history.html')">← Orqaga</button></div>`;
       return;
     }
-    const R={id:rDoc.id,...rDoc.data()};
 
     /* 2. Test + questions olish */
     const tDoc=await db.collection('tests').doc(R.testId).get();
@@ -205,7 +204,8 @@ function elapsed2s(s){s=s||0;return Math.floor(s/60)+'daq '+String(s%60).padStar
     if(!tDoc.exists){testDeleted=true;}
     else{questions=await DB.getQuestions(R.testId);}
 
-    const userAnswers=R.userAnswers||[];
+    /* userAnswers - avval R da, yo'q bo'lsa Cache dan */
+    const userAnswers=R.userAnswers || Cache.loadAnswers(R.testId) || [];
     const pass=R.score>=(tDoc.exists?tDoc.data().passScore||60:60);
     const sub=getSubject(R.subject||'other');
     const icon=ICON[R.subject||'other']||'📚';

@@ -1088,7 +1088,7 @@ let CU=null;
       const avg=Math.round(allResults.reduce((s,r)=>s+(r.score||0),0)/allResults.length);
       document.getElementById('s-a').textContent=avg+'%';
     }
-    function rTs(ts){try{return ts?.toDate?ts.toDate():new Date(ts?.seconds?ts.seconds*1000:ts);}catch{return null;}}
+    function rTs(ts){try{if(!ts)return null;if(typeof ts==='number')return new Date(ts);if(ts?.toDate)return ts.toDate();if(ts?.seconds)return new Date(ts.seconds*1000);return new Date(ts);}catch{return null;}}
     const last5=allResults.slice(0,5);
     if(last5.length){
       document.getElementById('res-list').innerHTML=last5.map(r=>{
