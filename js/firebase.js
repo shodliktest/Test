@@ -223,33 +223,32 @@ const DB = {
     if (testData) Cache.saveTest(testId, testData, clean);
   },
 
-  /* RESULTS — faqat natija, javoblar localStorage'da */
+  /* RESULTS — hammasi localStorage da, Firebase ga yozilmaydi */
   async saveResult(data) {
-    if (data.userAnswers && data.testId) {
-      Cache.saveAnswers(data.testId, data.userAnswers);
-    }
-    const { userAnswers: _ua, ...resultData } = data;
-    const ref = await db.collection('results').add({
-      ...resultData, completedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
     try {
-      const tRef = db.collection('tests').doc(data.testId);
-      const td = await tRef.get();
-      if (td.exists) {
-        const prev = td.data();
-        const n = (prev.attempts||0) + 1;
-        const avg = Math.round(((prev.averageScore||0) * (prev.attempts||0) + (data.score||0)) / n);
-        await tRef.update({ attempts: n, averageScore: avg });
-      }
-    } catch(e) { console.warn('result stats:', e.message); }
-    return ref.id;
+      const key = 'tp_results';
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      const result = {
+        ...data,
+        id: 'r_' + Date.now(),
+        completedAt: Date.now(),
+      };
+      existing.unshift(result);
+      if (existing.length > 100) existing.splice(100);
+      localStorage.setItem(key, JSON.stringify(existing));
+      return result.id;
+    } catch(e) {
+      console.warn('saveResult localStorage:', e);
+      return null;
+    }
   },
 
   async getMyResults(userId, limit = 20) {
-    const snap = await db.collection('results').where('userId', '==', userId).get();
-    const list = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a,b) => (b.completedAt?.seconds||0) - (a.completedAt?.seconds||0));
-    return limit ? list.slice(0, limit) : list;
+    try {
+      const all = JSON.parse(localStorage.getItem('tp_results') || '[]');
+      const mine = userId ? all.filter(r => r.userId === userId) : all;
+      return limit ? mine.slice(0, limit) : mine;
+    } catch { return []; }
   }
 };
 
