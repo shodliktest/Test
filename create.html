@@ -301,6 +301,242 @@
 <div class="imp-modal-bg" id="imp-modal">
   <div class="imp-box">
     <div class="imp-hdr">
+      <span style="font-size:.95rem;font-weight:800">📥 TXT fayldan import</span>
+      <button onclick="closeImport()"
+        style="background:none;border:1px solid var(--border-2);border-radius:8px;
+          width:28px;height:28px;cursor:pointer;font-size:.82rem;color:var(--text-3)">✕</button>
+    </div>
+    <div class="imp-body">
+
+      <!-- Format namunalari -->
+      <div class="fmt-tabs" style="flex-wrap:wrap;gap:.35rem;margin-bottom:.5rem">
+        <button class="fmtt on" onclick="showFmt(0,this)">⭕ Ko'p tanlov</button>
+        <button class="fmtt" onclick="showFmt(1,this)">✅ Ha/Yo'q</button>
+        <button class="fmtt" onclick="showFmt(2,this)">✏️ Bo'sh to'ldirish</button>
+        <button class="fmtt" onclick="showFmt(3,this)">↕️ Tartib</button>
+        <button class="fmtt" onclick="showFmt(4,this)">🔢 Ketma-ketlik</button>
+        <button class="fmtt" onclick="showFmt(5,this)">📝 Matnli</button>
+      </div>
+      <div class="fmt-preview" id="fmt-preview" style="margin-bottom:.6rem"></div>
+      <div style="font-size:.71rem;color:var(--text-3);margin-bottom:.85rem;line-height:1.7;background:rgba(108,63,232,.05);padding:.5rem .7rem;border-radius:8px">
+        💡 <b>*</b> yoki <b>[+]</b> = to'g'ri javob &nbsp;·&nbsp;
+        <b>Blank:</b> = bo'sh joy javobi &nbsp;·&nbsp;
+        <b>Tartib:</b> = tartib elementlari &nbsp;·&nbsp;
+        <b>Izoh:</b> = izoh
+      </div>
+
+      <!-- TXT fayl yuklash -->
+      <div class="drop-zone" id="drop-zone" style="margin-bottom:.75rem">
+        <div style="font-size:2rem;margin-bottom:.4rem;pointer-events:none">📄</div>
+        <div style="font-weight:800;font-size:.92rem;margin-bottom:.25rem;pointer-events:none">
+          .txt faylni bu yerga tashlang
+        </div>
+        <div style="font-size:.77rem;color:var(--text-3);margin-bottom:.6rem;pointer-events:none">
+          yoki quyidagi tugmani bosing
+        </div>
+        <label class="drop-label" for="file-input">📂 .txt fayl tanlash</label>
+        <input type="file" id="file-input" accept=".txt,.text" style="display:none" onchange="handleFile(this)"/>
+        <div style="font-size:.7rem;color:var(--text-3);margin-top:.5rem;pointer-events:none">
+          Faqat .txt format qabul qilinadi
+        </div>
+      </div>
+
+      <!-- Natija -->
+      <div id="file-result" style="margin-bottom:.5rem"></div>
+
+      <!-- Yoki matn yozish -->
+      <details style="margin-bottom:.75rem">
+        <summary style="font-size:.82rem;font-weight:700;color:var(--accent);cursor:pointer;padding:.4rem 0">
+          ✍️ Yoki matn sifatida kiriting
+        </summary>
+        <div style="margin-top:.5rem">
+          <textarea id="imp-textarea" class="form-input"
+            rows="8" style="font-family:monospace;font-size:.82rem;resize:vertical"
+            placeholder="1. Savol matni?&#10;A) Variant&#10;B) To'g'ri javob *&#10;C) Variant&#10;D) Variant"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:.5rem">
+            <button class="btn btn-primary btn-sm" onclick="doImport()">✅ Importlash</button>
+          </div>
+        </div>
+      </details>
+
+      <div style="display:flex;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="closeImport()">Yopish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+ lang="uz" data-theme="light">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TestPro — Test Yaratish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="css/style.css"/>
+
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-brand" onclick="goTo('index.html')" style="cursor:pointer">TestPro</div>
+  <div style="display:flex;gap:.55rem;align-items:center">
+    <button class="theme-toggle">🌙</button>
+    <button class="hamburger sidebar-toggle"><span></span><span></span><span></span></button>
+  </div>
+</div>
+<div class="sidebar-overlay"></div>
+<aside class="sidebar">
+  <div style="padding:1.2rem 1rem .5rem;border-bottom:1px solid var(--border)">
+    <div style="font-family:'Unbounded',sans-serif;font-size:1.15rem;font-weight:900;
+      background:var(--grad-main);-webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;background-clip:text">TestPro</div>
+  </div>
+  <div class="sidebar-inner">
+    <button class="sidebar-nav-item" onclick="goTo('dashboard.html')">📊 Dashboard</button>
+    <button class="sidebar-nav-item active">✏️ Test yaratish</button>
+    <button class="sidebar-nav-item" onclick="goTo('history.html')">📜 Tarix</button>
+    <button class="sidebar-nav-item" onclick="goTo('profile.html')">👤 Profil</button>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-ava" id="side-ava">?</div>
+      <div style="flex:1;min-width:0"><div class="user-chip-name" id="side-name">...</div></div>
+      <button id="logout-btn" class="btn btn-ghost btn-sm" style="padding:.3rem .5rem">🚪</button>
+    </div>
+  </div>
+</aside>
+
+<main style="padding-top:58px">
+<div class="create-wrap">
+
+  <!-- Header -->
+  <div class="page-hdr">
+    <div>
+      <h1 id="page-title">Yangi test yaratish</h1>
+      <p style="font-size:.78rem;color:var(--text-3);margin-top:.15rem">Savollar qo'shing va sozlang</p>
+    </div>
+    <div class="hdr-btns">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('dashboard.html')">← Orqaga</button>
+      <button class="btn btn-secondary btn-sm" onclick="openImport()">📥 Import</button>
+      <button class="btn btn-primary" id="save-btn">💾 Saqlash</button>
+    </div>
+  </div>
+
+  <div id="save-alert" style="margin-bottom:.85rem"></div>
+
+  <!-- TEST INFO -->
+  <div class="sec">
+    <div class="sec-title">📋 Test haqida</div>
+    <div class="form-group">
+      <label class="form-label">Test nomi *</label>
+      <input id="t-title" type="text" class="form-input" placeholder="Masalan: English Grammar A2"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Tavsif (ixtiyoriy)</label>
+      <textarea id="t-desc" class="form-input" rows="2" placeholder="Test haqida qisqacha..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Fan / Guruh *</label>
+      <div class="subj-grid" id="subj-grid"></div>
+      <div style="display:flex;gap:.45rem;align-items:center;margin-top:.35rem">
+        <input id="custom-subj" type="text" class="form-input" style="flex:1"
+          placeholder="Boshqa (o'z nomingizni yozing)..."/>
+        <button class="btn btn-secondary btn-sm" onclick="setCustomSubj()">✓ Qo'llash</button>
+      </div>
+    </div>
+    <div id="selected-subj-wrap" style="display:none;margin-top:-.35rem;margin-bottom:.65rem"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="sec">
+    <div class="sec-title">⚙️ Sozlamalar</div>
+
+    <!-- Visibility -->
+    <div class="form-group">
+      <label class="form-label">Ko'rinish</label>
+      <div class="vis-grid">
+        <button class="vis-btn active" id="vis-public" onclick="setVis('public')">
+          <span class="vis-icon">🌐</span>Ommaviy
+        </button>
+        <button class="vis-btn" id="vis-private" onclick="setVis('private')">
+          <span class="vis-icon">🔒</span>Shaxsiy
+        </button>
+      </div>
+      <div style="padding:.55rem .8rem;border-radius:10px;
+        background:rgba(79,70,229,.07);border:1px dashed rgba(79,70,229,.28);
+        font-size:.76rem;color:var(--accent);font-weight:600">
+        🔑 Barcha testlar ulashish kodi bilan birga saqlanadi
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.75rem">
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Vaqt (daqiqa)</label>
+        <input id="t-time" type="number" class="form-input" value="0" min="0" max="180" placeholder="0=cheksiz"/>
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">O'tish bali (%)</label>
+        <input id="t-pass" type="number" class="form-input" value="60" min="0" max="100"/>
+      </div>
+    </div>
+
+    <div style="margin-top:.85rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+        <span class="form-label" style="margin:0">Savollarni aralashtirish</span>
+        <label class="toggle"><input type="checkbox" id="t-shuffle"/><span class="toggle-slider"></span></label>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="form-label" style="margin:0">Natijani ko'rsatish</span>
+        <label class="toggle"><input type="checkbox" id="t-result" checked/><span class="toggle-slider"></span></label>
+      </div>
+    </div>
+
+    <!-- Q count + Save -->
+    <div style="text-align:center;padding:.65rem;
+      background:var(--bg-2);border-radius:12px;margin-top:.85rem;margin-bottom:.85rem">
+      <div style="font-family:'Unbounded',sans-serif;font-size:1.35rem;font-weight:900;color:var(--accent)" id="q-count">0</div>
+      <div style="font-size:.7rem;color:var(--text-3);font-weight:600">ta savol</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" id="save-btn-2">💾 Saqlash</button>
+  </div>
+
+  <!-- QUESTIONS -->
+  <div id="q-container"></div>
+
+  <!-- ADD QUESTION -->
+  <div class="add-area">
+    <div class="add-area-label">➕ Savol turi tanlang</div>
+    <div class="add-q-grid" style="grid-template-columns:repeat(3,1fr)">
+      <button class="aqbtn aqbtn-m" onclick="addQ('multiple')">
+        <span style="font-size:1.3rem">⭕</span>Ko'p tanlov
+      </button>
+      <button class="aqbtn aqbtn-t" onclick="addQ('truefalse')">
+        <span style="font-size:1.3rem">✅</span>Ha / Yo'q
+      </button>
+      <button class="aqbtn aqbtn-x" onclick="addQ('text')">
+        <span style="font-size:1.3rem">📝</span>Matn
+      </button>
+      <button class="aqbtn" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.07);color:#d97706" onclick="addQ('fill')">
+        <span style="font-size:1.3rem">✏️</span>Bo'sh to'ldirish
+      </button>
+      <button class="aqbtn" style="border-color:rgba(192,64,200,.3);background:rgba(192,64,200,.07);color:#a21caf" onclick="addQ('order')">
+        <span style="font-size:1.3rem">↕️</span>Tartib
+      </button>
+      <button class="aqbtn" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.07);color:#dc2626" onclick="addQ('sequence')">
+        <span style="font-size:1.3rem">🔢</span>Ketma-ketlik
+      </button>
+    </div>
+  </div>
+
+</div>
+</main>
+
+<!-- IMPORT MODAL -->
+<div class="imp-modal-bg" id="imp-modal">
+  <div class="imp-box">
+    <div class="imp-hdr">
       <span style="font-size:.95rem;font-weight:800">📥 Savollarni import qilish</span>
       <button onclick="closeImport()"
         style="background:none;border:1px solid var(--border-2);border-radius:8px;
@@ -315,15 +551,21 @@
 
       <!-- TEXT TAB -->
       <div id="imp-txt-body">
-        <div class="fmt-tabs">
-          <button class="fmtt on" onclick="showFmt(0,this)">A) * format</button>
-          <button class="fmtt" onclick="showFmt(1,this)">1) [+] format</button>
-          <button class="fmtt" onclick="showFmt(2,this)">Ha/Yo'q</button>
-          <button class="fmtt" onclick="showFmt(3,this)">📝 Matnli</button>
+        <div class="fmt-tabs" style="flex-wrap:wrap;gap:.35rem">
+          <button class="fmtt on" onclick="showFmt(0,this)">⭕ Ko'p tanlov</button>
+          <button class="fmtt" onclick="showFmt(1,this)">✅ Ha/Yo'q</button>
+          <button class="fmtt" onclick="showFmt(2,this)">✏️ Bo'sh to'ldirish</button>
+          <button class="fmtt" onclick="showFmt(3,this)">↕️ Tartib</button>
+          <button class="fmtt" onclick="showFmt(4,this)">🔢 Ketma-ketlik</button>
+          <button class="fmtt" onclick="showFmt(5,this)">📝 Matnli</button>
+          <button class="fmtt" onclick="showFmt(6,this)">✍️ Yozma javob</button>
         </div>
         <div class="fmt-preview" id="fmt-preview"></div>
-        <div style="font-size:.71rem;color:var(--text-3);margin-bottom:.65rem">
-          💡 <b>*</b> yoki <b>[+]</b> = to'g'ri javob &nbsp;·&nbsp; <b>Izoh:</b> = izoh &nbsp;·&nbsp; <b>Javob:</b> = matnli savol to'g'ri javob
+        <div style="font-size:.71rem;color:var(--text-3);margin-bottom:.65rem;line-height:1.6">
+          💡 <b>*</b> yoki <b>[+]</b> = to'g'ri javob &nbsp;·&nbsp;
+          <b>___</b> = bo'sh joy (fill) &nbsp;·&nbsp;
+          <b>Tartib:</b> = to'g'ri tartib &nbsp;·&nbsp;
+          <b>Izoh:</b> = izoh
         </div>
         <div class="form-group">
           <label class="form-label">Savollarni kiriting:</label>
@@ -670,15 +912,21 @@ window.updOrderOpt = (inp) => {
 
 window.chType = (id, type) => {
   const q = findQ(id);
-  if (!q) return;
-  q.type    = type;
-  q.options = type === 'multiple'  ? ['', '', '', ''] :
-              type === 'truefalse' ? ["Ha", "Yo'q"] :
-              type === 'order'     ? ['', '', '', ''] :
-              type === 'sequence'  ? ['', '', '', ''] : [];
-  q.correct = 0;
-  q.correctOrder = [];
-  q.blanks = [];
+  if (!q || q.type === type) return; // Bir xil tur — hech narsa qilma
+  q.type = type;
+  // Faqat bo'sh optionlar bo'lsa reset qil, aks holda saqla
+  const hasContent = (q.options||[]).some(o => o.trim());
+  if (!hasContent) {
+    q.options = type === 'multiple'  ? ['', '', '', ''] :
+                type === 'truefalse' ? ["Ha", "Yo'q"] :
+                type === 'order'     ? ['', '', '', ''] :
+                type === 'sequence'  ? ['', '', '', ''] : [];
+  }
+  if (type === 'truefalse') q.options = ["Ha", "Yo'q"];
+  if (type === 'text' || type === 'fill') q.options = [];
+  q.correct = Math.min(q.correct||0, Math.max((q.options||[]).length-1, 0));
+  if (type !== 'order' && type !== 'sequence') q.correctOrder = [];
+  if (type !== 'fill') q.blanks = [];
   renderAll();
 };
 
@@ -830,43 +1078,93 @@ async function loadEdit(id) {
    IMPORT
 ═══════════════════════════════════════ */
 const FMT_EXAMPLES = [
-`1. Savol matni?
-A) Variant A
-B) To'g'ri variant *
-C) Variant C
-D) Variant D
-Izoh: Bu yerda tushuntirish.
+/* 0: Ko'p tanlov */
+`1. Qaysi shahar O'zbekistonning poytaxti?
+A) Samarqand
+B) Toshkent *
+C) Buxoro
+D) Namangan
+Izoh: Toshkent 1930-yildan beri poytaxt.
 
-2. Keyingi savol?
-A) Javob 1 *
-B) Javob 2`,
+2. 2+2 nechaga teng?
+A) 3
+B) 4 *
+C) 5
+D) 6`,
 
-`1) Savol matni?
-1. Variant A
-2. To'g'ri [+]
-3. Variant C
-4. Variant D
-
-2) Keyingi savol?
-1. Birinchi [+]
-2. Ikkinchi`,
-
-`1. Bu gap to'g'rimi?
+/* 1: Ha/Yo'q */
+`1. Yer yumaloqmi?
 Ha *
 Yo'q
-Izoh: Ha, to'g'ri.
+Izoh: Yer shar shaklida.
 
-2. Yer yumaloqmi?
-Ha *
-Yo'q`,
+2. Quyosh sayyoradimi?
+Ha
+Yo'q *
+Izoh: Quyosh - yulduz.`,
 
-`1. Present Perfect zamonni qachon ishlatamiz?
-Javob: Hozirgi zamonga aloqador o'tgan harakatlar uchun
-Izoh: Have/has + V3 shaklida qo'llanadi.
+/* 2: Bo'sh to'ldirish (fill) */
+`1. Dunyoning eng baland tog'i ___ hisoblanadi.
+Blank: Everest
+Izoh: Everest 8848 metr balandlikda.
 
-2. "She ___ already eaten" jumlani to'ldiring.
-Javob: has
-Izoh: She (u) uchun "has" ishlatiladi.`
+2. O'zbekiston ___ yilda mustaqil bo'ldi.
+Blank: 1991
+Izoh: 1991-yil 1-sentabr.
+
+3. H2O bu ___ formulasi.
+Blank: suv
+Izoh: Kimyoviy formula.`,
+
+/* 3: Tartib (order) */
+`1. Quyidagi voqealarni to'g'ri tartibda joylashtiring.
+Tartib:
+1. Tuxum qo'yiladi
+2. Jo'ja tug'iladi
+3. Tovuq o'sadi
+4. Tovuq tuxum qo'yadi
+Izoh: Hayot aylanishi.
+
+2. Son'larni o'sish tartibida joylashtiring.
+Tartib:
+1. 10
+2. 25
+3. 47
+4. 100`,
+
+/* 4: Ketma-ketlik (sequence) */
+`1. Dastur ishga tushish ketma-ketligi.
+Ketma-ketlik:
+- Kod yoziladi
+- Kompilyatsiya qilinadi
+- Xatolar tekshiriladi
+- Dastur ishga tushadi
+Izoh: Standart dasturlash jarayoni.
+
+2. Non pishirish ketma-ketligi.
+Ketma-ketlik:
+- Un tayyorlanadi
+- Xamir qoriladi
+- Shakl beriladi
+- Pechga solinadi`,
+
+/* 5: Matnli */
+`1. Present Perfect zamonni tushuntiring.
+Javob: Have/has + V3 shaklida qo'llanadi
+Izoh: Hozirga aloqador o'tgan harakatlar uchun.
+
+2. Fotosintez nima?
+Javob: O'simliklar quyosh energiyasidan oziq yaratish jarayoni`,
+
+/* 6: Yozma javob — foydalanuvchi o'z javobini yozadi, to'g'ri javob ko'rsatilmaydi */
+`1. Ingliz tilida "men sevaman" ni qanday yoziladi?
+Yozma:
+
+2. Asosiy renklar (3 ta) nima?
+Yozma:
+
+3. O'zbekiston mustaqillik kunini yozing.
+Yozma: 1-sentabr`
 ];
 
 function initFmtPreviews() {
@@ -892,7 +1190,6 @@ window.openImport = () => {
 window.closeImport = () => {
   document.getElementById('imp-modal').classList.remove('show');
 };
-/* Close on backdrop click */
 document.getElementById('imp-modal').addEventListener('click', function (e) {
   if (e.target === this) closeImport();
 });
@@ -901,7 +1198,7 @@ window.doImport = () => {
   const raw = document.getElementById('imp-textarea').value.trim();
   if (!raw) { Toast.error('Matn kiriting!'); return; }
   const imported = parseTxt(raw);
-  if (!imported.length) { Toast.error('Format noto\'g\'ri. Namunaga qarang.'); return; }
+  if (!imported.length) { Toast.error("Format noto'g'ri. Namunaga qarang."); return; }
   questions.push(...imported);
   renderAll();
   closeImport();
@@ -947,17 +1244,24 @@ if (dz) {
 }
 
 /* ═══════════════════════════════════════
-   TEXT PARSER — supports A)* and 1)[+] and Ha/Yo'q
+   UNIVERSAL TXT PARSER — 6 savol turi
+   Ko'p tanlov | Ha/Yo'q | Fill | Order | Sequence | Text
 ═══════════════════════════════════════ */
 function parseTxt(raw) {
   const results = [];
 
-  // Bloklarga ajratish
-  const rawBlocks = raw.split(/\n\s*\n+/);
+  // Bloklarga ajratish — faqat bo'sh qator (tartib/ketma-ketlik ichidagi raqamlarga tegmaymiz)
   const blocks = [];
+  const rawBlocks = raw.split(/\n\s*\n+/);
   for (const rb of rawBlocks) {
     const trimmed = rb.trim();
     if (!trimmed) continue;
+    // Agar blok ichida Tartib: yoki Ketma-ketlik: bo'lsa — bo'lma
+    if (/^tartib\s*:/im.test(trimmed) || /^ketma-?ketlik\s*:/im.test(trimmed)) {
+      blocks.push(trimmed);
+      continue;
+    }
+    // Aks holda raqamli savollarga bo'l
     const subBlocks = trimmed.split(/(?=^\s*\d+[\.\)]\s+\S)/m);
     for (const sb of subBlocks) { if (sb.trim()) blocks.push(sb.trim()); }
   }
@@ -966,60 +1270,147 @@ function parseTxt(raw) {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
     if (!lines.length) continue;
 
-    let qText = '';
+    // Savol matni (1-qator)
+    let qText = lines[0].replace(/^\s*\d+[\.\)\:]\s*/, '').trim();
+    let explanation = '';
+    let detectedType = null;
+
+    // --- ORDER turi: "Tartib:" kalit so'zi ---
+    const tartibIdx = lines.findIndex(l => /^tartib\s*:/i.test(l));
+    if (tartibIdx !== -1) {
+      const items = [];
+      for (let li = tartibIdx + 1; li < lines.length; li++) {
+        const l = lines[li];
+        if (/^izoh\s*:/i.test(l)) { explanation = l.replace(/^izoh\s*:\s*/i, '').trim(); break; }
+        // "1. item" yoki "- item" yoki sadda matn
+        const m = l.match(/^(?:\d+[\.\)]\s*|[-•]\s*)(.+)/);
+        const itemText = m ? m[1].trim() : l.trim();
+        if (itemText) items.push(itemText);
+      }
+      if (items.length >= 2) {
+        results.push({
+          _id: Date.now() + Math.random(),
+          type: 'order',
+          text: qText,
+          options: [...items],
+          correctOrder: [...items],
+          blanks: [],
+          correct: 0,
+          explanation,
+          points: 1,
+        });
+        continue;
+      }
+    }
+
+    // --- SEQUENCE turi: "Ketma-ketlik:" kalit so'zi ---
+    const seqIdx = lines.findIndex(l => /^ketma-?ketlik\s*:/i.test(l));
+    if (seqIdx !== -1) {
+      const items = [];
+      for (let li = seqIdx + 1; li < lines.length; li++) {
+        const l = lines[li];
+        if (/^izoh\s*:/i.test(l)) { explanation = l.replace(/^izoh\s*:\s*/i, '').trim(); break; }
+        const m = l.match(/^(?:\d+[\.\)]\s*|[-•]\s*)(.+)/);
+        const itemText = m ? m[1].trim() : l.trim();
+        if (itemText) items.push(itemText);
+      }
+      if (items.length >= 2) {
+        results.push({
+          _id: Date.now() + Math.random(),
+          type: 'sequence',
+          text: qText,
+          options: [...items],
+          correctOrder: [...items],
+          blanks: [],
+          correct: 0,
+          explanation,
+          points: 1,
+        });
+        continue;
+      }
+    }
+
+    // --- FILL turi: savol matni "___" ni o'z ichiga oladi YOKI "Blank:" qatori bor ---
+    const hasBlankInText = /___/.test(qText);
+    const blankLines = lines.filter(l => /^blank\s*:/i.test(l));
+    if (hasBlankInText || blankLines.length > 0) {
+      const blanks = blankLines.map(l => l.replace(/^blank\s*:\s*/i, '').trim());
+
+      // Izohni topish
+      const izohLine = lines.find(l => /^izoh\s*:/i.test(l));
+      if (izohLine) explanation = izohLine.replace(/^izoh\s*:\s*/i, '').trim();
+
+      // Agar blank qatorlari yo'q lekin ___ bor — foydalanuvchi o'z javobini yozadi
+      if (blanks.length === 0 && hasBlankInText) {
+        // blank sifatida savol matni davomini ishlatamiz — lekin eng kamida 1 ta blank kerak
+        // Matndan to'ldirish kerak bo'lgan so'zni topishga urinmaymiz, faqat bitta bo'sh joy
+        blanks.push('');
+      }
+
+      results.push({
+        _id: Date.now() + Math.random(),
+        type: 'fill',
+        text: qText,
+        options: [],
+        correctOrder: [],
+        blanks,
+        correct: 0,
+        explanation,
+        points: 1,
+      });
+      continue;
+    }
+
+    // --- Ko'p tanlov / Ha/Yo'q turi ---
     let options = [];
     let correctIdx = 0;
-    let explanation = '';
-    let textAnswer = ''; // "Javob:" qatori uchun
-
-    // 1-chi qator = savol matni
-    qText = lines[0].replace(/^\s*\d+[\.\)\:]\s*/, '').trim();
+    let textAnswer = '';
 
     for (let li = 1; li < lines.length; li++) {
       const line = lines[li];
 
-      /* Izoh */
-      if (/^izoh\s*:/i.test(line)) {
-        explanation = line.replace(/^izoh\s*:\s*/i, '').trim();
+      if (/^izoh\s*:/i.test(line)) { explanation = line.replace(/^izoh\s*:\s*/i, '').trim(); continue; }
+      if (/^javob\s*:/i.test(line)) { textAnswer = line.replace(/^javob\s*:\s*/i, '').trim(); continue; }
+      // "Yozma:" - foydalanuvchi o'z javobini yozadigan tur
+      if (/^yozma\s*:?/i.test(line)) {
+        const hint = line.replace(/^yozma\s*:?\s*/i, '').trim();
+        if (hint) textAnswer = hint;
+        else textAnswer = '__yozma__';
         continue;
       }
 
-      /* Javob: — matnli savol to'g'ri javob hint */
-      if (/^javob\s*:/i.test(line)) {
-        textAnswer = line.replace(/^javob\s*:\s*/i, '').trim();
-        continue;
-      }
-
-      /* Variant: A) B) C) D) E) */
-      const optLetterM = line.match(/^([A-Ea-e])\s*[\)\.]\s*(.+)/);
-      if (optLetterM) {
-        let content2 = optLetterM[2].trim();
+      // A) B) C) D) E) format
+      const optLetterM = line.match(/^([A-Ea-e])\s*[\)\.]?\s*(.+)/);
+      if (optLetterM && line.length > 1 && /^[A-Ea-e][\)\.\s]/.test(line)) {
+        let content = optLetterM[2].trim();
         let isCorr = false;
-        if (/\*\s*$/.test(content2))       { isCorr = true; content2 = content2.replace(/\s*\*\s*$/, '').trim(); }
-        if (/\[\+\]/.test(content2))       { isCorr = true; content2 = content2.replace(/\s*\[\+\]\s*/g, '').trim(); }
-        if (/\(\+\)/.test(content2))       { isCorr = true; content2 = content2.replace(/\s*\(\+\)\s*/g, '').trim(); }
-        if (/\(to.g.ri\)/i.test(content2)) { isCorr = true; content2 = content2.replace(/\(to.g.ri\)/gi, '').trim(); }
+        if (/\*\s*$/.test(content))       { isCorr = true; content = content.replace(/\s*\*\s*$/, '').trim(); }
+        if (/\[\+\]/.test(content))       { isCorr = true; content = content.replace(/\s*\[\+\]\s*/g, '').trim(); }
+        if (/\(\+\)/.test(content))       { isCorr = true; content = content.replace(/\s*\(\+\)\s*/g, '').trim(); }
+        if (/\(to.g.ri\)/i.test(content)) { isCorr = true; content = content.replace(/\(to.g.ri\)/gi, '').trim(); }
         if (isCorr) correctIdx = options.length;
-        options.push(content2);
+        options.push(content);
         continue;
       }
 
-      /* Variant raqamli ketma-ket */
+      // 1) 2) 3) raqamli
       if (options.length > 0) {
         const optNumM = line.match(/^\d+[\)\.\s]\s*(.+)/);
         if (optNumM) {
-          let content2 = optNumM[1].trim();
+          let content = optNumM[1].trim();
           let isCorr = false;
-          if (/\*\s*$/.test(content2))    { isCorr = true; content2 = content2.replace(/\s*\*\s*$/, '').trim(); }
-          if (/\[\+\]/.test(content2))    { isCorr = true; content2 = content2.replace(/\s*\[\+\]\s*/g, '').trim(); }
+          if (/\*\s*$/.test(content)) { isCorr = true; content = content.replace(/\s*\*\s*$/, '').trim(); }
+          if (/\[\+\]/.test(content)) { isCorr = true; content = content.replace(/\s*\[\+\]\s*/g, '').trim(); }
           if (isCorr) correctIdx = options.length;
-          options.push(content2);
+          options.push(content);
           continue;
         }
       }
 
-      /* Ha / Yo'q */
+      // Ha / Yo'q
       if (/^(ha|yes|true)\s*(\*|\[\+\])?$/i.test(line)) {
+        const isCorr = /(\*|\[\+\])/.test(line);
+        if (isCorr) correctIdx = options.length;
         options.push('Ha');
         continue;
       }
@@ -1030,42 +1421,42 @@ function parseTxt(raw) {
         continue;
       }
 
-      /* Savol matni davomi */
-      if (options.length === 0 && !textAnswer) {
-        qText += ' ' + line;
-      }
+      // Savol davomi
+      if (options.length === 0 && !textAnswer) qText += ' ' + line;
     }
 
     if (!qText.trim()) continue;
 
-    /* Tur aniqlash:
-       - Javob: bor → text (yozma)
-       - Variantlar bor → multiple yoki truefalse
-       - Hech narsa yo'q → text */
+    // Tur aniqlash
     let type = 'text';
     if (textAnswer && options.length === 0) {
       type = 'text';
-      // textAnswer ni explanation ga qo'shamiz agar izoh bo'lmasa
-      if (!explanation && textAnswer) explanation = '✅ To\'g\'ri javob: ' + textAnswer;
-      else if (textAnswer) explanation = '✅ To\'g\'ri javob: ' + textAnswer + (explanation ? ' | ' + explanation : '');
+      if (textAnswer === '__yozma__') {
+        // Yozma javob - to'g'ri javob ko'rsatilmaydi
+      } else {
+        if (!explanation) explanation = "✅ To'g'ri javob: " + textAnswer;
+        else explanation = "✅ To'g'ri javob: " + textAnswer + ' | ' + explanation;
+      }
     } else if (options.length >= 2) {
       type = 'multiple';
       const lower = options.map(o => o.toLowerCase());
-      if (options.length === 2 &&
-          (lower[0].includes('ha') || lower[0].includes('yes') || lower[0].includes('true')) &&
-          (lower[1].includes("yo'q") || lower[1].includes('yoq') || lower[1].includes('no') || lower[1].includes('false'))) {
-        type = 'truefalse';
-      }
+      if (
+        options.length === 2 &&
+        (lower[0].includes('ha') || lower[0] === 'yes' || lower[0] === 'true') &&
+        (lower[1].includes("yo'q") || lower[1].includes('yoq') || lower[1] === 'no' || lower[1] === 'false')
+      ) { type = 'truefalse'; }
     }
 
     results.push({
-      _id:         Date.now() + Math.random(),
+      _id: Date.now() + Math.random(),
       type,
-      text:        qText.trim(),
-      options:     type === 'text' ? [] : options,
-      correct:     correctIdx,
+      text: qText.trim(),
+      options: type === 'text' ? [] : options,
+      correctOrder: [],
+      blanks: [],
+      correct: correctIdx,
       explanation,
-      points:      1,
+      points: 1,
     });
   }
 
