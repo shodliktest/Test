@@ -955,14 +955,25 @@ function parseTxt(raw) {
         continue;
       }
 
-      // A) B) C) D) E)
+      // A) B) C) D) E) — to'g'ri javob belgisi oldida ham (*B), +B) yoki oxirida ham (B) *)
+      // Belgisi oldida: *, +, -, !, =
+      const corrPrefixM = line.match(/^([*+\-!=])\s*([A-Ea-e])\s*[\)\.\s]\s*(.+)/);
+      if (corrPrefixM) {
+        let c = corrPrefixM[3].trim();
+        // Oxiridagi belgilarni ham tozala
+        c = c.replace(/\s*[*+\-!=]\s*$/, '').replace(/\s*\[\+\]\s*$/, '').trim();
+        correctIdx = options.length;
+        options.push(c); continue;
+      }
+
+      // Oddiy variant: A) matn yoki matn * oxirida
       const optLetterM = line.match(/^([A-Ea-e])\s*[\)\.\s]\s*(.+)/);
-      if (optLetterM && /^[A-Ea-e][\)\.\s]/.test(line)) {
+      if (optLetterM) {
         let c = optLetterM[2].trim(), isCorr = false;
-        if (/\*\s*$/.test(c))       { isCorr=true; c=c.replace(/\s*\*\s*$/,'').trim(); }
-        if (/\[\+\]/.test(c))       { isCorr=true; c=c.replace(/\s*\[\+\]\s*/g,'').trim(); }
-        if (/\(\+\)/.test(c))       { isCorr=true; c=c.replace(/\s*\(\+\)\s*/g,'').trim(); }
-        if (/\(to.g.ri\)/i.test(c)) { isCorr=true; c=c.replace(/\(to.g.ri\)/gi,'').trim(); }
+        if (/[*+!=]\s*$/.test(c))     { isCorr=true; c=c.replace(/\s*[*+!=]\s*$/,'').trim(); }
+        if (/\[\+\]/.test(c))         { isCorr=true; c=c.replace(/\s*\[\+\]\s*/g,'').trim(); }
+        if (/\(\+\)/.test(c))         { isCorr=true; c=c.replace(/\s*\(\+\)\s*/g,'').trim(); }
+        if (/\(to.g.ri\)/i.test(c))   { isCorr=true; c=c.replace(/\(to.g.ri\)/gi,'').trim(); }
         if (isCorr) correctIdx = options.length;
         options.push(c); continue;
       }

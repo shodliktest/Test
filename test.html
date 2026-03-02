@@ -794,7 +794,20 @@ function finish(){
 
   questions.forEach((q,i)=>{
     const type=q.type||'multiple';
-    if(type==='text')return; // text manual check
+    if(type==='text'){
+      // explanation da "✅ To'g'ri javob: ..." yoki "✅ Javob: ..." bor bo'lsa solishtir
+      const expl = q.explanation||'';
+      const corrM = expl.match(/^✅ (?:To'g'ri )?[Jj]avob:\s*(.+?)(?:\s*\|.*)?$/);
+      if(corrM){
+        // To'g'ri javob bor — solishtir
+        total++;
+        const ua = String(answers[i]||'').trim().toLowerCase();
+        const corr = corrM[1].trim().toLowerCase();
+        if(ua && (ua===corr || ua.includes(corr) || corr.includes(ua))) correct++;
+      }
+      // To'g'ri javob ko'rsatilmagan (Yozma:) — hisoblanmaydi
+      return;
+    }
     total++;
     if(type==='multiple'||type==='truefalse'){
       if(answers[i]===q.correct)correct++;
@@ -850,10 +863,25 @@ function buildReview(){
   document.getElementById('review-list').innerHTML=questions.map((q,i)=>{
     const type=q.type||'multiple';
     if(type==='text'){
-      return `<div class="rv-item">
+      const ua=String(answers[i]||'').trim();
+      const expl=q.explanation||'';
+      const corrM=expl.match(/^✅ (?:To'g'ri )?[Jj]avob:\s*(.+?)(?:\s*\|.*)?$/);
+      let isOk=false,corrAns='';
+      if(corrM){
+        corrAns=corrM[1].trim();
+        isOk=!!ua&&(ua.toLowerCase()===corrAns.toLowerCase()||
+          ua.toLowerCase().includes(corrAns.toLowerCase())||
+          corrAns.toLowerCase().includes(ua.toLowerCase()));
+      }
+      const hasCorr=!!corrM;
+      return `<div class="rv-item ${hasCorr?(isOk?'rv-c':'rv-w'):''}">
         <div class="rv-q">${i+1}. ${esc(q.text)}</div>
-        <div class="rv-a a-r">📝 Sizning: ${esc(answers[i]||'(berilmadi)')}</div>
-        ${q.explanation?`<div class="expl">💡 ${esc(q.explanation)}</div>`:''}
+        ${ua
+          ?`<div class="rv-a ${hasCorr?(isOk?'a-c':'a-w'):'a-r'}">${hasCorr?(isOk?'✅':'❌'):' 📝'} Sizning: ${esc(ua)}</div>`
+          :`<div class="rv-a a-w">⏭ Javob berilmadi</div>`}
+        ${hasCorr&&!isOk?`<div class="rv-a a-c">✅ To'g'ri javob: ${esc(corrAns)}</div>`:''}
+        ${expl&&!corrM?`<div class="expl">💡 ${esc(expl)}</div>`:''}
+        ${corrM&&expl.includes('|')?`<div class="expl">💡 ${esc(expl.replace(/^✅[^|]+\|\s*/,''))}</div>`:''}
       </div>`;
     }
     if(type==='multiple'||type==='truefalse'){
