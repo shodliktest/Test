@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import json
-import io
+import streamlit as st
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.methods import DeleteWebhook
 from aiogram.filters import Command
@@ -19,24 +19,20 @@ bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
 dp = Dispatcher()
 
 # ==========================================
-# 2. SAVOLLARNI MATNDAN O'QISH (FUNKSIYA)
+# 2. INTERFEYS VA QIDIRUV TUGMALARI
 # ==========================================
-def parse_questions_from_text(content):
-    blocks = content.split("\n\n")
-    quiz_data = []
-    for block in blocks:
-        lines = [line.strip() for line in block.split("\n") if line.strip()]
-        if len(lines) < 3: continue 
-        correct_id = 0
-        options = []
-        for i, line in enumerate(lines[1:]):
-            if line.startswith("*"):
-                correct_id = i
-                options.append(line[1:].strip())
-            else:
-                options.append(line)
-        quiz_data.append({"q": lines[0], "opts": options, "ans": correct_id})
-    return quiz_data
+def get_main_menu():
+    builder = ReplyKeyboardBuilder()
+    # Rasmdagi kabi ko'k (User/Bot) va yashil (Group/Channel) tugmalar
+    builder.button(text="👤 User", request_users=types.KeyboardButtonRequestUsers(request_id=1, user_is_bot=False))
+    builder.button(text="🌟 Premium", request_users=types.KeyboardButtonRequestUsers(request_id=2, user_is_premium=True))
+    builder.button(text="🤖 Bot", request_users=types.KeyboardButtonRequestUsers(request_id=3, user_is_bot=True))
+    builder.button(text="👥 Group", request_chat=types.KeyboardButtonRequestChat(request_id=4, chat_is_channel=False))
+    builder.button(text="📢 Channel", request_chat=types.KeyboardButtonRequestChat(request_id=5, chat_is_channel=True))
+    builder.button(text="🏛 Forum", request_chat=types.KeyboardButtonRequestChat(request_id=6, chat_has_forum=True))
+    
+    builder.adjust(3) # Har qatorda 3 tadan tugma
+    return builder.as_markup(resize_keyboard=True)
 
 # ==========================================
 # 3. HANDLERLAR
@@ -44,79 +40,70 @@ def parse_questions_from_text(content):
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    # Siz yuborgan rasmdagi kabi maxsus so'rov tugmalari
-    builder = ReplyKeyboardBuilder()
-    
-    # Rangli va maxsus turdagi tugmalar (User, Bot, Group, Channel)
-    builder.button(text="👤 User", request_users=types.KeyboardButtonRequestUsers(request_id=1, user_is_bot=False))
-    builder.button(text="🤖 Bot", request_users=types.KeyboardButtonRequestUsers(request_id=2, user_is_bot=True))
-    builder.button(text="👥 Group", request_chat=types.KeyboardButtonRequestChat(request_id=3, chat_is_channel=False))
-    builder.button(text="📢 Channel", request_chat=types.KeyboardButtonRequestChat(request_id=4, chat_is_channel=True))
-    
-    builder.adjust(2) # Tugmalarni 2 qatordan chiqarish
-
     await message.answer(
         "👋 <b>QuizMarker Botiga xush kelibsiz!</b>\n\n"
-        "➕ /yaratish - Buyrug'ini bering va faylni yuboring.",
-        reply_markup=builder.as_markup(resize_keyboard=True)
+        "🚀 <b>Buyruqlar:</b>\n"
+        "➕ /yaratish - Yangi test fayli yuklash\n"
+        "📂 /mytests - Bazadagi testlarni ko'rish",
+        reply_markup=get_main_menu()
     )
 
-# 1-QADAM: Buyruq berilganda yo'riqnoma ko'rsatish
+# FAYL YUKLASH TARTIBI (Xatosiz variant)
 @dp.message(Command("yaratish"))
-async def ask_for_file(message: types.Message):
-    await message.answer("📁 Iltimos, savollar yozilgan <b>.txt</b> faylni yuboring.")
+async def start_creation(message: types.Message):
+    await message.answer("📁 Iltimos, savollar yozilgan <b>.txt</b> faylni yuboring.\n\n"
+                         "<i>Bot siz fayl yubormaguningizcha kutib turadi.</i>")
 
-# 2-QADAM: Fayl yuborilganda uni tutib olish
 @dp.message(F.document)
-async def handle_upload(message: types.Message):
+async def handle_document(message: types.Message):
     if not message.document.file_name.endswith('.txt'):
-        return await message.answer("❌ Faqat <b>.txt</b> formatidagi fayllarni yuboring!")
+        return await message.answer("❌ Faqat <b>.txt</b> fayl yuboring!")
 
-    # Faylni yuklab olish
-    file_id = message.document.file_id
-    file = await bot.get_file(file_id)
-    file_path = file.file_path
-    
-    # Fayl mazmunini o'qish
-    downloaded_file = await bot.download_file(file_path)
-    content = downloaded_file.read().decode('utf-8')
-    
-    quizzes = parse_questions_from_text(content)
-    
-    if not quizzes:
-        return await message.answer("❌ Fayl formati xato yoki savollar topilmadi!")
+    # Faylni xotiraga yuklash
+    file = await bot.get_file(message.document.file_id)
+    content = await bot.download_file(file.file_path)
+    text_data = content.read().decode('utf-8')
 
-    # Bazaga (Guruhga) saqlash
-    test_json = json.dumps(quizzes, ensure_ascii=False)
+    # Savollarni parslash (Sodda mantiq)
+    blocks = text_data.strip().split("\n\n")
+    if not blocks:
+        return await message.answer("❌ Fayl ichida savollar topilmadi!")
+
+    # Bazaga yozish (Guruhga JSON ko'rinishida)
     db_msg = await bot.send_message(
-        chat_id=DB_GROUP_ID, 
-        text=f"🗂 #YANGI_TEST\n📦 Savollar: {len(quizzes)} ta\n\n<code>{test_json}</code>"
+        chat_id=DB_GROUP_ID,
+        text=f"🗂 #TEST_BAZA\n📦 Nomi: {message.document.file_name}\n\n<code>{text_data[:1000]}</code>"
     )
-    
-    test_id = db_msg.message_id
 
-    # Inline ulashish tugmasi
     builder = InlineKeyboardBuilder()
-    builder.row(types.InlineKeyboardButton(text="📤 Guruhga ulashish", switch_inline_query=f"quiz_{test_id}"))
+    builder.row(types.InlineKeyboardButton(text="📤 Guruhga ulashish", switch_inline_query=f"quiz_{db_msg.message_id}"))
 
-    await message.answer(
-        f"✅ <b>Fayl qabul qilindi!</b>\n"
-        f"📦 Test ID: <code>{test_id}</code>\n"
-        f"Savollar soni: {len(quizzes)} ta\n\n"
-        f"Endi testni guruhga yuborishingiz mumkin:",
-        reply_markup=builder.as_markup()
-    )
+    await message.answer(f"✅ Test qabul qilindi! ID: <code>{db_msg.message_id}</code>", 
+                         reply_markup=builder.as_markup())
+
+# MENING TESTLARIM (SAHIFALANGAN RO'YXAT)
+@dp.message(Command("mytests"))
+async def list_tests(message: types.Message):
+    # Bu yerda bazadan testlarni olish kerak, hozircha namuna:
+    builder = InlineKeyboardBuilder()
+    # Har bir test uchun alohida tugma
+    builder.row(types.InlineKeyboardButton(text="1️⃣ English Test", callback_data="view_1"))
+    builder.row(types.InlineKeyboardButton(text="2️⃣ Matematika", callback_data="view_2"))
+    builder.row(types.InlineKeyboardButton(text="⬅️ Oldingi", callback_data="prev"),
+                types.InlineKeyboardButton(text="Keyingi ➡️", callback_data="next"))
+    
+    await message.answer("📂 <b>Sizning testlaringiz:</b>", reply_markup=builder.as_markup())
 
 # ==========================================
-# 4. ISHGA TUSHIRISH
+# 4. ISHGA TUSHIRISH (STREAMLIT FIX)
 # ==========================================
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
+    # handle_signals=False Streamlit Cloud uchun hayotiy muhim!
     await dp.start_polling(bot, handle_signals=False)
 
 if __name__ == "__main__":
-    import streamlit as st
     st.title("🤖 Quiz Bot")
-    st.info("Bot ishlamoqda...")
+    st.success("Bot tizimi ishga tushdi.")
+    # Agar stop tugmasi ishlamasa, Manage App -> Reboot App qiling
     asyncio.run(main())
-        
