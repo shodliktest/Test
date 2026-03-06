@@ -7,21 +7,20 @@ from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 # ==========================================
-# 1. SOZLAMALAR VA XOTIRA
+# 1. SOZLAMALAR (Sizning ma'lumotlaringiz qo'yildi)
 # ==========================================
-BOT_TOKEN = "SIZNING_TOKENINGIZNI_SHU_YERGA_YOZING"
-DB_GROUP_ID = "-1001234567890" # Yopiq baza guruhingiz ID raqami
+BOT_TOKEN = "7735778627:AAHwSeGHgt-o4V87kiE276TQxicicy0JBk0"
+DB_GROUP_ID = "-1002110664592" 
 
 logging.basicConfig(level=logging.INFO)
+# Endi token xatosi chiqmaydi, chunki u aniq ko'rsatilgan
 bot = Bot(token=BOT_TOKEN, parse_mode='HTML')
 dp = Dispatcher()
 
-# Vaqtinchalik xotira
 active_polls = {}
 user_scores = {}
 loaded_test_cache = []
 
-# Savollarni TXT fayldan o'qish funksiyasi
 def load_questions(filename="savollar.txt"):
     try:
         with open(filename, "r", encoding="utf-8") as f:
@@ -46,10 +45,9 @@ def load_questions(filename="savollar.txt"):
     return quiz_data
 
 # ==========================================
-# 2. BOT BUYRUQLARI (HANDLERS)
+# 2. BOT BUYRUQLARI
 # ==========================================
 
-# Start buyrug'i
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
     await message.answer(
@@ -57,24 +55,19 @@ async def cmd_start(message: types.Message):
         "Yangi test bazaga yuklash va guruhlarga yuborish uchun /yaratish buyrug'ini bering."
     )
 
-# Test yaratish va Bazaga saqlash
 @dp.message(Command("yaratish"))
 async def cmd_create_test(message: types.Message):
     quizzes = load_questions("savollar.txt")
     if not quizzes:
         return await message.answer("❌ <code>savollar.txt</code> fayli bo'sh yoki topilmadi!")
 
-    # 1. Bazaga (Yopiq guruhga) saqlash
     test_data_str = json.dumps(quizzes, ensure_ascii=False)
     db_msg = await bot.send_message(
         chat_id=DB_GROUP_ID, 
         text=f"🗂 #YANGI_TEST\n\nSavollar: {len(quizzes)} ta\n\n<code>{test_data_str}</code>"
     )
-    
-    # 2. Xabar ID sini test kodi qilib olamiz
     test_id = db_msg.message_id 
 
-    # 3. Ulashish tugmasini yasaymiz (Standart emojilar bilan)
     builder = InlineKeyboardBuilder()
     button = types.InlineKeyboardButton(
         text="📤 Guruhga ulashish", 
@@ -89,12 +82,10 @@ async def cmd_create_test(message: types.Message):
         reply_markup=builder.as_markup()
     )
 
-# Inline rejim (Guruhga ulashish bosilganda ishlaydi)
 @dp.inline_query(F.query.startswith("quiz_"))
 async def inline_share(inline_query: types.InlineQuery):
     test_id = inline_query.query.split("_")[1]
 
-    # Guruhga tushadigan Boshlash tugmasi (Standart emoji bilan)
     builder = InlineKeyboardBuilder()
     builder.row(types.InlineKeyboardButton(
         text="▶️ Guruhda Boshlash", 
@@ -113,14 +104,12 @@ async def inline_share(inline_query: types.InlineQuery):
     )
     await inline_query.answer([result], cache_time=1)
 
-# Guruhda "Boshlash" bosilganda testni aylantirish (Game Loop)
 @dp.callback_query(F.data.startswith("startquiz_"))
 async def start_quiz_loop(callback: types.CallbackQuery):
     if callback.message.chat.type == "private":
         return await callback.answer("⚠️ Bu tugma faqat guruhlarda ishlaydi!", show_alert=True)
         
     global loaded_test_cache, active_polls, user_scores
-    # Vaqtinchalik testni o'qib olamiz
     loaded_test_cache = load_questions("savollar.txt") 
     
     await callback.message.delete()
@@ -128,12 +117,11 @@ async def start_quiz_loop(callback: types.CallbackQuery):
         "📢 <b>Diqqat! Viktorina boshlanmoqda!</b>\n\n"
         "⏱ Har bir savolga <b>15 soniya</b> vaqt beriladi."
     )
-    await asyncio.sleep(3) # Tayyorgarlik uchun pauza
+    await asyncio.sleep(3)
 
     active_polls.clear()
     user_scores.clear()
 
-    # Taymerli savol jo'natish tizimi
     for index, q in enumerate(loaded_test_cache):
         poll_msg = await bot.send_poll(
             chat_id=callback.message.chat.id,
@@ -145,11 +133,10 @@ async def start_quiz_loop(callback: types.CallbackQuery):
         )
         active_polls[poll_msg.poll.id] = q['ans']
         
-        await asyncio.sleep(15) # 15 soniya kutamiz
+        await asyncio.sleep(15) 
         await bot.stop_poll(chat_id=callback.message.chat.id, message_id=poll_msg.message_id)
-        await asyncio.sleep(2) # Keyingi savolga o'tishdan oldin tanaffus
+        await asyncio.sleep(2) 
 
-    # Natijalarni hisoblash (Leaderboard)
     if not user_scores:
         return await callback.message.answer("🏁 <b>Viktorina tugadi!</b>\nHech kim to'g'ri javob topa olmadi 😔")
 
@@ -161,14 +148,11 @@ async def start_quiz_loop(callback: types.CallbackQuery):
         
     await callback.message.answer(text)
 
-# Javoblarni ushlab ball berish (Orqa fonda ishlaydi)
 @dp.poll_answer()
 async def catch_answers(poll_answer: types.PollAnswer):
     if poll_answer.poll_id in active_polls:
         if poll_answer.user.id not in user_scores:
             user_scores[poll_answer.user.id] = {"name": poll_answer.user.full_name, "score": 0}
-        
-        # To'g'ri topgan bo'lsa ball beramiz
         if poll_answer.option_ids[0] == active_polls[poll_answer.poll_id]:
             user_scores[poll_answer.user.id]["score"] += 1
 
