@@ -107,6 +107,9 @@ def _run_bot_in_thread():
         new_router.message.register(h_module.cmd_leaderboard,  Command("leaderboard"))
         new_router.message.register(h_module.cmd_my_score,     Command("my_score"))
         new_router.message.register(h_module.cmd_quiz_history, Command("quiz_history"))
+        new_router.message.register(h_module.cmd_create_quiz,  Command("create_quiz"))
+        new_router.message.register(h_module.handle_document,  F.document)
+        new_router.message.register(h_module.handle_text_quiz, F.text & F.text.startswith("Test nomi:"))
         new_router.callback_query.register(
             h_module.handle_answer,
             F.data.startswith("ans:")
@@ -131,6 +134,7 @@ def _run_bot_in_thread():
             BotCommand(command="quiz_list",    description="Testlar ro'yxati"),
             BotCommand(command="quiz_start",   description="Test boshlash (admin)"),
             BotCommand(command="quiz_stop",    description="Testni to'xtatish (admin)"),
+            BotCommand(command="create_quiz",  description="JSON fayl bilan test yaratish (admin)"),
             BotCommand(command="leaderboard",  description="Reyting"),
             BotCommand(command="my_score",     description="Mening natijalarim"),
             BotCommand(command="quiz_history", description="O'tgan testlar"),
