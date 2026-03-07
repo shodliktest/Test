@@ -59,7 +59,8 @@ def _run_bot_in_thread():
         dp = Dispatcher()
 
         # ── Servislar ──────────────────────────────
-        channel_db          = ChannelDB(bot, config.DB_CHANNEL_ID)
+        channel_id = config.DB_GROUP_ID
+        channel_db          = ChannelDB(bot, channel_id)
         quiz_service        = QuizService()
         set_channel_db(channel_db)           # Kanal DB ni service ga ulash
         group_manager       = GroupManager(bot)
