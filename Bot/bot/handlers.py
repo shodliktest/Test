@@ -678,6 +678,7 @@ async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
             f"        {bar}  {pct}%  ({cnt})"
         )
 
+    # Izohsiz asosiy matn
     revealed = (
         f"🏁 <b>Savol {idx+1}/{total}</b>\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
@@ -685,10 +686,6 @@ async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
         f"{chr(10).join(opt_lines)}\n\n"
         f"👥 Javob berdi: <b>{total_ans}</b>  |  ✅ To'g'ri: <b>{correct_cnt}</b>"
     )
-
-    # Izoh — blockquote
-    if explanation:
-        revealed += f"\n\n<blockquote>💡 {explanation}</blockquote>"
 
     try:
         if image_url:
@@ -703,11 +700,21 @@ async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
             )
     except TelegramAPIError as e:
         logger.warning(f"Reveal edit xatosi: {e}")
-        # Edit ishlamasa yangi xabar yuboramiz
         try:
             await bot.send_message(group_id, revealed, parse_mode="HTML")
         except TelegramAPIError:
             pass
+
+    # Izoh — alohida xabar sifatida (blockquote)
+    if explanation:
+        try:
+            await bot.send_message(
+                group_id,
+                f"<blockquote>💡 {explanation}</blockquote>",
+                parse_mode="HTML"
+            )
+        except TelegramAPIError as e:
+            logger.warning(f"Izoh yuborishda xato: {e}")
 
 
 async def _end_quiz(bot: Bot, session: QuizSession, quiz_service: QuizService):
