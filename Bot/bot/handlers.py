@@ -905,10 +905,11 @@ async def cmd_create_quiz(message: Message, bot: Bot):
     )
 
     # Namuna .txt faylni yuborish
+    from aiogram.types import BufferedInputFile
     sample_bytes = SAMPLE_TEXT.encode("utf-8")
     await bot.send_document(
         chat_id=message.chat.id,
-        document=("namuna_test.txt", sample_bytes, "text/plain"),
+        document=BufferedInputFile(sample_bytes, filename="namuna_test.txt"),
         caption=(
             "📥 Shu faylni yuklab, to'ldirib qayta yuboring!\n\n"
             "<b>Qoidalar:</b>\n"
