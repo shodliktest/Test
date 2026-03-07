@@ -1092,9 +1092,32 @@ async def _save_quiz_from_data(data: dict, message: Message,
             nums = ", ".join(str(n) for n in no_correct[:5])
             warn = (
                 f"\n\n⚠️ <b>Eslatma:</b> {len(no_correct)} ta savolda to'g'ri "
-                f"javob belgilanmagan ({nums}...). "
+                f"javob belgilanmagan ({nums}). "
                 f"Birinchi variant to'g'ri deb qabul qilindi."
             )
+
+        # Inline tugmalar
+        bot_username = (await message.bot.get_me()).username
+        share_url = f"https://t.me/{bot_username}?startgroup=quiz_{quiz_id}"
+
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="▶️ Guruhda boshlash",
+                    switch_inline_query=f"quiz_start {quiz_id}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 Testlar ro'yxati",
+                    switch_inline_query_current_chat="/quiz_list"
+                ),
+                InlineKeyboardButton(
+                    text="📤 Ulashish",
+                    url=share_url
+                ),
+            ],
+        ])
 
         await wait_msg.edit_text(
             f"✅ <b>Test yaratildi!</b>\n\n"
@@ -1104,9 +1127,10 @@ async def _save_quiz_from_data(data: dict, message: Message,
             f"⏱ <b>Vaqt/savol:</b> {time_per_q} soniya\n"
             f"👤 <b>Yaratdi:</b> {created_by}"
             f"{warn}\n\n"
-            f"▶️ Guruhda boshlash:\n"
+            f"▶️ Guruhda boshlash uchun:\n"
             f"<code>/quiz_start {quiz_id}</code>",
-            parse_mode="HTML"
+            parse_mode="HTML",
+            reply_markup=keyboard
         )
 
     except Exception as e:
