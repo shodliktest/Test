@@ -43,8 +43,7 @@ def _run_bot_in_thread():
         import bot.handlers as h_module
         from bot.group_manager import GroupManager
         from bot.leaderboard import LeaderboardService
-        from database.channel_db import ChannelDB
-        from services.quiz_service import QuizService, set_channel_db
+        from services.quiz_service import QuizService
         from aiogram import F
 
         token = config.BOT_TOKEN
@@ -59,10 +58,8 @@ def _run_bot_in_thread():
         dp = Dispatcher()
 
         # ── Servislar ──────────────────────────────
-        channel_id = config.DB_GROUP_ID
-        channel_db          = ChannelDB(bot, channel_id)
         quiz_service        = QuizService()
-        set_channel_db(channel_db)           # Kanal DB ni service ga ulash
+        quiz_service.startup_load()  # quizzes.json + users.json → RAM
         group_manager       = GroupManager(bot)
         leaderboard_service = LeaderboardService(None)  # RAM dan o'qiydi
 
@@ -118,13 +115,12 @@ def _run_bot_in_thread():
             BotCommand(command="quiz_history", description="O'tgan testlar"),
         ])
 
-        # ── STARTUP: FAYLLARDAN YUKLA ─────────────────
-        from database.file_store import file_info, get_all_quiz_ids
-        fi  = file_info()
-        ids = get_all_quiz_ids()
+        # ── STARTUP: quizzes.json + users.json → RAM ──
+        from database.file_store import file_info
+        fi = file_info()
         logger.info(
-            f"📂 Fayllar tayyor: {fi['quiz_count']} test, "
-            f"{fi['quizzes_kb']} KB | data: {fi['data_dir']}"
+            f"🚀 Tayyor: {fi['quiz_count']} test, "
+            f"{fi['users_count']} user | {fi['data_dir']}"
         )
 
         # Adminlarga xabar
