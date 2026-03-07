@@ -31,13 +31,7 @@ logger = logging.getLogger(__name__)
 # ══════════════════════════════════════════════════════
 
 def _run_bot_in_thread():
-    """
-    Botni alohida thread + event loop da ishlatadi.
-
-    Tuzatilgan xatolar:
-    1. set_wakeup_fd — start_polling o'rniga polling coroutine bevosita ishlatiladi
-    2. Router already attached — har safar YANGI router va dispatcher yaratiladi
-    """
+    """Botni alohida thread + event loop da ishlatadi."""
     async def _start_bot():
         from aiogram import Bot, Dispatcher, Router, BaseMiddleware
         from aiogram.client.default import DefaultBotProperties
@@ -46,14 +40,11 @@ def _run_bot_in_thread():
         from aiogram.filters import Command
         from typing import Callable, Dict, Any, Awaitable
 
-        # !! Har safar YANGI router import emas, bevosita handlers dan handler
-        # funksiyalarini olib yangi routerga qo'shamiz — "already attached" xatosi yo'q
         import bot.handlers as h_module
         from bot.group_manager import GroupManager
         from bot.leaderboard import LeaderboardService
-        from database.telegram_db import TelegramDB
-        from database.firebase_cache import FirebaseCache
-        from services.quiz_service import QuizService
+        from database.channel_db import ChannelDB
+        from services.quiz_service import QuizService, set_channel_db
         from aiogram import F
 
         token = config.BOT_TOKEN
@@ -61,19 +52,18 @@ def _run_bot_in_thread():
             logger.warning("BOT_TOKEN sozlanmagan — bot ishga tushmaydi")
             return
 
-        # Har safar yangi Bot + Dispatcher
         bot = Bot(
             token=token,
             default=DefaultBotProperties(parse_mode=ParseMode.HTML)
         )
         dp = Dispatcher()
 
-        # Servislar
-        db                  = TelegramDB(bot)
-        firebase            = FirebaseCache()
-        quiz_service        = QuizService(db)
+        # ── Servislar ──────────────────────────────
+        channel_db          = ChannelDB(bot, config.DB_CHANNEL_ID)
+        quiz_service        = QuizService()
+        set_channel_db(channel_db)           # Kanal DB ni service ga ulash
         group_manager       = GroupManager(bot)
-        leaderboard_service = LeaderboardService(db)
+        leaderboard_service = LeaderboardService(None)  # RAM dan o'qiydi
 
         # Middleware
         class MW(BaseMiddleware):
@@ -84,21 +74,18 @@ def _run_bot_in_thread():
                 data: Dict[str, Any]
             ) -> Any:
                 data["bot"]                  = bot
-                data["db"]                   = db
                 data["quiz_service"]         = quiz_service
                 data["group_manager"]        = group_manager
                 data["leaderboard_service"]  = leaderboard_service
-                data["firebase"]             = firebase
                 return await handler(event, data)
 
         mw = MW()
         dp.message.middleware(mw)
         dp.callback_query.middleware(mw)
 
-        # Har safar YANGI router yaratish (eski routerni qayta ishlatmaslik)
+        # Har safar YANGI router yaratish
         new_router = Router(name="main_fresh")
 
-        # Handlerlarni yangi routerga qo'shish
         new_router.message.register(h_module.cmd_start,        Command("start"))
         new_router.message.register(h_module.cmd_help,         Command("help"))
         new_router.message.register(h_module.cmd_quiz_list,    Command("quiz_list"))
@@ -109,21 +96,11 @@ def _run_bot_in_thread():
         new_router.message.register(h_module.cmd_quiz_history, Command("quiz_history"))
         new_router.message.register(h_module.cmd_create_quiz,  Command("create_quiz"))
         new_router.message.register(h_module.handle_document,  F.document)
-        new_router.message.register(h_module.handle_text_quiz, F.text & F.text.startswith("Test nomi:"))
+        new_router.message.register(h_module.handle_text_quiz,
+                                    F.text & F.text.startswith("Test nomi:"))
         new_router.callback_query.register(
-            h_module.handle_answer,
-            F.data.startswith("ans:")
+            h_module.handle_answer, F.data.startswith("ans:")
         )
-
-        # DB guruh tinglash
-        @new_router.message()
-        async def db_listener(message: Message):
-            try:
-                if message.chat.id == int(config.DB_GROUP_ID):
-                    if message.text and "DB_RECORD" in message.text:
-                        db.update_cache(message.message_id, message.text)
-            except Exception:
-                pass
 
         dp.include_router(new_router)
 
@@ -134,36 +111,30 @@ def _run_bot_in_thread():
             BotCommand(command="quiz_list",    description="Testlar ro'yxati"),
             BotCommand(command="quiz_start",   description="Test boshlash (admin)"),
             BotCommand(command="quiz_stop",    description="Testni to'xtatish (admin)"),
-            BotCommand(command="create_quiz",  description="JSON fayl bilan test yaratish (admin)"),
+            BotCommand(command="create_quiz",  description="Test yaratish (admin)"),
             BotCommand(command="leaderboard",  description="Reyting"),
             BotCommand(command="my_score",     description="Mening natijalarim"),
             BotCommand(command="quiz_history", description="O'tgan testlar"),
         ])
 
-        # ── STARTUP DA DB DAN YUKLASH ──────────────────
-        # getUpdates orqali DB guruhidan oxirgi xabarlarni o'qiymiz
-        logger.info("📥 DB guruhdan xabarlar yuklanmoqda...")
-        try:
-            # drop_pending=False — pending updatelarni o'qib cache ga yozamiz
-            updates = await bot.get_updates(limit=100, timeout=3, allowed_updates=["message"])
-            db_id = int(config.DB_GROUP_ID)
-            loaded = 0
-            for upd in updates:
-                msg = upd.message
-                if msg and msg.chat.id == db_id and msg.text and "DB_RECORD" in msg.text:
-                    db.update_cache(msg.message_id, msg.text)
-                    loaded += 1
-            logger.info(f"📥 Pending updatelardan {loaded} ta record yuklandi")
-        except Exception as e:
-            logger.warning(f"Pending updates o'qishda xato: {e}")
+        # ── STARTUP DA KANALDAN YUKLASH ──────────────
+        logger.info("📥 Telegram kanaldan ma'lumotlar yuklanmoqda...")
+        ok = await channel_db.check()
+        if ok:
+            await channel_db.load_all(max_messages=300)
+        else:
+            logger.warning("⚠️ Kanal topilmadi — DB_CHANNEL_ID ni tekshiring")
 
         # Adminlarga xabar
+        stats = quiz_service.get_stats()
         for admin_id in config.ADMIN_IDS:
             try:
                 await bot.send_message(
                     admin_id,
                     f"✅ <b>Bot ishga tushdi!</b>\n\n"
-                    f"📦 Cache: {len(db._cache)} ta record\n"
+                    f"📚 Testlar: <b>{stats['quizzes']}</b>\n"
+                    f"📊 Natijalar: <b>{stats['results']}</b>\n"
+                    f"💾 Kanal: <code>{config.DB_CHANNEL_ID}</code>\n\n"
                     f"/quiz_list — testlarni ko'rish\n"
                     f"/create_quiz — test yaratish"
                 )
@@ -175,7 +146,7 @@ def _run_bot_in_thread():
             await dp.start_polling(
                 bot,
                 allowed_updates=["message", "callback_query"],
-                drop_pending_updates=False,  # pending larni o'qib oldik, o'chirmaymiz
+                drop_pending_updates=True,
                 handle_signals=False,
                 close_bot_session=True,
             )
