@@ -124,7 +124,7 @@ async def cmd_quiz_start(message: Message, bot: Bot,
         return
 
     # Admin tekshiruvi
-    is_admin = await group_manager.is_admin(message.chat.id, message.from_user.id)
+    is_admin = await group_manager.is_group_admin(message.chat.id, message.from_user.id)
     if not is_admin:
         await message.answer("❌ Faqat guruh adminlari test boshlashi mumkin.")
         return
@@ -397,7 +397,7 @@ async def cmd_quiz_stop(message: Message, bot: Bot,
         await message.answer("⚠️ Hozir aktiv test yo'q.")
         return
 
-    is_admin = await group_manager.is_admin(group_id, message.from_user.id)
+    is_admin = await group_manager.is_group_admin(group_id, message.from_user.id)
     if not is_admin:
         await message.answer("❌ Faqat adminlar to'xtatishi mumkin.")
         return
