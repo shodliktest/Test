@@ -34,8 +34,7 @@ class TelegramDB:
             text = format_json_message(data)
             msg = await self.bot.send_message(
                 chat_id=self.db_group_id,
-                text=text,
-                parse_mode="Markdown"
+                text=text
             )
             rec = dict(data)
             rec["_message_id"] = msg.message_id
