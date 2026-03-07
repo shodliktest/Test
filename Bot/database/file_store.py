@@ -184,3 +184,28 @@ def file_info() -> dict:
 # Eski import uchun alias
 get_all_quiz_ids = load_quiz_index
 
+
+
+# ════════════════════════════════════════════════════
+# ACTIVE SESSIONS — restart da tiklash uchun
+# ════════════════════════════════════════════════════
+
+ACTIVE_SESSIONS_FILE = DATA_DIR / "active_sessions.json"
+
+def save_active_session(group_id: int, session_data: dict) -> bool:
+    """Aktiv sessiyani faylga saqlaydi (restart da tiklash uchun)."""
+    all_sessions = _read(ACTIVE_SESSIONS_FILE, {})
+    all_sessions[str(group_id)] = session_data
+    return _write(ACTIVE_SESSIONS_FILE, all_sessions)
+
+def load_active_sessions() -> dict:
+    """Barcha aktiv sessiyalarni yuklaydi."""
+    return _read(ACTIVE_SESSIONS_FILE, {})
+
+def delete_active_session(group_id: int):
+    """Sessiya tugagach fayldan o'chiradi."""
+    all_sessions = _read(ACTIVE_SESSIONS_FILE, {})
+    key = str(group_id)
+    if key in all_sessions:
+        del all_sessions[key]
+        _write(ACTIVE_SESSIONS_FILE, all_sessions)
