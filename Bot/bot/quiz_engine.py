@@ -76,9 +76,16 @@ class QuizSession:
         if not q:
             return None
 
-        answer_idx = option_ids[0]
+        answer_idx  = option_ids[0]
         correct_idx = q.get("correct_index", 0)
         is_correct  = (answer_idx == correct_idx)
+
+        logger.info(
+            f"📝 Javob: user={username}({user_id}) "
+            f"savol={self.current_question_index} "
+            f"tanlov={answer_idx} togri={correct_idx} "
+            f"natija={'✅' if is_correct else '❌'}"
+        )
 
         self.current_answers[user_id] = {
             "user_id":    user_id,
@@ -99,6 +106,7 @@ class QuizSession:
         if is_correct:
             self.user_scores[user_id]["correct"] += 1
 
+        logger.info(f"📊 Jami: {username} -> {self.user_scores[user_id]['correct']} togri")
         return is_correct
 
     def advance_question(self):
