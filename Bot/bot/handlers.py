@@ -68,8 +68,11 @@ def build_countdown_bar(seconds_left: int, total: int) -> str:
 # ══════════════════════════════════════════════════════
 
 @router.message(CommandStart())
-async def cmd_start(message: Message):
-    name = message.from_user.first_name or "o'quvchi"
+async def cmd_start(message: Message, quiz_service: QuizService):
+    user = message.from_user
+    name = user.first_name or "o'quvchi"
+    # Foydalanuvchini ro'yxatdan o'tkazish
+    quiz_service.register_user(user.id, user.first_name or "", user.username or "")
     chat_type = message.chat.type
 
     if chat_type == "private":
