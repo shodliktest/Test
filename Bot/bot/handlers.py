@@ -662,26 +662,25 @@ async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
 
     opt_labels = ["🅐", "🅑", "🅒", "🅓"]
 
-    # Variantlar — foiz bar ••••---- (10 ta belgi)
     opt_lines = []
     for i, opt in enumerate(options[:4]):
-        cnt    = vote_counts[i] if i < len(vote_counts) else 0
-        pct    = round(cnt / total_ans * 100) if total_ans else 0
-        filled = round(pct / 10)
-        bar    = "●" * filled + "○" * (10 - filled)
-        label  = opt_labels[i] if i < len(opt_labels) else f"{i+1}"
-        mark   = "✅" if i == correct_i else "   "
+        cnt   = vote_counts[i] if i < len(vote_counts) else 0
+        pct   = round(cnt / total_ans * 100) if total_ans else 0
+        bar_n = int(pct / 10)
+        bar   = "🟩" * bar_n + "⬜" * (10 - bar_n)
+        label = opt_labels[i] if i < len(opt_labels) else f"{i+1}"
+        mark  = "✅ " if i == correct_i else "    "
         opt_lines.append(
-            f"{mark} {label}  {opt}\n"
-            f"      {bar}  {pct}%  ({cnt})"
+            f"{mark}{label}  {opt}\n"
+            f"        {bar}  {pct}%  ({cnt} kishi)"
         )
 
-    # Izohsiz asosiy matn
     revealed = (
-        f"🏁 <b>Savol {idx+1}/{total}</b>\n"
+        f"🏁 <b>Savol {idx+1}/{total}</b>  —  Vaqt tugadi!\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
         f"{q['text']}\n\n"
         f"{chr(10).join(opt_lines)}\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━\n"
         f"👥 Javob berdi: <b>{total_ans}</b>  |  ✅ To'g'ri: <b>{correct_cnt}</b>"
     )
 
@@ -703,7 +702,7 @@ async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
         except TelegramAPIError:
             pass
 
-    # Izoh — alohida xabar sifatida (blockquote)
+    # Izoh — alohida YANGI xabar (blockquote faqat send_message da ishlaydi)
     if explanation:
         try:
             await bot.send_message(
