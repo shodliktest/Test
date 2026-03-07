@@ -694,3 +694,414 @@ def _format_final_leaderboard(results: list, quiz_title: str,
         f"\n🎉 Barcha ishtirokchilarga rahmat!"
     ]
     return "\n".join(lines)
+
+
+# ══════════════════════════════════════════════════════
+# TEST YARATISH — ODDIY MATN YOKI FAYL ORQALI
+# ══════════════════════════════════════════════════════
+
+import json as _json
+import io as _io
+import re as _re
+
+# ── Namuna matn formati ──────────────────────────────
+SAMPLE_TEXT = """Test nomi: Geografiya testi
+Vaqt: 30
+
+1. O'zbekiston poytaxti qayer?
+A) Xiva
+B) Namangan
+*C) Toshkent
+D) Andijon
+
+2. Eng baland tog' qaysi?
+A) Elbrус
+*B) Everest
+C) Kilimanjaro
+D) Fuji
+
+3. Kaspiy dengizi qaysi okean havzasiga kiradi?
++A) Hech qaysi (yopiq havza)
+B) Atlantika
+C) Tinch okean
+D) Hind okeani"""
+
+
+# ══════════════════════════════════════════════════════
+# MATN FORMATI PARSER
+# ══════════════════════════════════════════════════════
+
+def parse_text_quiz(text: str) -> dict:
+    """
+    Oddiy matn formatdagi testni parse qiladi.
+
+    Qo'llab-quvvatlanadigan formatlar:
+      - To'g'ri javob: * yoki + bilan belgilanadi
+        *A) Javob   yoki   A) *Javob   yoki   +A) Javob
+      - Savol raqami: "1." yoki "1)" formatda
+      - Sarlavha: "Test nomi: ..." yoki birinchi qator
+      - Vaqt: "Vaqt: 30" yoki "Time: 30"
+    """
+    lines = [l.rstrip() for l in text.strip().splitlines()]
+
+    title       = ""
+    time_per_q  = 30
+    description = ""
+    questions   = []
+
+    # ── Sarlavha va meta ma'lumotlar ──
+    content_lines = []
+    for line in lines:
+        low = line.lower().strip()
+
+        # Sarlavha
+        if not title and _re.match(r'^(test nomi|title|nom)\s*:', low):
+            title = _re.sub(r'^[^:]+:\s*', '', line, flags=_re.IGNORECASE).strip()
+            continue
+
+        # Vaqt
+        if _re.match(r'^(vaqt|time|seconds?)\s*:', low):
+            val = _re.sub(r'^[^:]+:\s*', '', line, flags=_re.IGNORECASE).strip()
+            try:
+                time_per_q = max(5, min(120, int(val)))
+            except ValueError:
+                pass
+            continue
+
+        # Tavsif
+        if _re.match(r'^(tavsif|description|izoh)\s*:', low):
+            description = _re.sub(r'^[^:]+:\s*', '', line, flags=_re.IGNORECASE).strip()
+            continue
+
+        content_lines.append(line)
+
+    # ── Savollarni ajratish ──
+    # Savol boshlanishini aniqlash: "1." "1)" "1-"
+    Q_START = _re.compile(r'^\s*(\d+)\s*[.\-\)]\s+(.+)')
+    # Variant boshlanishi: A) B) C) D)  (yoki *A) +B) A)* va h.k.)
+    OPT_RE  = _re.compile(
+        r'^\s*'
+        r'(?P<correct1>[*+])?'          # * yoki + boshida
+        r'\s*(?P<label>[A-Da-d])'       # A B C D
+        r'\s*[.\-\)]\s*'               # ). yoki -
+        r'(?P<correct2>[*+])?'          # * yoki + labeldan keyin
+        r'\s*(?P<text>.+)'             # variant matni
+    )
+
+    current_q   = None
+    current_opts = []
+    correct_idx  = -1
+
+    def flush_question():
+        nonlocal current_q, current_opts, correct_idx
+        if current_q and current_opts:
+            if correct_idx == -1:
+                correct_idx = 0  # Default: birinchi variant
+            questions.append({
+                "text":          current_q,
+                "type":          "multiple_choice",
+                "options":       [o for o in current_opts],
+                "correct_index": correct_idx,
+                "explanation":   "",
+                "image_url":     "",
+            })
+        current_q    = None
+        current_opts = []
+        correct_idx  = -1
+
+    for line in content_lines:
+        if not line.strip():
+            continue
+
+        # Yangi savol?
+        m_q = Q_START.match(line)
+        if m_q:
+            flush_question()
+            current_q   = m_q.group(2).strip()
+            current_opts = []
+            correct_idx  = -1
+            continue
+
+        # Variant?
+        m_o = OPT_RE.match(line)
+        if m_o and current_q is not None:
+            is_correct = bool(m_o.group("correct1") or m_o.group("correct2"))
+            opt_text   = m_o.group("text").strip()
+
+            # Variant matnida * yoki + bor?
+            # masalan:  A) *Toshkent
+            if opt_text.startswith(("*", "+")):
+                is_correct = True
+                opt_text   = opt_text[1:].strip()
+
+            if is_correct:
+                correct_idx = len(current_opts)
+
+            current_opts.append(opt_text)
+            continue
+
+        # Savol davomi (ko'p qatorli savol)
+        if current_q is not None and not m_o:
+            current_q += " " + line.strip()
+
+    flush_question()  # Oxirgi savolni saqlash
+
+    # Sarlavha topilmagan bo'lsa — birinchi savoldan oldingi matn
+    if not title:
+        title = "Yangi Test"
+
+    return {
+        "title":            title,
+        "description":      description,
+        "time_per_question": time_per_q,
+        "questions":        questions,
+    }
+
+
+# ══════════════════════════════════════════════════════
+# /create_quiz — YO'RIQNOMA VA NAMUNA
+# ══════════════════════════════════════════════════════
+
+@router.message(Command("create_quiz"))
+async def cmd_create_quiz(message: Message, bot: Bot):
+    """
+    /create_quiz — test yaratish yo'riqnomasi.
+    Faqat adminlar uchun.
+    """
+    if message.from_user.id not in config.ADMIN_IDS:
+        await message.answer("❌ Bu buyruq faqat <b>adminlar</b> uchun!", parse_mode="HTML")
+        return
+
+    await message.answer(
+        "📋 <b>Test yaratish — 2 usul:</b>\n\n"
+
+        "━━━━━━━━━━━━━━━━━━━━━\n"
+        "📝 <b>1-usul: Matn yuborish</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━\n"
+        "Quyidagi formatda <b>to'g'ridan-to'g'ri xabar yozing</b>:\n\n"
+
+        "<code>Test nomi: Geografiya\n"
+        "Vaqt: 30\n\n"
+        "1. Savol matni?\n"
+        "A) Variant\n"
+        "B) Variant\n"
+        "*C) To'g'ri javob\n"
+        "D) Variant\n\n"
+        "2. Keyingi savol?\n"
+        "+A) To'g'ri javob\n"
+        "B) Variant\n"
+        "C) Variant</code>\n\n"
+
+        "✅ <b>To'g'ri javob belgisi:</b> <code>*</code> yoki <code>+</code>\n"
+        "   Variantdan oldin: <code>*A)</code> yoki <code>+A)</code>\n"
+        "   Variantdan keyin: <code>A) *Toshkent</code>\n\n"
+
+        "━━━━━━━━━━━━━━━━━━━━━\n"
+        "📄 <b>2-usul: .txt yoki .json fayl</b>\n"
+        "━━━━━━━━━━━━━━━━━━━━━\n"
+        "Xuddi shu formatda fayl yaratib yuboring.\n\n"
+        "👇 Namuna fayl:",
+        parse_mode="HTML"
+    )
+
+    # Namuna .txt faylni yuborish
+    sample_bytes = SAMPLE_TEXT.encode("utf-8")
+    await bot.send_document(
+        chat_id=message.chat.id,
+        document=("namuna_test.txt", sample_bytes, "text/plain"),
+        caption=(
+            "📥 Shu faylni yuklab, to'ldirib qayta yuboring!\n\n"
+            "<b>Qoidalar:</b>\n"
+            "• <code>*A)</code> yoki <code>+A)</code> — to'g'ri javob\n"
+            "• Har bir savol raqam bilan boshlanadi: <code>1.</code> <code>2.</code>\n"
+            "• Variantlar: <code>A)</code> <code>B)</code> <code>C)</code> <code>D)</code>\n"
+            "• <code>Vaqt: 30</code> — soniya (5-120)\n"
+            "• <code>Test nomi: ...</code> — sarlavha"
+        ),
+        parse_mode="HTML"
+    )
+
+
+
+# ══════════════════════════════════════════════════════
+# FAYL QABUL QILISH (.txt yoki .json)
+# ══════════════════════════════════════════════════════
+
+@router.message(F.document)
+async def handle_document(message: Message, bot: Bot, quiz_service: QuizService):
+    """Admin yuborgan .txt yoki .json fayldan test yaratadi."""
+    if message.from_user.id not in config.ADMIN_IDS:
+        return
+
+    doc   = message.document
+    fname = (doc.file_name or "").lower()
+
+    if not (fname.endswith(".txt") or fname.endswith(".json")):
+        await message.answer(
+            "⚠️ Faqat <b>.txt</b> yoki <b>.json</b> fayl qabul qilinadi!\n"
+            "/create_quiz — namuna olish",
+            parse_mode="HTML"
+        )
+        return
+
+    if doc.file_size and doc.file_size > 500_000:
+        await message.answer("❌ Fayl 500 KB dan kichik bo'lishi kerak!")
+        return
+
+    wait_msg = await message.answer("⏳ Fayl o'qilmoqda...")
+
+    try:
+        file       = await bot.get_file(doc.file_id)
+        file_bytes = await bot.download_file(file.file_path)
+        content    = file_bytes.read().decode("utf-8")
+    except Exception as e:
+        await wait_msg.edit_text(f"❌ Faylni yuklab bo'lmadi: {e}")
+        return
+
+    # .json yoki .txt parse qilish
+    if fname.endswith(".json"):
+        try:
+            raw = _json.loads(content)
+            # JSON formatda kelgan bo'lsa — to'g'ridan parse
+            data = _parse_json_data(raw)
+        except _json.JSONDecodeError as e:
+            await wait_msg.edit_text(
+                f"❌ <b>JSON xatosi:</b>\n<code>{str(e)[:200]}</code>",
+                parse_mode="HTML"
+            )
+            return
+    else:
+        # .txt — oddiy matn format
+        data = parse_text_quiz(content)
+
+    await _save_quiz_from_data(data, message, wait_msg, quiz_service)
+
+
+# ══════════════════════════════════════════════════════
+# TO'G'RIDAN XABAR ORQALI TEST YARATISH
+# ══════════════════════════════════════════════════════
+
+@router.message(F.text & F.text.startswith("Test nomi:"))
+async def handle_text_quiz(message: Message, quiz_service: QuizService):
+    """
+    Admin 'Test nomi:' bilan boshlanadigan xabar yuborganda
+    to'g'ridan test yaratadi — fayl shart emas!
+    """
+    if message.from_user.id not in config.ADMIN_IDS:
+        return
+
+    wait_msg = await message.answer("⏳ Test o'qilmoqda...")
+    data = parse_text_quiz(message.text)
+    await _save_quiz_from_data(data, message, wait_msg, quiz_service)
+
+
+# ══════════════════════════════════════════════════════
+# YORDAMCHI FUNKSIYALAR
+# ══════════════════════════════════════════════════════
+
+def _parse_json_data(raw: dict) -> dict:
+    """JSON dict ni ichki formatga o'giradi."""
+    questions = []
+    for q in raw.get("questions", []):
+        questions.append({
+            "text":          str(q.get("text", "")).strip(),
+            "type":          q.get("type", "multiple_choice"),
+            "options":       [str(o) for o in q.get("options", [])[:4]],
+            "correct_index": int(q.get("correct_index", 0)),
+            "explanation":   str(q.get("explanation", "")).strip(),
+            "image_url":     str(q.get("image_url", "")).strip(),
+        })
+    return {
+        "title":             raw.get("title", "Yangi Test").strip(),
+        "description":       raw.get("description", "").strip(),
+        "time_per_question": int(raw.get("time_per_question", 30)),
+        "questions":         questions,
+    }
+
+
+async def _save_quiz_from_data(data: dict, message: Message,
+                                wait_msg, quiz_service: QuizService):
+    """Parse qilingan ma'lumotni tekshirib DB ga saqlaydi."""
+    from utils.helpers import generate_id, build_quiz_record, build_question_record
+
+    title     = data.get("title", "").strip()
+    questions = data.get("questions", [])
+
+    # ── Tekshirish ──
+    if not title:
+        await wait_msg.edit_text(
+            "❌ <b>Test nomi topilmadi!</b>\n\n"
+            "Matn birinchi qatordan boshlang:\n"
+            "<code>Test nomi: Geografiya testi</code>",
+            parse_mode="HTML"
+        )
+        return
+
+    if not questions:
+        await wait_msg.edit_text(
+            "❌ <b>Savollar topilmadi!</b>\n\n"
+            "Format to'g'riligini tekshiring:\n"
+            "<code>1. Savol matni?\n"
+            "A) Variant\n"
+            "*B) To'g'ri javob</code>",
+            parse_mode="HTML"
+        )
+        return
+
+    # To'g'ri javobsiz savollarni aniqlash
+    no_correct = [
+        i + 1 for i, q in enumerate(questions)
+        if q.get("correct_index", -1) == -1
+    ]
+
+    time_per_q  = max(5, min(120, int(data.get("time_per_question", 30))))
+    description = data.get("description", "")
+    created_by  = message.from_user.username or message.from_user.first_name or "admin"
+
+    try:
+        quiz_id  = generate_id("quiz")
+        quiz_rec = build_quiz_record(
+            quiz_id, title, description, created_by,
+            len(questions), time_per_q
+        )
+        await quiz_service.db.save_record(quiz_rec)
+
+        for idx, q in enumerate(questions):
+            q_rec = build_question_record(
+                quiz_id, idx,
+                q["text"], q["options"], q["correct_index"],
+                q.get("type", "multiple_choice"),
+                q.get("explanation", ""),
+                q.get("image_url", "")
+            )
+            await quiz_service.db.save_record(q_rec)
+
+        # ── Muvaffaqiyat ──
+        warn = ""
+        if no_correct:
+            nums = ", ".join(str(n) for n in no_correct[:5])
+            warn = (
+                f"\n\n⚠️ <b>Eslatma:</b> {len(no_correct)} ta savolda to'g'ri "
+                f"javob belgilanmagan ({nums}...). "
+                f"Birinchi variant to'g'ri deb qabul qilindi."
+            )
+
+        await wait_msg.edit_text(
+            f"✅ <b>Test yaratildi!</b>\n\n"
+            f"📚 <b>Nom:</b> {title}\n"
+            f"🆔 <b>ID:</b> <code>{quiz_id}</code>\n"
+            f"❓ <b>Savollar:</b> {len(questions)} ta\n"
+            f"⏱ <b>Vaqt/savol:</b> {time_per_q} soniya\n"
+            f"👤 <b>Yaratdi:</b> {created_by}"
+            f"{warn}\n\n"
+            f"▶️ Guruhda boshlash:\n"
+            f"<code>/quiz_start {quiz_id}</code>",
+            parse_mode="HTML"
+        )
+
+    except Exception as e:
+        await wait_msg.edit_text(
+            f"❌ <b>Saqlashda xato:</b> {e}\n\n"
+            f"DB guruh: <code>{config.DB_GROUP_ID}</code>",
+            parse_mode="HTML"
+        )
