@@ -124,7 +124,7 @@ def _run_bot_in_thread():
         )
 
         # Adminlarga xabar
-        from database.file_store import file_info, get_all_quiz_ids
+        from database.file_store import file_info
         stats = quiz_service.get_stats()
         for admin_id in config.ADMIN_IDS:
             try:
