@@ -4,6 +4,7 @@
 ║         Streamlit Dashboard - Main Entry Point       ║
 ║                                                      ║
 ║  Ishga tushirish:  streamlit run main.py             ║
+║  Bot background da avtomatik ishga tushadi!          ║
 ╚══════════════════════════════════════════════════════╝
 """
 import streamlit as st
@@ -12,6 +13,9 @@ import sys
 import os
 import csv
 import io
+import threading
+import asyncio
+import logging
 from datetime import datetime
 
 # Root papkani Python path ga qo'shish
@@ -19,6 +23,143 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT_DIR)
 
 from utils.config import config
+
+logger = logging.getLogger(__name__)
+
+# ══════════════════════════════════════════════════════
+# BOT — BACKGROUND THREAD DA ISHLATISH
+# ══════════════════════════════════════════════════════
+
+def _run_bot_in_thread():
+    """
+    Botni alohida thread + event loop da ishlatadi.
+    Streamlit har sahifa yangilanishda qayta ishga tushirmasligi uchun
+    'bot_started' flagini st.session_state da saqlaymiz.
+    """
+    async def _start_bot():
+        try:
+            from aiogram import Bot, Dispatcher, Router, BaseMiddleware
+            from aiogram.client.default import DefaultBotProperties
+            from aiogram.enums import ParseMode
+            from aiogram.types import Message, BotCommand, TelegramObject
+            from typing import Callable, Dict, Any, Awaitable
+
+            from bot.handlers import router as main_router
+            from bot.group_manager import GroupManager
+            from bot.leaderboard import LeaderboardService
+            from database.telegram_db import TelegramDB
+            from database.firebase_cache import FirebaseCache
+            from services.quiz_service import QuizService
+
+            token = config.BOT_TOKEN
+            if not token or token == "YOUR_BOT_TOKEN_HERE":
+                logger.warning("BOT_TOKEN sozlanmagan — bot ishga tushmaydi")
+                return
+
+            bot = Bot(
+                token=token,
+                default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+            )
+            dp = Dispatcher()
+
+            # Servislar
+            db                   = TelegramDB(bot)
+            firebase             = FirebaseCache()
+            quiz_service         = QuizService(db)
+            group_manager        = GroupManager(bot)
+            leaderboard_service  = LeaderboardService(db)
+
+            # Middleware
+            class MW(BaseMiddleware):
+                async def __call__(
+                    self,
+                    handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+                    event: TelegramObject,
+                    data: Dict[str, Any]
+                ) -> Any:
+                    data["bot"]                  = bot
+                    data["db"]                   = db
+                    data["quiz_service"]         = quiz_service
+                    data["group_manager"]        = group_manager
+                    data["leaderboard_service"]  = leaderboard_service
+                    data["firebase"]             = firebase
+                    return await handler(event, data)
+
+            mw = MW()
+            dp.message.middleware(mw)
+            dp.callback_query.middleware(mw)
+
+            # DB guruh tinglash
+            db_router = Router()
+
+            @db_router.message()
+            async def db_listener(message: Message):
+                try:
+                    if message.chat.id == int(config.DB_GROUP_ID):
+                        if message.text and "DB_RECORD" in message.text:
+                            db.update_cache(message.message_id, message.text)
+                except Exception:
+                    pass
+
+            dp.include_router(db_router)
+            dp.include_router(main_router)
+
+            # Buyruqlar
+            await bot.set_my_commands([
+                BotCommand(command="start",        description="Boshlash"),
+                BotCommand(command="help",         description="Yordam"),
+                BotCommand(command="quiz_list",    description="Testlar ro'yxati"),
+                BotCommand(command="quiz_start",   description="Test boshlash (admin)"),
+                BotCommand(command="quiz_stop",    description="Testni to'xtatish (admin)"),
+                BotCommand(command="leaderboard",  description="Reyting"),
+                BotCommand(command="my_score",     description="Mening natijalarim"),
+                BotCommand(command="quiz_history", description="O'tgan testlar"),
+            ])
+
+            logger.info("✅ Bot polling boshlandi (background)")
+
+            await dp.start_polling(
+                bot,
+                allowed_updates=["message", "callback_query"],
+                drop_pending_updates=True
+            )
+
+        except Exception as e:
+            logger.error(f"Bot xatosi: {e}", exc_info=True)
+
+    # Yangi event loop yaratib botni ishga tushirish
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        loop.run_until_complete(_start_bot())
+    except Exception as e:
+        logger.error(f"Bot thread xatosi: {e}")
+    finally:
+        loop.close()
+
+
+def start_bot_background():
+    """
+    Botni background thread da bir martadan ishga tushiradi.
+    Streamlit har render da bu funksiyani chaqiradi,
+    lekin thread faqat bir marta yaratiladi.
+    """
+    # Thread allaqachon ishlamoqdami?
+    for t in threading.enumerate():
+        if t.name == "QuizBotThread":
+            return  # Allaqachon ishlamoqda
+
+    token = config.BOT_TOKEN
+    if not token or token == "YOUR_BOT_TOKEN_HERE":
+        return  # Token yo'q — ishlatma
+
+    t = threading.Thread(
+        target=_run_bot_in_thread,
+        name="QuizBotThread",
+        daemon=True   # Streamlit to'xtaganda bot ham to'xtaydi
+    )
+    t.start()
+    logger.info("🚀 Bot background thread ishga tushdi")
 
 # ══════════════════════════════════════════════════════
 # PAGE CONFIG
@@ -757,13 +898,116 @@ def page_logs(db_records: list):
 # ══════════════════════════════════════════════════════
 # MAIN ENTRY POINT
 # ══════════════════════════════════════════════════════
+def bot_status_widget():
+    """Sidebar da bot holati ko'rsatadi."""
+    token = config.BOT_TOKEN
+    token_ok = token and token != "YOUR_BOT_TOKEN_HERE"
+
+    # Thread ishlamoqdami?
+    bot_running = any(t.name == "QuizBotThread" for t in threading.enumerate())
+
+    if token_ok and bot_running:
+        st.markdown("""
+        <div style='background:rgba(72,187,120,0.15); border:1px solid rgba(72,187,120,0.4);
+                    border-radius:8px; padding:10px 14px; margin-bottom:12px;'>
+            <span style='color:#68d391; font-size:0.9rem;'>🟢 <b>Bot: Ishlamoqda</b></span>
+        </div>
+        """, unsafe_allow_html=True)
+    elif token_ok and not bot_running:
+        st.markdown("""
+        <div style='background:rgba(237,137,54,0.15); border:1px solid rgba(237,137,54,0.4);
+                    border-radius:8px; padding:10px 14px; margin-bottom:12px;'>
+            <span style='color:#f6ad55; font-size:0.9rem;'>🟡 <b>Bot: Ishga tushmoqda...</b></span>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style='background:rgba(245,101,101,0.15); border:1px solid rgba(245,101,101,0.4);
+                    border-radius:8px; padding:10px 14px; margin-bottom:12px;'>
+            <span style='color:#fc8181; font-size:0.9rem;'>🔴 <b>Bot: Token yo'q</b></span>
+        </div>
+        """, unsafe_allow_html=True)
+        st.caption("Secrets da BOT_TOKEN kiriting")
+
+
 def main():
+    # ── Botni background da ishga tushirish ──
+    # (Streamlit har render qilganda chaqiriladi,
+    #  lekin thread faqat bir marta yaratiladi)
+    start_bot_background()
+
     if not check_auth():
         return
 
     db_records = load_demo_data()
-    render_sidebar(db_records)
 
+    # ── Sidebar ──
+    with st.sidebar:
+        st.markdown("""
+        <div style='text-align:center; padding:16px 0 12px;
+                    border-bottom:1px solid rgba(99,179,237,0.1); margin-bottom:16px;'>
+            <div style='font-size:2.2rem;'>🎯</div>
+            <div style='color:#e2e8f0; font-weight:700; font-size:1rem;'>Quiz Platform</div>
+            <div style='color:#718096; font-size:0.72rem;'>Admin Dashboard v1.0</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Bot holati
+        bot_status_widget()
+
+        st.markdown("**Navigatsiya**")
+        pages = {
+            "🏠 Bosh sahifa":          "home",
+            "✏️ Quiz Yaratish":         "creator",
+            "📝 Quiz Tahrirlash":       "editor",
+            "📊 Tahlil":                "analytics",
+            "🏆 Foydalanuvchi ballari": "scores",
+            "📋 Tizim loglari":         "logs",
+        }
+        if "current_page" not in st.session_state:
+            st.session_state.current_page = "home"
+
+        for label, key in pages.items():
+            is_active = st.session_state.current_page == key
+            if st.button(label, key=f"nav_{key}", use_container_width=True,
+                         type="primary" if is_active else "secondary"):
+                st.session_state.current_page = key
+                st.rerun()
+
+        st.divider()
+
+        quizzes  = [r for r in db_records if r.get("type") == "QUIZ" and r.get("active", True)]
+        scores   = [r for r in db_records if r.get("type") == "USER_SCORE"]
+        sessions = [r for r in db_records if r.get("type") == "SESSION"]
+
+        st.markdown("**Tezkor statistika**")
+        st.caption(f"📚 Quizlar: **{len(quizzes)}**")
+        st.caption(f"🎮 Sessiyalar: **{len(sessions)}**")
+        st.caption(f"👥 Urinishlar: **{len(scores)}**")
+        st.caption(f"🙋 O'yinchilar: **{len(set(s.get('user_id') for s in scores))}**")
+
+        st.divider()
+
+        with st.expander("📥 JSON yuklash"):
+            uploaded = st.file_uploader("JSON fayl", type="json", label_visibility="collapsed")
+            if uploaded:
+                try:
+                    data = json.load(uploaded)
+                    if isinstance(data, list):
+                        st.session_state.db_records = data
+                        st.session_state.demo_data_loaded = True
+                        st.success(f"✅ {len(data)} ta yozuv yuklandi!")
+                        st.rerun()
+                    else:
+                        st.error("JSON massiv bo'lishi kerak!")
+                except Exception as e:
+                    st.error(f"Xato: {e}")
+
+        if st.button("🚪 Chiqish", use_container_width=True):
+            st.session_state.authenticated = False
+            st.rerun()
+
+    # ── Sahifa routing ──
     page = st.session_state.get("current_page", "home")
     routing = {
         "home":      lambda: page_home(db_records),

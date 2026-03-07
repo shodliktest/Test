@@ -1,0 +1,17 @@
+services:
+  - type: worker
+    name: quiz-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run_bot.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: DB_GROUP_ID
+        sync: false
+      - key: ADMIN_IDS
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
