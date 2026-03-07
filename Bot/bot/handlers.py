@@ -320,15 +320,27 @@ async def handle_poll_answer(poll_answer: PollAnswer):
     option_ids = poll_answer.option_ids
 
     session = session_manager.get_session_by_poll(poll_id)
+
+    # poll_id topilmasa — barcha aktiv sessiyalardan qidirish
+    # (masalan, bot restart bo'lsa _by_poll dict bo'sh bo'ladi)
     if not session:
+        session = session_manager.find_session_by_group_any()
+        if session:
+            # poll_id ni qayta ro'yxatdan o'tkazish
+            session_manager.register_poll(poll_id, session.group_id)
+            session.current_poll_id = poll_id
+
+    if not session:
+        logger.debug(f"poll_answer: sessiya topilmadi poll_id={poll_id}")
         return
 
-    session.record_poll_answer(
+    result = session.record_poll_answer(
         user_id    = user.id,
         username   = user.username or "",
         first_name = user.first_name or "O'quvchi",
         option_ids = option_ids,
     )
+    logger.info(f"poll_answer qayd: user={user.id} result={result}")
 
 
 # ══════════════════════════════════════════════════════

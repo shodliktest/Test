@@ -161,6 +161,13 @@ class QuizSessionManager:
     def get_session(self, group_id: int) -> Optional[QuizSession]:
         return self._sessions.get(group_id)
 
+    def find_session_by_group_any(self) -> Optional[QuizSession]:
+        """Birinchi aktiv sessiyani qaytaradi (poll_id yo'q bo'lganda fallback)."""
+        for session in self._sessions.values():
+            if session.is_active:
+                return session
+        return None
+
     def get_session_by_poll(self, poll_id: str) -> Optional[QuizSession]:
         group_id = self._by_poll.get(poll_id)
         if group_id:
