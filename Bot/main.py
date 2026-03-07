@@ -96,9 +96,8 @@ def _run_bot_in_thread():
         new_router.message.register(h_module.handle_document,  F.document)
         new_router.message.register(h_module.handle_text_quiz,
                                     F.text & F.text.startswith("Test nomi:"))
-        new_router.callback_query.register(
-            h_module.handle_answer, F.data.startswith("ans:")
-        )
+        # Poll javoblari
+        new_router.poll_answer.register(h_module.handle_poll_answer)
 
         dp.include_router(new_router)
 
@@ -144,7 +143,7 @@ def _run_bot_in_thread():
         try:
             await dp.start_polling(
                 bot,
-                allowed_updates=["message", "callback_query"],
+                allowed_updates=["message", "callback_query", "poll_answer"],
                 drop_pending_updates=True,
                 handle_signals=False,
                 close_bot_session=True,
