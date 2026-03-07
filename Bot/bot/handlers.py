@@ -31,6 +31,31 @@ logger = logging.getLogger(__name__)
 router = Router()
 
 
+async def _flood_safe_send(bot: Bot, chat_id: int, text: str,
+                            parse_mode="HTML", reply_markup=None,
+                            max_retries=3) -> Optional[object]:
+    """Flood control ni hisobga olgan holda xabar yuboradi."""
+    import re
+    for attempt in range(max_retries):
+        try:
+            return await bot.send_message(
+                chat_id, text,
+                parse_mode=parse_mode,
+                reply_markup=reply_markup
+            )
+        except TelegramAPIError as e:
+            err = str(e).lower()
+            if ("retry" in err or "flood" in err or "too many" in err) and attempt < max_retries - 1:
+                m    = re.search(r'retry after (\d+)', err)
+                wait = int(m.group(1)) + 1 if m else 15
+                logger.warning(f"⏳ Flood control — {wait}s kutilmoqda (urinish {attempt+1})")
+                await asyncio.sleep(wait)
+            else:
+                logger.error(f"❌ Xabar yuborishda xato: {e}")
+                return None
+    return None
+
+
 # ══════════════════════════════════════════════════════
 # KLAVIATURA QURUVCHILAR
 # ══════════════════════════════════════════════════════
@@ -463,9 +488,12 @@ async def _send_next_question(bot: Bot, session: QuizSession, quiz_service: Quiz
         opts_text = ""
 
     def _build_question_text(remaining: int) -> str:
-        bar_filled = int((timeout - remaining) / timeout * 10) if timeout else 0
-        bar = "🟦" * bar_filled + "⬜" * (10 - bar_filled)
-        timer_line = f"\n{bar}  ⏱ <b>{remaining}s</b>"
+        # ■■■■□□□□□□ progress bar (10 ta blok)
+        filled   = int((timeout - remaining) / timeout * 10) if timeout else 0
+        bar      = "■" * filled + "□" * (10 - filled)
+        pct      = int((timeout - remaining) / timeout * 100) if timeout else 0
+        timer_line = f"\n{bar} {pct}%  ⏱ <b>{remaining}s</b>"
+
         body = (
             f"❓ <b>Savol {idx+1}/{total}</b>\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
@@ -487,6 +515,7 @@ async def _send_next_question(bot: Bot, session: QuizSession, quiz_service: Quiz
         session.is_question_active = True
         session.answers_locked     = False
 
+        # Flood control bilan yuborish
         if image_url:
             try:
                 msg = await bot.send_photo(
@@ -495,11 +524,20 @@ async def _send_next_question(bot: Bot, session: QuizSession, quiz_service: Quiz
                     parse_mode="HTML", reply_markup=kb
                 )
             except TelegramAPIError:
-                msg = await bot.send_message(group_id, _build_question_text(timeout),
-                                              parse_mode="HTML", reply_markup=kb)
+                msg = await _flood_safe_send(
+                    bot, group_id, _build_question_text(timeout),
+                    reply_markup=kb
+                )
         else:
-            msg = await bot.send_message(group_id, _build_question_text(timeout),
-                                          parse_mode="HTML", reply_markup=kb)
+            msg = await _flood_safe_send(
+                bot, group_id, _build_question_text(timeout),
+                reply_markup=kb
+            )
+
+        if not msg:
+            logger.error("Savol yuborib bo'lmadi — sessiya to'xtatildi")
+            session_manager.end_session(group_id)
+            return
 
         session.question_message_id = msg.message_id
 
@@ -520,21 +558,24 @@ async def _question_timer(bot: Bot, session: QuizSession, quiz_service: QuizServ
         group_id = session.group_id
         msg_id   = session.question_message_id
 
-        # ── SEKUNDLAR HISOBLAGICHI (har 5s da edit) ──
+        # ── SEKUNDLAR HISOBLAGICHI ──
+        # Edit chastotasi: ko'p guruh bo'lsa flood bo'lmasin
+        # Har 5s da edit (oldin 3s edi)
         for remaining in range(timeout, 0, -1):
             await asyncio.sleep(1)
             if not session.is_active:
                 return
 
-            # Har 3 soniyada xabarni yangilash (flood limit)
-            if remaining % 3 == 0 or remaining <= 5:
+            if remaining % 5 == 0 or remaining <= 5:
                 try:
                     new_text = build_text_fn(remaining)
-                    q = session.current_question
-                    image_url = q.get("image_url", "") if q else ""
-                    q_type = q.get("question_type", q.get("type", "multiple_choice")) if q else ""
-                    idx = session.current_question_index
-                    options = q.get("options", []) if q else []
+                    q        = session.current_question
+                    if not q:
+                        continue
+                    image_url = q.get("image_url", "")
+                    q_type    = q.get("question_type", q.get("type", "multiple_choice"))
+                    idx       = session.current_question_index
+                    options   = q.get("options", [])
 
                     if q_type == "true_false":
                         kb = build_true_false_keyboard(session.session_id, idx)
@@ -551,8 +592,14 @@ async def _question_timer(bot: Bot, session: QuizSession, quiz_service: QuizServ
                             text=new_text, chat_id=group_id, message_id=msg_id,
                             parse_mode="HTML", reply_markup=kb
                         )
-                except TelegramAPIError:
-                    pass  # Edit xatosi — davom etamiz
+                except TelegramAPIError as e:
+                    err = str(e).lower()
+                    if "retry" in err or "flood" in err:
+                        import re
+                        m = re.search(r'retry after (\d+)', err)
+                        wait = int(m.group(1)) if m else 10
+                        await asyncio.sleep(wait)
+                    # Boshqa xatolarda davom etamiz
 
         if not session.is_active:
             return
@@ -585,11 +632,11 @@ async def _question_timer(bot: Bot, session: QuizSession, quiz_service: QuizServ
 
 async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
     """
-    Vaqt tugagach savol xabarini edit qilib:
-    - Tugmalarni olib tashlaydi
-    - To'g'ri javob oldiga ✅ qo'yadi
-    - Variantlar statistikasini foiz bilan ko'rsatadi (quiz pol)
-    - Izohni Telegram quote (>) sifatida qo'shadi
+    Vaqt tugagach:
+    - Variantlar foiz bar bilan (••••----)
+    - To'g'ri javob ✅ belgisi bilan
+    - Javob berganlar + to'g'ri javob soni
+    - Izoh <blockquote> sifatida
     """
     q = session.current_question
     if not q:
@@ -604,11 +651,11 @@ async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
     idx         = session.current_question_index
     total       = session.total_questions
 
-    # ── Javoblar statistikasi ──
-    answers     = session.current_answers  # {user_id: UserAnswer}
-    total_ans   = len(answers)
+    # Javoblar statistikasi
+    answers    = session.current_answers
+    total_ans  = len(answers)
+    correct_cnt = sum(1 for ua in answers.values() if ua.is_correct)
 
-    # Har variant nechta kishi tanlagan
     vote_counts = [0] * len(options)
     for ua in answers.values():
         ai = ua.answer_index
@@ -617,34 +664,29 @@ async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
 
     opt_labels = ["🅐", "🅑", "🅒", "🅓"]
 
-    # ── Variantlar satrlari (✅ va foiz bilan) ──
+    # Variantlar — foiz bar ••••---- (10 ta belgi)
     opt_lines = []
     for i, opt in enumerate(options[:4]):
         cnt   = vote_counts[i] if i < len(vote_counts) else 0
         pct   = round(cnt / total_ans * 100) if total_ans else 0
-        bar_n = int(pct / 10)
-        bar   = "🟩" * bar_n + "⬜" * (10 - bar_n)
-        mark  = "✅ " if i == correct_i else "    "
+        filled = int(pct / 10)
+        bar   = "•" * filled + "·" * (10 - filled)
         label = opt_labels[i] if i < len(opt_labels) else f"{i+1}"
+        mark  = "✅ " if i == correct_i else "     "
         opt_lines.append(
             f"{mark}{label}  {opt}\n"
-            f"        {bar}  {pct}%  ({cnt} kishi)"
+            f"        {bar}  {pct}%  ({cnt})"
         )
 
-    correct_text = options[correct_i] if correct_i < len(options) else "?"
-    correct_cnt  = sum(1 for ua in answers.values() if ua.is_correct)
-
     revealed = (
-        f"🏁 <b>Savol {idx+1}/{total}</b>  —  Vaqt tugadi!\n"
+        f"🏁 <b>Savol {idx+1}/{total}</b>\n"
         f"━━━━━━━━━━━━━━━━━━━━━\n"
         f"{q['text']}\n\n"
         f"{chr(10).join(opt_lines)}\n\n"
-        f"━━━━━━━━━━━━━━━━━━━━━\n"
-        f"✅ To'g'ri: <b>{correct_text}</b>  |  "
-        f"👥 Javob berdi: {total_ans}  |  ✅ To'g'ri: {correct_cnt}"
+        f"👥 Javob berdi: <b>{total_ans}</b>  |  ✅ To'g'ri: <b>{correct_cnt}</b>"
     )
 
-    # Izoh — Telegram quote (blockquote) sifatida
+    # Izoh — blockquote
     if explanation:
         revealed += f"\n\n<blockquote>💡 {explanation}</blockquote>"
 
@@ -683,10 +725,7 @@ async def _end_quiz(bot: Bot, session: QuizSession, quiz_service: QuizService):
     )
 
     lb_text = _format_final_leaderboard(final_results, session.quiz_title)
-    try:
-        await bot.send_message(group_id, lb_text, parse_mode="HTML")
-    except TelegramAPIError as e:
-        logger.error(f"Final leaderboard yuborishda xato: {e}")
+    await _flood_safe_send(bot, group_id, lb_text)
 
 
 def _format_final_leaderboard(results: list, quiz_title: str,
