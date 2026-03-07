@@ -174,6 +174,19 @@ async def cmd_quiz_start(message: Message, bot: Bot,
         started_by=message.from_user.id,
     )
 
+    # Sessiyani faylga saqlaymiz — restart da tiklash uchun
+    from database.file_store import save_active_session
+    save_active_session(group_id, {
+        "session_id":        session.session_id,
+        "quiz_id":           quiz_id,
+        "quiz_title":        quiz["title"],
+        "group_id":          group_id,
+        "group_title":       message.chat.title or "Guruh",
+        "started_by":        message.from_user.id,
+        "questions":         questions,
+        "time_per_question": time_per_q,
+    })
+
     await message.answer(
         f"🎯 <b>{quiz['title']}</b> boshlanmoqda!\n"
         f"📝 {len(questions)} ta savol  ·  ⏱ {time_per_q}s/savol\n\n"
@@ -233,6 +246,7 @@ async def _send_poll_question(bot: Bot, session: QuizSession,
         session.current_poll_id      = msg.poll.id
         session.current_poll_msg_id  = msg.message_id
         session_manager.register_poll(msg.poll.id, session.group_id)
+        logger.info(f"🗳️ Poll ro'yxatdan o'tdi: poll_id={msg.poll.id} group={session.group_id}")
 
         # open_period tugagach keyingi savolga o'tamiz
         session._timer_task = asyncio.create_task(
@@ -253,24 +267,41 @@ async def _wait_and_next(bot: Bot, session: QuizSession,
                           quiz_service: QuizService, timeout: int):
     """open_period tugagach keyingi savolga o'tadi."""
     try:
-        await asyncio.sleep(timeout + 1)  # +1s bufer
+        await asyncio.sleep(timeout + 2)
 
         if not session.is_active:
             return
 
+        # Joriy pollni to'xtatish (agar hali ochiq bo'lsa)
+        if session.current_poll_msg_id:
+            try:
+                await bot.stop_poll(session.group_id, session.current_poll_msg_id)
+            except TelegramAPIError:
+                pass  # Allaqachon yopilgan bo'lishi mumkin
+
+        await asyncio.sleep(1)
+
         if session.is_last_question:
             session.advance_question()
-            await asyncio.sleep(2)
             await _end_quiz(bot, session, quiz_service)
         else:
             session.advance_question()
-            await asyncio.sleep(2)  # Oldingi poll yopilishini kutish
+            await asyncio.sleep(1)
             await _send_poll_question(bot, session, quiz_service)
 
     except asyncio.CancelledError:
-        pass
+        logger.info(f"Timer bekor qilindi: {session.session_id}")
     except Exception as e:
         logger.error(f"_wait_and_next xatosi: {e}", exc_info=True)
+        try:
+            final_results = session.get_final_results()
+            lb_text = _format_final_leaderboard(final_results, session.quiz_title)
+            await bot.send_message(session.group_id, lb_text, parse_mode="HTML")
+            session_manager.end_session(session.group_id)
+            from database.file_store import delete_active_session
+            delete_active_session(session.group_id)
+        except Exception as e2:
+            logger.error(f"Fallback leaderboard xatosi: {e2}")
 
 
 # ══════════════════════════════════════════════════════
@@ -311,6 +342,11 @@ async def _end_quiz(bot: Bot, session: QuizSession, quiz_service: QuizService):
 
     session_manager.end_session(group_id)
 
+    # Fayldan ham o'chirish
+    from database.file_store import delete_active_session
+    delete_active_session(group_id)
+
+    # Natijalar bo'sh bo'lsa ham leaderboard chiqar
     await quiz_service.record_session_results(
         session_id=session.session_id,
         quiz_id=session.quiz_id,
@@ -320,9 +356,11 @@ async def _end_quiz(bot: Bot, session: QuizSession, quiz_service: QuizService):
 
     lb_text = _format_final_leaderboard(final_results, session.quiz_title)
 
+    sent = False
     for attempt in range(3):
         try:
             await bot.send_message(group_id, lb_text, parse_mode="HTML")
+            sent = True
             break
         except TelegramAPIError as e:
             err = str(e).lower()
@@ -330,10 +368,14 @@ async def _end_quiz(bot: Bot, session: QuizSession, quiz_service: QuizService):
                 import re
                 m    = re.search(r'retry after (\d+)', err)
                 wait = int(m.group(1)) + 1 if m else 15
+                logger.warning(f"Leaderboard flood — {wait}s kutish")
                 await asyncio.sleep(wait)
             else:
                 logger.error(f"Leaderboard yuborishda xato: {e}")
                 break
+
+    if sent:
+        logger.info(f"✅ Leaderboard yuborildi: {session.session_id} | {len(final_results)} kishi")
 
 
 def _format_final_leaderboard(results: list, quiz_title: str,
@@ -388,8 +430,23 @@ async def cmd_quiz_stop(message: Message, bot: Bot,
     group_id = message.chat.id
     session  = session_manager.get_session(group_id)
 
+    # Sessiya RAM da yo'q — fayldan tekshirish
     if not session:
-        await message.answer("⚠️ Hozir aktiv test yo'q.")
+        from database.file_store import load_active_sessions, delete_active_session
+        active = load_active_sessions()
+        sdata  = active.get(str(group_id))
+        if not sdata:
+            await message.answer("⚠️ Hozir aktiv test yo'q.")
+            return
+        # Fayl bor lekin RAM yo'q — bot restart bo'lgan
+        delete_active_session(group_id)
+        await message.answer(
+            "⛔ <b>Test to'xtatildi.</b>\n\n"
+            f"📚 <b>{sdata.get('quiz_title', 'Test')}</b>\n\n"
+            "⚠️ Bot qayta ishga tushgani uchun javoblar saqlanmagan.\n"
+            "Natijalar mavjud emas.",
+            parse_mode="HTML"
+        )
         return
 
     is_admin = await group_manager.is_group_admin(group_id, message.from_user.id)
@@ -406,6 +463,9 @@ async def cmd_quiz_stop(message: Message, bot: Bot,
 
     final_results = session.get_final_results()
     session_manager.end_session(group_id)
+
+    from database.file_store import delete_active_session
+    delete_active_session(group_id)
 
     await quiz_service.record_session_results(
         session_id=session.session_id,
