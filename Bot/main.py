@@ -33,101 +33,125 @@ logger = logging.getLogger(__name__)
 def _run_bot_in_thread():
     """
     Botni alohida thread + event loop da ishlatadi.
-    Streamlit har sahifa yangilanishda qayta ishga tushirmasligi uchun
-    'bot_started' flagini st.session_state da saqlaymiz.
+
+    Tuzatilgan xatolar:
+    1. set_wakeup_fd — start_polling o'rniga polling coroutine bevosita ishlatiladi
+    2. Router already attached — har safar YANGI router va dispatcher yaratiladi
     """
     async def _start_bot():
+        from aiogram import Bot, Dispatcher, Router, BaseMiddleware
+        from aiogram.client.default import DefaultBotProperties
+        from aiogram.enums import ParseMode
+        from aiogram.types import Message, BotCommand, TelegramObject
+        from aiogram.filters import Command
+        from typing import Callable, Dict, Any, Awaitable
+
+        # !! Har safar YANGI router import emas, bevosita handlers dan handler
+        # funksiyalarini olib yangi routerga qo'shamiz — "already attached" xatosi yo'q
+        import bot.handlers as h_module
+        from bot.group_manager import GroupManager
+        from bot.leaderboard import LeaderboardService
+        from database.telegram_db import TelegramDB
+        from database.firebase_cache import FirebaseCache
+        from services.quiz_service import QuizService
+        from aiogram import F
+
+        token = config.BOT_TOKEN
+        if not token or token == "YOUR_BOT_TOKEN_HERE":
+            logger.warning("BOT_TOKEN sozlanmagan — bot ishga tushmaydi")
+            return
+
+        # Har safar yangi Bot + Dispatcher
+        bot = Bot(
+            token=token,
+            default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+        )
+        dp = Dispatcher()
+
+        # Servislar
+        db                  = TelegramDB(bot)
+        firebase            = FirebaseCache()
+        quiz_service        = QuizService(db)
+        group_manager       = GroupManager(bot)
+        leaderboard_service = LeaderboardService(db)
+
+        # Middleware
+        class MW(BaseMiddleware):
+            async def __call__(
+                self,
+                handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+                event: TelegramObject,
+                data: Dict[str, Any]
+            ) -> Any:
+                data["bot"]                  = bot
+                data["db"]                   = db
+                data["quiz_service"]         = quiz_service
+                data["group_manager"]        = group_manager
+                data["leaderboard_service"]  = leaderboard_service
+                data["firebase"]             = firebase
+                return await handler(event, data)
+
+        mw = MW()
+        dp.message.middleware(mw)
+        dp.callback_query.middleware(mw)
+
+        # Har safar YANGI router yaratish (eski routerni qayta ishlatmaslik)
+        new_router = Router(name="main_fresh")
+
+        # Handlerlarni yangi routerga qo'shish
+        new_router.message.register(h_module.cmd_start,        Command("start"))
+        new_router.message.register(h_module.cmd_help,         Command("help"))
+        new_router.message.register(h_module.cmd_quiz_list,    Command("quiz_list"))
+        new_router.message.register(h_module.cmd_quiz_start,   Command("quiz_start"))
+        new_router.message.register(h_module.cmd_quiz_stop,    Command("quiz_stop"))
+        new_router.message.register(h_module.cmd_leaderboard,  Command("leaderboard"))
+        new_router.message.register(h_module.cmd_my_score,     Command("my_score"))
+        new_router.message.register(h_module.cmd_quiz_history, Command("quiz_history"))
+        new_router.callback_query.register(
+            h_module.handle_answer,
+            F.data.startswith("ans:")
+        )
+
+        # DB guruh tinglash
+        @new_router.message()
+        async def db_listener(message: Message):
+            try:
+                if message.chat.id == int(config.DB_GROUP_ID):
+                    if message.text and "DB_RECORD" in message.text:
+                        db.update_cache(message.message_id, message.text)
+            except Exception:
+                pass
+
+        dp.include_router(new_router)
+
+        # Buyruqlar ro'yxati
+        await bot.set_my_commands([
+            BotCommand(command="start",        description="Boshlash"),
+            BotCommand(command="help",         description="Yordam"),
+            BotCommand(command="quiz_list",    description="Testlar ro'yxati"),
+            BotCommand(command="quiz_start",   description="Test boshlash (admin)"),
+            BotCommand(command="quiz_stop",    description="Testni to'xtatish (admin)"),
+            BotCommand(command="leaderboard",  description="Reyting"),
+            BotCommand(command="my_score",     description="Mening natijalarim"),
+            BotCommand(command="quiz_history", description="O'tgan testlar"),
+        ])
+
+        logger.info("✅ Bot polling boshlandi (background thread)")
+
+        # !! start_polling o'rniga _polling — signal handler ishlatmaydi
+        # Bu "set_wakeup_fd only works in main thread" xatosini hal qiladi
         try:
-            from aiogram import Bot, Dispatcher, Router, BaseMiddleware
-            from aiogram.client.default import DefaultBotProperties
-            from aiogram.enums import ParseMode
-            from aiogram.types import Message, BotCommand, TelegramObject
-            from typing import Callable, Dict, Any, Awaitable
-
-            from bot.handlers import router as main_router
-            from bot.group_manager import GroupManager
-            from bot.leaderboard import LeaderboardService
-            from database.telegram_db import TelegramDB
-            from database.firebase_cache import FirebaseCache
-            from services.quiz_service import QuizService
-
-            token = config.BOT_TOKEN
-            if not token or token == "YOUR_BOT_TOKEN_HERE":
-                logger.warning("BOT_TOKEN sozlanmagan — bot ishga tushmaydi")
-                return
-
-            bot = Bot(
-                token=token,
-                default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-            )
-            dp = Dispatcher()
-
-            # Servislar
-            db                   = TelegramDB(bot)
-            firebase             = FirebaseCache()
-            quiz_service         = QuizService(db)
-            group_manager        = GroupManager(bot)
-            leaderboard_service  = LeaderboardService(db)
-
-            # Middleware
-            class MW(BaseMiddleware):
-                async def __call__(
-                    self,
-                    handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-                    event: TelegramObject,
-                    data: Dict[str, Any]
-                ) -> Any:
-                    data["bot"]                  = bot
-                    data["db"]                   = db
-                    data["quiz_service"]         = quiz_service
-                    data["group_manager"]        = group_manager
-                    data["leaderboard_service"]  = leaderboard_service
-                    data["firebase"]             = firebase
-                    return await handler(event, data)
-
-            mw = MW()
-            dp.message.middleware(mw)
-            dp.callback_query.middleware(mw)
-
-            # DB guruh tinglash
-            db_router = Router()
-
-            @db_router.message()
-            async def db_listener(message: Message):
-                try:
-                    if message.chat.id == int(config.DB_GROUP_ID):
-                        if message.text and "DB_RECORD" in message.text:
-                            db.update_cache(message.message_id, message.text)
-                except Exception:
-                    pass
-
-            dp.include_router(db_router)
-            dp.include_router(main_router)
-
-            # Buyruqlar
-            await bot.set_my_commands([
-                BotCommand(command="start",        description="Boshlash"),
-                BotCommand(command="help",         description="Yordam"),
-                BotCommand(command="quiz_list",    description="Testlar ro'yxati"),
-                BotCommand(command="quiz_start",   description="Test boshlash (admin)"),
-                BotCommand(command="quiz_stop",    description="Testni to'xtatish (admin)"),
-                BotCommand(command="leaderboard",  description="Reyting"),
-                BotCommand(command="my_score",     description="Mening natijalarim"),
-                BotCommand(command="quiz_history", description="O'tgan testlar"),
-            ])
-
-            logger.info("✅ Bot polling boshlandi (background)")
-
-            await dp.start_polling(
-                bot,
+            await dp._polling(
+                bot=bot,
                 allowed_updates=["message", "callback_query"],
-                drop_pending_updates=True
+                handle_as_tasks=True,
             )
-
         except Exception as e:
-            logger.error(f"Bot xatosi: {e}", exc_info=True)
+            logger.error(f"Polling xatosi: {e}")
+        finally:
+            await bot.session.close()
 
-    # Yangi event loop yaratib botni ishga tushirish
+    # Yangi event loop (thread uchun)
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -135,7 +159,10 @@ def _run_bot_in_thread():
     except Exception as e:
         logger.error(f"Bot thread xatosi: {e}")
     finally:
-        loop.close()
+        try:
+            loop.close()
+        except Exception:
+            pass
 
 
 def start_bot_background():
