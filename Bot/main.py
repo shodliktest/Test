@@ -118,24 +118,26 @@ def _run_bot_in_thread():
             BotCommand(command="quiz_history", description="O'tgan testlar"),
         ])
 
-        # ── STARTUP DA KANALDAN YUKLASH ──────────────
-        logger.info("📥 Telegram kanaldan ma'lumotlar yuklanmoqda...")
-        ok = await channel_db.check()
-        if ok:
-            await channel_db.load_all(max_messages=300)
-        else:
-            logger.warning("⚠️ Kanal topilmadi — DB_CHANNEL_ID ni tekshiring")
+        # ── STARTUP: FAYLLARDAN YUKLA ─────────────────
+        from database.file_store import file_info, get_all_quiz_ids
+        fi  = file_info()
+        ids = get_all_quiz_ids()
+        logger.info(
+            f"📂 Fayllar tayyor: {fi['quiz_count']} test, "
+            f"{fi['quizzes_kb']} KB | data: {fi['data_dir']}"
+        )
 
         # Adminlarga xabar
+        from database.file_store import file_info, get_all_quiz_ids
         stats = quiz_service.get_stats()
         for admin_id in config.ADMIN_IDS:
             try:
                 await bot.send_message(
                     admin_id,
                     f"✅ <b>Bot ishga tushdi!</b>\n\n"
-                    f"📚 Testlar: <b>{stats['quizzes']}</b>\n"
-                    f"📊 Natijalar: <b>{stats['results']}</b>\n"
-                    f"💾 Kanal: <code>{config.DB_CHANNEL_ID}</code>\n\n"
+                    f"📚 Testlar: <b>{stats.get('quiz_count', 0)}</b>\n"
+                    f"💾 Hajm: <b>{stats.get('quizzes_kb', 0)} KB</b>\n"
+                    f"📁 Papka: <code>{stats.get('data_dir', '')}</code>\n\n"
                     f"/quiz_list — testlarni ko'rish\n"
                     f"/create_quiz — test yaratish"
                 )
