@@ -313,7 +313,6 @@ async def cmd_my_score(message: Message, quiz_service: QuizService):
     first_name = message.from_user.first_name or "O'quvchi"
 
     user_scores = quiz_service.get_user_history(user_id)
-
     if not user_scores:
         await message.answer(
             f"📊 <b>{first_name}</b>, siz hali hech qanday test yechmagansiz!\n\n"
@@ -557,7 +556,11 @@ async def _question_timer(bot: Bot, session: QuizSession, quiz_service: QuizServ
 
         # ── VAQT TUGADI — javoblarni qulflash ──
         session.lock_answers()
-        await _reveal_answer(bot, session, msg_id)
+
+        try:
+            await _reveal_answer(bot, session, msg_id)
+        except Exception as e:
+            logger.error(f"Reveal xatosi (o'tilmoqda): {e}")
 
         await asyncio.sleep(3)
         if not session.is_active:
