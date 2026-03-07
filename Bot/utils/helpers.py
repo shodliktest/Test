@@ -17,22 +17,31 @@ def generate_id(prefix: str = "id") -> str:
 
 
 def format_json_message(data: Dict[str, Any]) -> str:
-    """Format data as a JSON message for Telegram DB group."""
-    return f"📦 DB_RECORD\n```json\n{json.dumps(data, ensure_ascii=False, indent=2)}\n```"
+    """Format data as a plain text message for Telegram DB group.
+    Markdown ishlatmaymiz — apostroflar va maxsus belgilar xato chiqaradi."""
+    import json
+    json_str = json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+    return f"DB_RECORD\n{json_str}"
 
 
 def parse_json_from_message(text: str) -> Optional[Dict[str, Any]]:
-    """Extract and parse JSON from a Telegram message."""
+    """Extract and parse JSON from a Telegram DB message."""
     if not text or "DB_RECORD" not in text:
         return None
     try:
-        # Extract JSON between code block markers
-        start = text.find("```json\n") + 8
-        end = text.rfind("\n```")
-        if start < 8 or end == -1:
-            return None
-        json_str = text[start:end].strip()
-        return json.loads(json_str)
+        # Yangi format: "DB_RECORD\n{json}"
+        lines = text.strip().splitlines()
+        for i, line in enumerate(lines):
+            if "DB_RECORD" in line and i + 1 < len(lines):
+                json_str = lines[i + 1].strip()
+                return json.loads(json_str)
+        # Eski format (markdown kod blok): ```json\n...\n```
+        if "```json" in text:
+            start = text.find("```json\n") + 8
+            end = text.rfind("\n```")
+            if start >= 8 and end != -1:
+                return json.loads(text[start:end].strip())
+        return None
     except (json.JSONDecodeError, ValueError):
         return None
 
