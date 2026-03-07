@@ -22,11 +22,11 @@ class ChannelDB:
     async def check(self) -> bool:
         try:
             chat = await self.bot.get_chat(self.channel_id)
-            logger.info(f"✅ Kanal: {chat.title} ({self.channel_id})")
+            logger.info(f"✅ DB guruh: {chat.title} ({self.channel_id})")
             return True
         except TelegramAPIError as e:
-            logger.error(f"❌ Kanal topilmadi: {e}")
-            return False
+            logger.warning(f"⚠️ DB guruh tekshirishda xato: {e} — davom etilmoqda")
+            return True  # Xato bo'lsa ham davom etamiz
 
     # ── YOZISH ───────────────────────────────────────
 
@@ -59,13 +59,12 @@ class ChannelDB:
     # ── STARTUP DA YUKLASH ────────────────────────────
 
     async def load_all(self, max_messages: int = 400):
-        """Kanal xabarlarini o'qib RAM ga yuklaydi."""
+        """Guruh/kanal xabarlarini o'qib RAM ga yuklaydi."""
         if self._loaded:
             return
-        logger.info(f"📥 Kanal yuklanmoqda ({self.channel_id})...")
+        logger.info(f"📥 Guruh yuklanmoqda ({self.channel_id})...")
         loaded = 0
         try:
-            # Sentinel yuborib oxirgi msg_id ni bilamiz
             sentinel = await self.bot.send_message(
                 chat_id=self.channel_id, text="🔄 BOT_STARTUP_PING"
             )
@@ -82,7 +81,6 @@ class ChannelDB:
                     if text.startswith(("QUIZ:", "RESULT:")):
                         if ram.load_from_text(text):
                             loaded += 1
-                    # Forward xabarni o'chirish
                     try:
                         await self.bot.delete_message(
                             chat_id=self.channel_id,
@@ -93,13 +91,12 @@ class ChannelDB:
                     await asyncio.sleep(0.05)
                 except TelegramAPIError as e:
                     err = str(e).lower()
-                    if "not found" in err or "invalid" in err or "message_id" in err:
+                    if any(x in err for x in ("not found","invalid","message_id","can't be forwarded")):
                         continue
                     if "flood" in err:
                         await asyncio.sleep(3)
                     continue
 
-            # Sentinel o'chirish
             try:
                 await self.bot.delete_message(
                     chat_id=self.channel_id, message_id=top_id
@@ -108,11 +105,11 @@ class ChannelDB:
                 pass
 
         except Exception as e:
-            logger.error(f"❌ Kanal yuklash xatosi: {e}")
+            logger.error(f"❌ Guruh yuklash xatosi: {e}")
 
         self._loaded = True
         st = ram.stats()
         logger.info(
-            f"✅ Kanal yuklandi: {loaded} yozuv | "
+            f"✅ Guruh yuklandi: {loaded} yozuv | "
             f"quizlar={st['quizzes']} natijalar={st['results']}"
         )
