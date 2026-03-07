@@ -488,11 +488,9 @@ async def _send_next_question(bot: Bot, session: QuizSession, quiz_service: Quiz
         opts_text = ""
 
     def _build_question_text(remaining: int) -> str:
-        # ■■■■□□□□□□ progress bar (10 ta blok)
-        filled   = int((timeout - remaining) / timeout * 10) if timeout else 0
-        bar      = "■" * filled + "□" * (10 - filled)
-        pct      = int((timeout - remaining) / timeout * 100) if timeout else 0
-        timer_line = f"\n{bar} {pct}%  ⏱ <b>{remaining}s</b>"
+        filled = int((timeout - remaining) / timeout * 10) if timeout else 0
+        bar    = "■" * filled + "□" * (10 - filled)
+        pct    = int((timeout - remaining) / timeout * 100) if timeout else 0
 
         body = (
             f"❓ <b>Savol {idx+1}/{total}</b>\n"
@@ -501,7 +499,7 @@ async def _send_next_question(bot: Bot, session: QuizSession, quiz_service: Quiz
         )
         if opts_text:
             body += f"\n\n{opts_text}"
-        body += timer_line
+        body += f"\n\n{bar} {pct}%  ⏱ <b>{remaining}s</b>"
         return body
 
     if q_type == "true_false":
@@ -667,15 +665,15 @@ async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
     # Variantlar — foiz bar ••••---- (10 ta belgi)
     opt_lines = []
     for i, opt in enumerate(options[:4]):
-        cnt   = vote_counts[i] if i < len(vote_counts) else 0
-        pct   = round(cnt / total_ans * 100) if total_ans else 0
-        filled = int(pct / 10)
-        bar   = "•" * filled + "·" * (10 - filled)
-        label = opt_labels[i] if i < len(opt_labels) else f"{i+1}"
-        mark  = "✅ " if i == correct_i else "     "
+        cnt    = vote_counts[i] if i < len(vote_counts) else 0
+        pct    = round(cnt / total_ans * 100) if total_ans else 0
+        filled = round(pct / 10)
+        bar    = "●" * filled + "○" * (10 - filled)
+        label  = opt_labels[i] if i < len(opt_labels) else f"{i+1}"
+        mark   = "✅" if i == correct_i else "   "
         opt_lines.append(
-            f"{mark}{label}  {opt}\n"
-            f"        {bar}  {pct}%  ({cnt})"
+            f"{mark} {label}  {opt}\n"
+            f"      {bar}  {pct}%  ({cnt})"
         )
 
     # Izohsiz asosiy matn
