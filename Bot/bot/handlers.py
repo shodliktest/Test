@@ -111,7 +111,7 @@ async def cmd_help(message: Message):
 
 @router.message(Command("quiz_list"))
 async def cmd_quiz_list(message: Message, quiz_service: QuizService):
-    quizzes = await quiz_service.list_quizzes()
+    quizzes = quiz_service.list_quizzes()
     if not quizzes:
         await message.answer(
             "📭 Hali test mavjud emas.\n"
@@ -124,7 +124,8 @@ async def cmd_quiz_list(message: Message, quiz_service: QuizService):
     for q in quizzes:
         qid   = q.get("id", "?")
         title = q.get("title", "Nomsiz")
-        count = q.get("questions", 0)
+        # questions ro'yxati yoki question_count
+        count = len(q.get("questions", [])) or q.get("question_count", 0)
         tpq   = q.get("time_per_question", 30)
         desc  = q.get("description", "")
         lines.append(f"🔹 <b>{title}</b>")
@@ -190,7 +191,7 @@ async def cmd_quiz_start(message: Message, bot: Bot,
         return
 
     # Testni yuklash
-    quiz = await quiz_service.get_quiz_with_questions(quiz_id)
+    quiz = quiz_service.get_quiz_with_questions(quiz_id)
     if not quiz:
         await message.answer(
             f"❌ <code>{quiz_id}</code> ID li test topilmadi.\n"
@@ -217,7 +218,7 @@ async def cmd_quiz_start(message: Message, bot: Bot,
     )
 
     # DB ga yozish
-    await quiz_service.record_session_start(
+    quiz_service.record_session_start(
         session_id=session.session_id,
         quiz_id=quiz_id,
         quiz_title=quiz["title"],
@@ -284,15 +285,16 @@ async def cmd_quiz_stop(message: Message, bot: Bot,
 # ══════════════════════════════════════════════════════
 
 @router.message(Command("leaderboard"))
-async def cmd_leaderboard(message: Message, leaderboard_service: LeaderboardService):
-    global_lb = await leaderboard_service.get_global_leaderboard()
-    if not global_lb:
+async def cmd_leaderboard(message: Message, quiz_service: QuizService):
+    from database.ram_store import ram
+    lb = LeaderboardService().get_global_leaderboard()
+    if not lb:
         await message.answer("📊 Hali hech kim test yechmagan.", parse_mode="HTML")
         return
 
     lines = ["🌍 <b>Umumiy Reyting (Global)</b>\n"]
     emojis = ["🥇","🥈","🥉"] + [f"{i}." for i in range(4, 11)]
-    for i, u in enumerate(global_lb[:10]):
+    for i, u in enumerate(lb[:10]):
         name  = u.get("username") or u.get("first_name","?")
         avg   = u.get("avg_score", 0)
         total = u.get("total_quizzes", 0)
@@ -306,12 +308,11 @@ async def cmd_leaderboard(message: Message, leaderboard_service: LeaderboardServ
 # ══════════════════════════════════════════════════════
 
 @router.message(Command("my_score"))
-async def cmd_my_score(message: Message, leaderboard_service: LeaderboardService):
+async def cmd_my_score(message: Message, quiz_service: QuizService):
     user_id    = message.from_user.id
     first_name = message.from_user.first_name or "O'quvchi"
 
-    all_scores  = leaderboard_service.db.get_all_scores_from_cache()
-    user_scores = [s for s in all_scores if s.get("user_id") == user_id]
+    user_scores = quiz_service.get_user_history(user_id)
 
     if not user_scores:
         await message.answer(
@@ -349,7 +350,7 @@ async def cmd_my_score(message: Message, leaderboard_service: LeaderboardService
 
 @router.message(Command("quiz_history"))
 async def cmd_quiz_history(message: Message, quiz_service: QuizService):
-    sessions = quiz_service.db.get_sessions_from_cache()
+    sessions = quiz_service.get_sessions()
     if not sessions:
         await message.answer("📭 Hali hech qanday test sessiyasi bo'lmagan.", parse_mode="HTML")
         return
@@ -444,44 +445,40 @@ async def _send_next_question(bot: Bot, session: QuizSession, quiz_service: Quiz
     group_id = session.group_id
     idx      = session.current_question_index
     total    = session.total_questions
-    q_type   = q.get("question_type", "multiple_choice")
+    q_type   = q.get("question_type", q.get("type", "multiple_choice"))
     options  = q.get("options", [])
+    # Har savol uchun alohida vaqt (agar belgilangan bo'lsa)
+    timeout  = q.get("time_override", session.time_per_question)
 
     # ── Savol matni ──
     opt_labels = ["🅐", "🅑", "🅒", "🅓"]
-    if q_type == "multiple_choice" and options:
+    if q_type in ("multiple_choice", "true_false") and options:
         opts_text = "\n".join(
             f"  {opt_labels[i]}  {opt}"
             for i, opt in enumerate(options[:4])
         )
-        question_body = (
-            f"❓ <b>Savol {idx+1}/{total}</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"{q['text']}\n\n"
-            f"{opts_text}\n\n"
-            f"⏱ <b>{session.time_per_question} soniya</b>"
-        )
-        kb = build_answer_keyboard(session.session_id, idx, options)
+    else:
+        opts_text = ""
 
-    elif q_type == "true_false":
-        question_body = (
+    def _build_question_text(remaining: int) -> str:
+        bar_filled = int((timeout - remaining) / timeout * 10) if timeout else 0
+        bar = "🟦" * bar_filled + "⬜" * (10 - bar_filled)
+        timer_line = f"\n{bar}  ⏱ <b>{remaining}s</b>"
+        body = (
             f"❓ <b>Savol {idx+1}/{total}</b>\n"
             f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"{q['text']}\n\n"
-            f"⏱ <b>{session.time_per_question} soniya</b>"
+            f"{q['text']}"
         )
+        if opts_text:
+            body += f"\n\n{opts_text}"
+        body += timer_line
+        return body
+
+    if q_type == "true_false":
         kb = build_true_false_keyboard(session.session_id, idx)
-
-    else:  # fill_in_blank yoki boshqa
-        question_body = (
-            f"❓ <b>Savol {idx+1}/{total}</b>\n"
-            f"━━━━━━━━━━━━━━━━━━━━━\n"
-            f"{q['text']}\n\n"
-            f"⏱ <b>{session.time_per_question} soniya</b>"
-        )
+    else:
         kb = build_answer_keyboard(session.session_id, idx, options)
 
-    # Rasm bormi?
     image_url = q.get("image_url", "")
 
     try:
@@ -491,137 +488,87 @@ async def _send_next_question(bot: Bot, session: QuizSession, quiz_service: Quiz
         if image_url:
             try:
                 msg = await bot.send_photo(
-                    group_id,
-                    photo=image_url,
-                    caption=question_body,
-                    parse_mode="HTML",
-                    reply_markup=kb
+                    group_id, photo=image_url,
+                    caption=_build_question_text(timeout),
+                    parse_mode="HTML", reply_markup=kb
                 )
             except TelegramAPIError:
-                msg = await bot.send_message(group_id, question_body,
+                msg = await bot.send_message(group_id, _build_question_text(timeout),
                                               parse_mode="HTML", reply_markup=kb)
         else:
-            msg = await bot.send_message(group_id, question_body,
+            msg = await bot.send_message(group_id, _build_question_text(timeout),
                                           parse_mode="HTML", reply_markup=kb)
 
         session.question_message_id = msg.message_id
 
-        # Timer ishga tushirish
+        # Timer
         session._timer_task = asyncio.create_task(
-            _question_timer(bot, session, quiz_service)
+            _question_timer(bot, session, quiz_service, _build_question_text)
         )
 
     except TelegramAPIError as e:
         logger.error(f"Savol yuborishda xato: {e}")
 
 
-async def _question_timer(bot: Bot, session: QuizSession, quiz_service: QuizService):
-    """Savol vaqtini boshqarish — countdown va to'g'ri javobni ko'rsatish."""
+async def _question_timer(bot: Bot, session: QuizSession, quiz_service: QuizService,
+                           build_text_fn):
+    """Countdown timer — xabarni edit qilib soniyalarni ko'rsatadi."""
     try:
-        time_total = session.time_per_question
+        timeout  = session.time_per_question
+        group_id = session.group_id
+        msg_id   = session.question_message_id
 
-        # ── Countdown xabarlari (10s, 5s, 3s, 2s, 1s) ──
-        checkpoints = []
-        if time_total >= 15:
-            checkpoints.append((time_total - 10, 10))
-        if time_total >= 8:
-            checkpoints.append((time_total - 5,  5))
-        for sec in [3, 2, 1]:
-            if time_total > sec:
-                checkpoints.append((time_total - sec, sec))
-
-        elapsed = 0
-        for wait, remaining in checkpoints:
-            to_wait = wait - elapsed
-            if to_wait > 0:
-                await asyncio.sleep(to_wait)
-                elapsed = wait
+        # ── SEKUNDLAR HISOBLAGICHI (har 5s da edit) ──
+        for remaining in range(timeout, 0, -1):
+            await asyncio.sleep(1)
             if not session.is_active:
                 return
-            # ⏰ Reminder xabari (faqat 5s dan past)
-            if remaining <= 5:
+
+            # Har 3 soniyada xabarni yangilash (flood limit)
+            if remaining % 3 == 0 or remaining <= 5:
                 try:
-                    await bot.send_message(
-                        session.group_id,
-                        f"⏰ <b>{remaining} soniya qoldi!</b>",
-                        parse_mode="HTML"
-                    )
-                except TelegramAPIError:
-                    pass
+                    new_text = build_text_fn(remaining)
+                    q = session.current_question
+                    image_url = q.get("image_url", "") if q else ""
+                    q_type = q.get("question_type", q.get("type", "multiple_choice")) if q else ""
+                    idx = session.current_question_index
+                    options = q.get("options", []) if q else []
 
-        # Qolgan vaqtni kutish
-        remaining_sleep = time_total - elapsed
-        if remaining_sleep > 0:
-            await asyncio.sleep(remaining_sleep)
+                    if q_type == "true_false":
+                        kb = build_true_false_keyboard(session.session_id, idx)
+                    else:
+                        kb = build_answer_keyboard(session.session_id, idx, options)
 
-        if not session.is_active:
-            return
-
-        # ── Javoblarni qulflash ──
-        session.lock_answers()
-
-        # ── To'g'ri javobni e'lon qilish ──
-        q           = session.current_question
-        if q:
-            correct_i    = q.get("correct_index", 0)
-            options      = q.get("options", [])
-            correct_text = options[correct_i] if correct_i < len(options) else "?"
-            explanation  = q.get("explanation", "")
-
-            answered     = len(session.current_answers)
-            correct_cnt  = sum(1 for a in session.current_answers.values() if a.is_correct)
-
-            # Kimlar to'g'ri javob berganini ko'rsatish (max 5 kishi)
-            correct_names = [
-                a.first_name or a.username or "O'quvchi"
-                for a in session.current_answers.values()
-                if a.is_correct
-            ][:5]
-
-            reveal_lines = [
-                f"⏰ <b>Vaqt tugadi!</b>",
-                f"━━━━━━━━━━━━━━━━━━━━━",
-                f"✅ <b>To'g'ri javob:</b>  {correct_text}",
-                f"👥 Javob berdi: {answered} kishi  |  ✅ To'g'ri: {correct_cnt}",
-            ]
-            if correct_names:
-                reveal_lines.append(f"🌟 To'g'ri: {', '.join(correct_names)}")
-            if explanation:
-                reveal_lines.append(f"\n💡 <i>{explanation}</i>")
-
-            # Mini leaderboard (agar 3+ savol o'tilgan bo'lsa)
-            if session.current_question_index >= 2:
-                lb = session.get_leaderboard()[:3]
-                if lb:
-                    reveal_lines.append("\n<b>📊 Hozirgi holat:</b>")
-                    emojis = ["🥇","🥈","🥉"]
-                    for i, r in enumerate(lb):
-                        name = r.get("username") or r.get("first_name","?")
-                        reveal_lines.append(
-                            f"{emojis[i]} {name} — {r.get('correct',0)}/{session.current_question_index+1}"
+                    if image_url:
+                        await bot.edit_message_caption(
+                            chat_id=group_id, message_id=msg_id,
+                            caption=new_text, parse_mode="HTML", reply_markup=kb
                         )
-
-            try:
-                await bot.send_message(
-                    session.group_id,
-                    "\n".join(reveal_lines),
-                    parse_mode="HTML"
-                )
-            except TelegramAPIError:
-                pass
-
-        await asyncio.sleep(2)
+                    else:
+                        await bot.edit_message_text(
+                            text=new_text, chat_id=group_id, message_id=msg_id,
+                            parse_mode="HTML", reply_markup=kb
+                        )
+                except TelegramAPIError:
+                    pass  # Edit xatosi — davom etamiz
 
         if not session.is_active:
             return
 
-        # ── Keyingi savolga o'tish yoki tugatish ──
+        # ── VAQT TUGADI — javoblarni qulflash ──
+        session.lock_answers()
+        await _reveal_answer(bot, session, msg_id)
+
+        await asyncio.sleep(3)
+        if not session.is_active:
+            return
+
         if session.is_last_question:
             session.advance_question()
             await _end_quiz(bot, session, quiz_service)
         else:
             session.advance_question()
-            await asyncio.sleep(1)  # Oz pauza
+            await asyncio.sleep(1)
             await _send_next_question(bot, session, quiz_service)
 
     except asyncio.CancelledError:
@@ -630,14 +577,98 @@ async def _question_timer(bot: Bot, session: QuizSession, quiz_service: QuizServ
         logger.error(f"Timer xatosi: {e}", exc_info=True)
 
 
+async def _reveal_answer(bot: Bot, session: QuizSession, msg_id: int):
+    """
+    Vaqt tugagach savol xabarini edit qilib:
+    - Tugmalarni olib tashlaydi
+    - To'g'ri javob oldiga ✅ qo'yadi
+    - Variantlar statistikasini foiz bilan ko'rsatadi (quiz pol)
+    - Izohni Telegram quote (>) sifatida qo'shadi
+    """
+    q = session.current_question
+    if not q:
+        return
+
+    group_id    = session.group_id
+    options     = q.get("options", [])
+    correct_i   = q.get("correct_index", 0)
+    explanation = q.get("explanation", "").strip()
+    q_type      = q.get("question_type", q.get("type", "multiple_choice"))
+    image_url   = q.get("image_url", "")
+    idx         = session.current_question_index
+    total       = session.total_questions
+
+    # ── Javoblar statistikasi ──
+    answers     = session.current_answers  # {user_id: UserAnswer}
+    total_ans   = len(answers)
+
+    # Har variant nechta kishi tanlagan
+    vote_counts = [0] * len(options)
+    for ua in answers.values():
+        ai = ua.answer_index
+        if 0 <= ai < len(options):
+            vote_counts[ai] += 1
+
+    opt_labels = ["🅐", "🅑", "🅒", "🅓"]
+
+    # ── Variantlar satrlari (✅ va foiz bilan) ──
+    opt_lines = []
+    for i, opt in enumerate(options[:4]):
+        cnt   = vote_counts[i] if i < len(vote_counts) else 0
+        pct   = round(cnt / total_ans * 100) if total_ans else 0
+        bar_n = int(pct / 10)
+        bar   = "🟩" * bar_n + "⬜" * (10 - bar_n)
+        mark  = "✅ " if i == correct_i else "    "
+        label = opt_labels[i] if i < len(opt_labels) else f"{i+1}"
+        opt_lines.append(
+            f"{mark}{label}  {opt}\n"
+            f"        {bar}  {pct}%  ({cnt} kishi)"
+        )
+
+    correct_text = options[correct_i] if correct_i < len(options) else "?"
+    correct_cnt  = sum(1 for ua in answers.values() if ua.is_correct)
+
+    revealed = (
+        f"🏁 <b>Savol {idx+1}/{total}</b>  —  Vaqt tugadi!\n"
+        f"━━━━━━━━━━━━━━━━━━━━━\n"
+        f"{q['text']}\n\n"
+        f"{chr(10).join(opt_lines)}\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━\n"
+        f"✅ To'g'ri: <b>{correct_text}</b>  |  "
+        f"👥 Javob berdi: {total_ans}  |  ✅ To'g'ri: {correct_cnt}"
+    )
+
+    # Izoh — Telegram quote (blockquote) sifatida
+    if explanation:
+        revealed += f"\n\n<blockquote>💡 {explanation}</blockquote>"
+
+    try:
+        if image_url:
+            await bot.edit_message_caption(
+                chat_id=group_id, message_id=msg_id,
+                caption=revealed, parse_mode="HTML", reply_markup=None
+            )
+        else:
+            await bot.edit_message_text(
+                text=revealed, chat_id=group_id, message_id=msg_id,
+                parse_mode="HTML", reply_markup=None
+            )
+    except TelegramAPIError as e:
+        logger.warning(f"Reveal edit xatosi: {e}")
+        # Edit ishlamasa yangi xabar yuboramiz
+        try:
+            await bot.send_message(group_id, revealed, parse_mode="HTML")
+        except TelegramAPIError:
+            pass
+
+
 async def _end_quiz(bot: Bot, session: QuizSession, quiz_service: QuizService):
-    """Testni yakunlash, natijalarni saqlash va final leaderboard ko'rsatish."""
+    """Testni yakunlash va final natijalarni e'lon qilish."""
     group_id      = session.group_id
     final_results = session.get_final_results()
 
     session_manager.end_session(group_id)
 
-    # ── DB ga saqlash ──
     await quiz_service.record_session_results(
         session_id=session.session_id,
         quiz_id=session.quiz_id,
@@ -645,7 +676,6 @@ async def _end_quiz(bot: Bot, session: QuizSession, quiz_service: QuizService):
         results=final_results
     )
 
-    # ── Final leaderboard ──
     lb_text = _format_final_leaderboard(final_results, session.quiz_title)
     try:
         await bot.send_message(group_id, lb_text, parse_mode="HTML")
@@ -655,42 +685,42 @@ async def _end_quiz(bot: Bot, session: QuizSession, quiz_service: QuizService):
 
 def _format_final_leaderboard(results: list, quiz_title: str,
                                 stopped_early: bool = False) -> str:
-    """Final natijalar xabarini formatlash."""
+    """Final natijalar — o'rinlar va foizlar bilan."""
     if not results:
         header = "⛔ Test to'xtatildi." if stopped_early else "🏁 Test yakunlandi!"
         return f"{header}\n\nHech kim javob bermadi."
 
-    header = (
-        f"⛔ <b>Test to'xtatildi!</b>\n" if stopped_early
-        else f"🏁 <b>Test yakunlandi!</b>\n"
-    )
+    header = "⛔ <b>Test to'xtatildi!</b>" if stopped_early else "🏁 <b>Test yakunlandi!</b>"
 
     lines = [
         header,
         f"📚 <b>{quiz_title}</b>",
         f"━━━━━━━━━━━━━━━━━━━━━\n",
+        f"<b>🏆 Natijalar jadvali:</b>\n"
     ]
 
-    emojis = ["🥇","🥈","🥉"] + [f"{i}." for i in range(4, 11)]
+    medals = ["🥇", "🥈", "🥉"]
     for i, r in enumerate(results[:10]):
-        name    = r.get("username") or r.get("first_name","O'quvchi")
+        name    = r.get("username") or r.get("first_name", "O'quvchi")
         score   = r.get("score", 0)
         correct = r.get("correct", 0)
         total   = r.get("total", 0)
-        bar     = "🟩" * int(score / 10) + "⬜" * (10 - int(score / 10))
+        bar_n   = int(score / 10)
+        bar     = "🟩" * bar_n + "⬜" * (10 - bar_n)
+        medal   = medals[i] if i < 3 else f"  {i+1}."
         lines.append(
-            f"{emojis[i]}  <b>{name}</b>\n"
-            f"    {bar}  {score:.0f}%  ({correct}/{total} ✅)"
+            f"{medal} <b>{name}</b>\n"
+            f"    {bar}  {score:.0f}%  ({correct}/{total} ✅)\n"
         )
 
     if len(results) > 10:
-        lines.append(f"\n<i>...va yana {len(results)-10} ishtirokchi</i>")
+        lines.append(f"<i>...va yana {len(results)-10} ishtirokchi</i>\n")
 
-    avg = sum(r.get("score",0) for r in results) / len(results)
+    avg = sum(r.get("score", 0) for r in results) / len(results)
     lines += [
-        f"\n━━━━━━━━━━━━━━━━━━━━━",
-        f"👥 Ishtirokchilar: <b>{len(results)}</b>",
-        f"📊 O'rtacha ball: <b>{avg:.1f}%</b>",
+        f"━━━━━━━━━━━━━━━━━━━━━",
+        f"👥 Ishtirokchilar: <b>{len(results)} kishi</b>",
+        f"📊 O'rtacha natija: <b>{avg:.1f}%</b>",
         f"\n🎉 Barcha ishtirokchilarga rahmat!"
     ]
     return "\n".join(lines)
@@ -778,6 +808,8 @@ def parse_text_quiz(text: str) -> dict:
     # ── Savollarni ajratish ──
     # Savol boshlanishini aniqlash: "1." "1)" "1-"
     Q_START = _re.compile(r'^\s*(\d+)\s*[.\-\)]\s+(.+)')
+    # Savol vaqti: "1. [30s] Savol..." yoki "1. Savol? [vaqt:20]"
+    Q_TIME  = _re.compile(r'\[(\d+)s?\]|\[vaqt\s*:\s*(\d+)\]', _re.IGNORECASE)
     # Variant boshlanishi: A) B) C) D)  (yoki *A) +B) A)* va h.k.)
     OPT_RE  = _re.compile(
         r'^\s*'
@@ -788,26 +820,31 @@ def parse_text_quiz(text: str) -> dict:
         r'\s*(?P<text>.+)'             # variant matni
     )
 
-    current_q   = None
+    current_q    = None
     current_opts = []
     correct_idx  = -1
+    current_time = None  # Savol uchun alohida vaqt
 
     def flush_question():
-        nonlocal current_q, current_opts, correct_idx
+        nonlocal current_q, current_opts, correct_idx, current_time
         if current_q and current_opts:
             if correct_idx == -1:
-                correct_idx = 0  # Default: birinchi variant
-            questions.append({
+                correct_idx = 0
+            q_entry = {
                 "text":          current_q,
                 "type":          "multiple_choice",
                 "options":       [o for o in current_opts],
                 "correct_index": correct_idx,
                 "explanation":   "",
                 "image_url":     "",
-            })
+            }
+            if current_time is not None:
+                q_entry["time_override"] = current_time
+            questions.append(q_entry)
         current_q    = None
         current_opts = []
         correct_idx  = -1
+        current_time = None
 
     for line in content_lines:
         if not line.strip():
@@ -817,7 +854,17 @@ def parse_text_quiz(text: str) -> dict:
         m_q = Q_START.match(line)
         if m_q:
             flush_question()
-            current_q   = m_q.group(2).strip()
+            q_text = m_q.group(2).strip()
+            # Savol matnida [30s] yoki [vaqt:20] bormi?
+            m_t = Q_TIME.search(q_text)
+            if m_t:
+                t_val = m_t.group(1) or m_t.group(2)
+                try:
+                    current_time = max(5, min(120, int(t_val)))
+                except ValueError:
+                    current_time = None
+                q_text = Q_TIME.sub("", q_text).strip()
+            current_q    = q_text
             current_opts = []
             correct_idx  = -1
             continue
@@ -1021,24 +1068,20 @@ def _parse_json_data(raw: dict) -> dict:
 
 
 def _format_for_cache(record: dict) -> str:
-    """update_cache uchun DB_RECORD formatida matn."""
-    import json as _j
-    return f"📦 DB_RECORD\n```json\n{_j.dumps(record, ensure_ascii=False)}\n```"
+    """Eski mos kelish uchun — endi ishlatilmaydi."""
+    return ""
 
 
 async def _save_quiz_from_data(data: dict, message: Message,
                                 wait_msg, quiz_service: QuizService):
-    """Parse qilingan ma'lumotni tekshirib DB ga saqlaydi."""
-    from utils.helpers import generate_id, build_quiz_record, build_question_record
-
+    """Parse qilingan testni RAM ga, so'ng kanalga saqlaydi."""
     title     = data.get("title", "").strip()
     questions = data.get("questions", [])
 
-    # ── Tekshirish ──
     if not title:
         await wait_msg.edit_text(
             "❌ <b>Test nomi topilmadi!</b>\n\n"
-            "Matn birinchi qatordan boshlang:\n"
+            "Birinchi qator:\n"
             "<code>Test nomi: Geografiya testi</code>",
             parse_mode="HTML"
         )
@@ -1047,7 +1090,6 @@ async def _save_quiz_from_data(data: dict, message: Message,
     if not questions:
         await wait_msg.edit_text(
             "❌ <b>Savollar topilmadi!</b>\n\n"
-            "Format to'g'riligini tekshiring:\n"
             "<code>1. Savol matni?\n"
             "A) Variant\n"
             "*B) To'g'ri javob</code>",
@@ -1055,39 +1097,20 @@ async def _save_quiz_from_data(data: dict, message: Message,
         )
         return
 
-    # To'g'ri javobsiz savollarni aniqlash
-    no_correct = [
-        i + 1 for i, q in enumerate(questions)
-        if q.get("correct_index", -1) == -1
-    ]
-
+    no_correct  = [i+1 for i, q in enumerate(questions)
+                   if q.get("correct_index", -1) == -1]
     time_per_q  = max(5, min(120, int(data.get("time_per_question", 30))))
     description = data.get("description", "")
     created_by  = message.from_user.username or message.from_user.first_name or "admin"
 
     try:
-        quiz_id  = generate_id("quiz")
-        quiz_rec = build_quiz_record(
-            quiz_id, title, description, created_by,
-            len(questions), time_per_q
+        # RAM + Kanal ga saqlash
+        quiz_id, ok = await quiz_service.create_quiz(
+            title=title, description=description,
+            created_by=created_by, questions=questions,
+            time_per_question=time_per_q
         )
-        msg_id = await quiz_service.db.write_record(quiz_rec)
-        if msg_id:
-            quiz_service.db.update_cache(msg_id, _format_for_cache(quiz_rec))
 
-        for idx, q in enumerate(questions):
-            q_rec = build_question_record(
-                quiz_id, idx,
-                q["text"], q["options"], q["correct_index"],
-                q.get("type", "multiple_choice"),
-                q.get("explanation", ""),
-                q.get("image_url", "")
-            )
-            msg_id = await quiz_service.db.write_record(q_rec)
-            if msg_id:
-                quiz_service.db.update_cache(msg_id, _format_for_cache(q_rec))
-
-        # ── Muvaffaqiyat ──
         warn = ""
         if no_correct:
             nums = ", ".join(str(n) for n in no_correct[:5])
@@ -1097,46 +1120,40 @@ async def _save_quiz_from_data(data: dict, message: Message,
                 f"Birinchi variant to'g'ri deb qabul qilindi."
             )
 
-        # Inline tugmalar
-        bot_username = (await message.bot.get_me()).username
-        share_url = f"https://t.me/{bot_username}?startgroup=quiz_{quiz_id}"
+        bot_me       = await message.bot.get_me()
+        bot_username = bot_me.username
 
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="▶️ Guruhda boshlash",
-                    switch_inline_query=f"quiz_start {quiz_id}"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📋 Testlar ro'yxati",
-                    switch_inline_query_current_chat="/quiz_list"
-                ),
-                InlineKeyboardButton(
-                    text="📤 Ulashish",
-                    url=share_url
-                ),
-            ],
-        ])
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(
+                text="▶️ Guruhga qo'shish",
+                url=f"https://t.me/{bot_username}?startgroup=start"
+            ),
+            InlineKeyboardButton(
+                text="📤 Ulashish",
+                url=(f"https://t.me/share/url?"
+                     f"url=https://t.me/{bot_username}"
+                     f"&text=%2Fquiz_start%20{quiz_id}")
+            ),
+        ]])
 
         await wait_msg.edit_text(
-            f"✅ <b>Test yaratildi!</b>\n\n"
+            f"✅ <b>Test saqlandi!</b>\n\n"
             f"📚 <b>Nom:</b> {title}\n"
             f"🆔 <b>ID:</b> <code>{quiz_id}</code>\n"
             f"❓ <b>Savollar:</b> {len(questions)} ta\n"
             f"⏱ <b>Vaqt/savol:</b> {time_per_q} soniya\n"
             f"👤 <b>Yaratdi:</b> {created_by}"
             f"{warn}\n\n"
-            f"▶️ Guruhda boshlash uchun:\n"
+            f"💾 RAM + Telegram kanalga saqlandi\n\n"
+            f"▶️ Guruhda boshlash:\n"
             f"<code>/quiz_start {quiz_id}</code>",
             parse_mode="HTML",
             reply_markup=keyboard
         )
 
     except Exception as e:
+        logger.error(f"Quiz saqlashda xato: {e}", exc_info=True)
         await wait_msg.edit_text(
-            f"❌ <b>Saqlashda xato:</b> {e}\n\n"
-            f"DB guruh: <code>{config.DB_GROUP_ID}</code>",
+            f"❌ <b>Saqlashda xato:</b> <code>{e}</code>",
             parse_mode="HTML"
         )
