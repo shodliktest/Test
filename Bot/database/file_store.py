@@ -180,3 +180,7 @@ def file_info() -> dict:
                       if RESULTS_FILE.exists() else 0,
         "users_count": len(load_users()),
     }
+
+# Eski import uchun alias
+get_all_quiz_ids = load_quiz_index
+
