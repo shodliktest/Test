@@ -142,18 +142,23 @@ def _run_bot_in_thread():
 
         logger.info("✅ Bot polling boshlandi (background thread)")
 
-        # !! start_polling o'rniga _polling — signal handler ishlatmaydi
-        # Bu "set_wakeup_fd only works in main thread" xatosini hal qiladi
+        # drop_pending_updates=True — eski getUpdates so'rovlarini bekor qiladi
+        # handle_signals=False     — signal handler ishlatmaydi (thread uchun zarur)
         try:
-            await dp._polling(
-                bot=bot,
+            await dp.start_polling(
+                bot,
                 allowed_updates=["message", "callback_query"],
-                handle_as_tasks=True,
+                drop_pending_updates=True,
+                handle_signals=False,       # ← set_wakeup_fd xatosini hal qiladi
+                close_bot_session=True,
             )
         except Exception as e:
             logger.error(f"Polling xatosi: {e}")
         finally:
-            await bot.session.close()
+            try:
+                await bot.session.close()
+            except Exception:
+                pass
 
     # Yangi event loop (thread uchun)
     loop = asyncio.new_event_loop()
