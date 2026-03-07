@@ -1019,6 +1019,12 @@ def _parse_json_data(raw: dict) -> dict:
     }
 
 
+def _format_for_cache(record: dict) -> str:
+    """update_cache uchun DB_RECORD formatida matn."""
+    import json as _j
+    return f"📦 DB_RECORD\n```json\n{_j.dumps(record, ensure_ascii=False)}\n```"
+
+
 async def _save_quiz_from_data(data: dict, message: Message,
                                 wait_msg, quiz_service: QuizService):
     """Parse qilingan ma'lumotni tekshirib DB ga saqlaydi."""
@@ -1064,7 +1070,9 @@ async def _save_quiz_from_data(data: dict, message: Message,
             quiz_id, title, description, created_by,
             len(questions), time_per_q
         )
-        await quiz_service.db.save_record(quiz_rec)
+        msg_id = await quiz_service.db.write_record(quiz_rec)
+        if msg_id:
+            quiz_service.db.update_cache(msg_id, _format_for_cache(quiz_rec))
 
         for idx, q in enumerate(questions):
             q_rec = build_question_record(
@@ -1074,7 +1082,9 @@ async def _save_quiz_from_data(data: dict, message: Message,
                 q.get("explanation", ""),
                 q.get("image_url", "")
             )
-            await quiz_service.db.save_record(q_rec)
+            msg_id = await quiz_service.db.write_record(q_rec)
+            if msg_id:
+                quiz_service.db.update_cache(msg_id, _format_for_cache(q_rec))
 
         # ── Muvaffaqiyat ──
         warn = ""
