@@ -516,7 +516,7 @@ async def cmd_quiz_history(message: Message, quiz_service: QuizService):
 async def cmd_create_quiz(message: Message):
     await message.answer(
         "📝 <b>Test yaratish</b>\n\n"
-        "<b>Usul 1 — Matn:</b>\n"
+        "<b>Usul 1 — .txt fayl yuboring:</b>\n"
         "<code>Test nomi: Geografiya\n"
         "Vaqt: 30\n\n"
         "1. O'zbekiston poytaxti?\n"
@@ -526,8 +526,10 @@ async def cmd_create_quiz(message: Message):
         "D) Andijon\n"
         "Izoh: Toshkent 1930-yildan poytaxt\n\n"
         "2. ...</code>\n\n"
-        "<b>Usul 2 — JSON fayl:</b> .json fayl yuboring\n\n"
-        "⚠️ Izoh har savol ostiga yoziladi",
+        "✅ To'g'ri javob oldiga <b>*</b> belgisi qo'ying\n"
+        "💡 Izoh — <code>Izoh:</code> yoki <code>Explanation:</code>\n\n"
+        "<b>Usul 2 — .json fayl yuboring</b>\n"
+        "<b>Usul 3 — Shu formatda to'g'ridan-to'g'ri yozing</b>",
         parse_mode="HTML"
     )
 
@@ -538,20 +540,33 @@ async def handle_document(message: Message, bot: Bot, quiz_service: QuizService)
         return
 
     doc = message.document
-    if not doc.file_name.endswith(".json"):
-        await message.answer("❌ Faqat .json fayl qabul qilinadi.")
-        return
+    fname = doc.file_name or ""
 
-    wait_msg = await message.answer("⏳ Fayl o'qilmoqda...")
-    try:
-        file     = await bot.get_file(doc.file_id)
-        bio      = await bot.download_file(file.file_path)
-        raw_text = bio.read().decode("utf-8")
-        import json
-        data = json.loads(raw_text)
-        await _save_quiz_from_data(data, message, wait_msg, quiz_service)
-    except Exception as e:
-        await wait_msg.edit_text(f"❌ Fayl o'qishda xato: {e}", parse_mode="HTML")
+    if fname.endswith(".json"):
+        wait_msg = await message.answer("⏳ JSON fayl o'qilmoqda...")
+        try:
+            file     = await bot.get_file(doc.file_id)
+            bio      = await bot.download_file(file.file_path)
+            raw_text = bio.read().decode("utf-8")
+            import json
+            data = json.loads(raw_text)
+            await _save_quiz_from_data(data, message, wait_msg, quiz_service)
+        except Exception as e:
+            await wait_msg.edit_text(f"❌ JSON xato: {e}", parse_mode="HTML")
+
+    elif fname.endswith(".txt"):
+        wait_msg = await message.answer("⏳ TXT fayl o'qilmoqda...")
+        try:
+            file     = await bot.get_file(doc.file_id)
+            bio      = await bot.download_file(file.file_path)
+            raw_text = bio.read().decode("utf-8")
+            data = _parse_text_quiz(raw_text)
+            await _save_quiz_from_data(data, message, wait_msg, quiz_service)
+        except Exception as e:
+            await wait_msg.edit_text(f"❌ TXT xato: {e}", parse_mode="HTML")
+
+    else:
+        await message.answer("❌ Faqat <b>.txt</b> yoki <b>.json</b> fayl qabul qilinadi.", parse_mode="HTML")
 
 
 @router.message(F.text & F.text.startswith("Test nomi:"))
