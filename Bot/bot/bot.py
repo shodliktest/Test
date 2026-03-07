@@ -1,133 +1,174 @@
 """
-Main Bot Entry Point
-Telegram Quiz Platform - Bot
+Telegram Quiz Bot — Asosiy fayl
+Ishga tushirish: python bot/bot.py  (loyiha root dan)
 """
 import asyncio
 import logging
 import sys
+import os
 
-from aiogram import Bot, Dispatcher
+# ── Loyiha root ni path ga qo'shish ──────────────────────────
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+from aiogram import Bot, Dispatcher, Router, BaseMiddleware
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.types import Message, BotCommand
+from aiogram.types import Message, BotCommand, TelegramObject
+from typing import Callable, Dict, Any, Awaitable
 
-from bot.handlers import router
+from bot.handlers import router as main_router
 from bot.group_manager import GroupManager
 from bot.leaderboard import LeaderboardService
 from database.telegram_db import TelegramDB
 from database.firebase_cache import FirebaseCache
 from services.quiz_service import QuizService
 from utils.config import config
-from utils.helpers import parse_json_from_message
 
-# Configure logging
+# ── Logging ───────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler("bot.log", encoding="utf-8")
-    ]
+    handlers=[logging.StreamHandler(sys.stdout)]
 )
+try:
+    logging.getLogger().addHandler(
+        logging.FileHandler("bot.log", encoding="utf-8")
+    )
+except Exception:
+    pass
+
 logger = logging.getLogger(__name__)
 
 
-async def set_bot_commands(bot: Bot):
-    """Register bot commands for the menu."""
-    commands = [
-        BotCommand(command="start", description="Welcome message"),
-        BotCommand(command="help", description="Show all commands"),
-        BotCommand(command="quiz_list", description="Browse available quizzes"),
-        BotCommand(command="quiz_start", description="Start a quiz [id]"),
-        BotCommand(command="quiz_stop", description="Stop current quiz (admin)"),
-        BotCommand(command="leaderboard", description="View global leaderboard"),
-        BotCommand(command="my_score", description="View your score history"),
-        BotCommand(command="quiz_history", description="Recent quiz sessions"),
-    ]
-    await bot.set_my_commands(commands)
-    logger.info("Bot commands registered")
+# ══════════════════════════════════════════════════════════════
+# MIDDLEWARE
+# ══════════════════════════════════════════════════════════════
+class ServicesMiddleware(BaseMiddleware):
+    def __init__(self, bot, db, quiz_service,
+                 group_manager, leaderboard_service, firebase):
+        self.bot                = bot
+        self.db                 = db
+        self.quiz_service       = quiz_service
+        self.group_manager      = group_manager
+        self.leaderboard_service = leaderboard_service
+        self.firebase           = firebase
+        super().__init__()
+
+    async def __call__(
+        self,
+        handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: Dict[str, Any]
+    ) -> Any:
+        data["bot"]                 = self.bot
+        data["db"]                  = self.db
+        data["quiz_service"]        = self.quiz_service
+        data["group_manager"]       = self.group_manager
+        data["leaderboard_service"] = self.leaderboard_service
+        data["firebase"]            = self.firebase
+        return await handler(event, data)
 
 
-async def on_startup(bot: Bot, db: TelegramDB):
-    """Actions on bot startup."""
-    await set_bot_commands(bot)
-    logger.info("Bot started successfully")
-
-    # Notify admin
-    for admin_id in config.ADMIN_IDS:
-        try:
-            await bot.send_message(admin_id, "✅ Quiz Bot is online!")
-        except Exception:
-            pass
-
-
+# ══════════════════════════════════════════════════════════════
+# ASOSIY FUNKSIYA
+# ══════════════════════════════════════════════════════════════
 async def main():
-    """Main bot runner."""
-    logger.info("Initializing Telegram Quiz Bot...")
+    logger.info("=" * 50)
+    logger.info("Quiz Bot ishga tushmoqda...")
+    logger.info("=" * 50)
 
-    if config.BOT_TOKEN == "YOUR_BOT_TOKEN_HERE":
-        logger.error("BOT_TOKEN not configured! Set the BOT_TOKEN environment variable.")
+    # Token tekshiruvi
+    token = config.BOT_TOKEN
+    if not token or token == "YOUR_BOT_TOKEN_HERE":
+        logger.error("❌ BOT_TOKEN sozlanmagan!")
+        logger.error("   .env yoki environment da BOT_TOKEN kiriting.")
         sys.exit(1)
 
-    # Initialize bot and dispatcher
+    logger.info(f"✅ Token: {token[:10]}...")
+    logger.info(f"✅ DB Guruh: {config.DB_GROUP_ID}")
+    logger.info(f"✅ Adminlar: {config.ADMIN_IDS}")
+
+    # Bot yaratish
     bot = Bot(
-        token=config.BOT_TOKEN,
+        token=token,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
     dp = Dispatcher()
 
-    # Initialize services
-    db = TelegramDB(bot)
-    firebase = FirebaseCache()
-    quiz_service = QuizService(db)
-    group_manager = GroupManager(bot)
+    # Servislar
+    db                  = TelegramDB(bot)
+    firebase            = FirebaseCache()
+    quiz_service        = QuizService(db)
+    group_manager       = GroupManager(bot)
     leaderboard_service = LeaderboardService(db)
 
-    # Register middleware to inject services into handlers
-    from aiogram import BaseMiddleware
-    from typing import Callable, Dict, Any, Awaitable
-    from aiogram.types import TelegramObject
+    # Middleware
+    mw = ServicesMiddleware(
+        bot=bot,
+        db=db,
+        quiz_service=quiz_service,
+        group_manager=group_manager,
+        leaderboard_service=leaderboard_service,
+        firebase=firebase
+    )
+    dp.message.middleware(mw)
+    dp.callback_query.middleware(mw)
 
-    class ServicesMiddleware(BaseMiddleware):
-        async def __call__(
-            self,
-            handler: Callable[[TelegramObject, Dict[str, Any]], Awaitable[Any]],
-            event: TelegramObject,
-            data: Dict[str, Any]
-        ) -> Any:
-            data["bot"] = bot
-            data["db"] = db
-            data["quiz_service"] = quiz_service
-            data["group_manager"] = group_manager
-            data["leaderboard_service"] = leaderboard_service
-            data["firebase"] = firebase
-            return await handler(event, data)
+    # DB guruh tinglash
+    db_router = Router()
 
-    dp.message.middleware(ServicesMiddleware())
-    dp.callback_query.middleware(ServicesMiddleware())
-
-    # DB message listener - populate cache from incoming DB group messages
-    from aiogram import Router as R
-    db_router = R()
-
-    @db_router.message(lambda m: m.chat.id == int(config.DB_GROUP_ID))
-    async def db_message_listener(message: Message):
-        """Listen to DB group messages and update cache."""
-        if message.text and "DB_RECORD" in message.text:
-            db.update_cache(message.message_id, message.text)
+    @db_router.message()
+    async def db_listener(message: Message):
+        try:
+            if message.chat.id == int(config.DB_GROUP_ID):
+                if message.text and "DB_RECORD" in message.text:
+                    db.update_cache(message.message_id, message.text)
+        except Exception as e:
+            logger.warning(f"DB listener: {e}")
 
     dp.include_router(db_router)
-    dp.include_router(router)
+    dp.include_router(main_router)
 
-    # Startup
-    await on_startup(bot, db)
+    # Buyruqlar ro'yxati
+    await bot.set_my_commands([
+        BotCommand(command="start",        description="Botni boshlash"),
+        BotCommand(command="help",         description="Yordam"),
+        BotCommand(command="quiz_list",    description="Testlar ro'yxati"),
+        BotCommand(command="quiz_start",   description="Test boshlash (admin)"),
+        BotCommand(command="quiz_stop",    description="Testni to'xtatish (admin)"),
+        BotCommand(command="leaderboard",  description="Umumiy reyting"),
+        BotCommand(command="my_score",     description="Mening natijalarim"),
+        BotCommand(command="quiz_history", description="O'tgan testlar"),
+    ])
 
-    logger.info("Starting polling...")
+    logger.info("✅ Bot tayyor!")
+
+    # Adminlarga xabar
+    for admin_id in config.ADMIN_IDS:
+        try:
+            await bot.send_message(
+                admin_id,
+                "✅ <b>Quiz Bot ishga tushdi!</b>\n\n"
+                "/quiz_list — testlarni ko'rish\n"
+                "/quiz_start — test boshlash"
+            )
+        except Exception as e:
+            logger.warning(f"Admin {admin_id}: {e}")
+
+    # Polling
+    logger.info("📡 Polling boshlandi...")
     try:
-        await dp.start_polling(bot, allowed_updates=["message", "callback_query", "poll_answer"])
+        await dp.start_polling(
+            bot,
+            allowed_updates=["message", "callback_query"],
+            drop_pending_updates=True
+        )
+    except KeyboardInterrupt:
+        logger.info("Ctrl+C — bot to'xtatildi")
     finally:
         await bot.session.close()
-        logger.info("Bot stopped")
 
 
 if __name__ == "__main__":
