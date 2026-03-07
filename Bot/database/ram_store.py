@@ -1,12 +1,19 @@
 """
-RAM Store — Barcha ma'lumotlar xotirada (500 MB yetarli).
-Test tugagach kanalga JSON yuboriladi.
+RAM Store — Faqat FAOL sessiyalar uchun.
+
+Arxitektura:
+  - Testlar faylda saqlanadi, sessiya boshida RAMga yuklanadi
+  - Sessiya tugagach test RAM dan o'chiriladi
+  - Natijalar sessiya davomida RAM da saqlanadi
+  - Test tugagach natijalar e'lon qilinib RAM dan tozalanadi
+  - Sessiya progress (scores) tozalanadi
 """
-import json, logging
+import logging
 from typing import Dict, List, Optional
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
 
 def _now() -> str:
     return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -14,149 +21,112 @@ def _now() -> str:
 
 class RAMStore:
     def __init__(self):
-        # quiz_id -> {id, title, description, time_per_question,
-        #              created_by, created_at, active, questions:[]}
-        self.quizzes:  Dict[str, Dict] = {}
-        # session_id -> {id, quiz_id, quiz_title, group_id, ...}
-        self.sessions: Dict[str, Dict] = {}
-        # session_id -> [user_score_dict, ...]
-        self.scores:   Dict[str, List] = {}
-        # session_id -> result_dict
-        self.results:  Dict[str, Dict] = {}
-        # list of log dicts (max 1000)
-        self.logs:     List[Dict]      = []
+        # Faol sessiyalar uchun testlar: quiz_id -> quiz_dict
+        # Sessiya tugagach o'chiriladi
+        self.active_quizzes: Dict[str, dict] = {}
 
-    # ── QUIZ ─────────────────────────────────────────
-    def save_quiz(self, quiz_id, title, description,
-                  created_by, time_per_question, questions) -> Dict:
+        # Sessiyalar: session_id -> session_dict
+        self.sessions: Dict[str, dict] = {}
+
+        # Sessiya ballari: session_id -> [user_score, ...]
+        # Sessiya tugab natijalar e'lon qilinganidan keyin tozalanadi
+        self.session_scores: Dict[str, List] = {}
+
+        # Logs
+        self.logs: List[dict] = []
+
+    # ════════════════════════════════════════════════
+    # QUIZ — faqat faol sessiya uchun RAM da
+    # ════════════════════════════════════════════════
+
+    def load_quiz_to_ram(self, quiz_data: dict):
+        """Fayldan o'qilgan testni RAM ga yuklaydi."""
+        qid = quiz_data.get("id")
+        if qid:
+            self.active_quizzes[qid] = quiz_data
+            logger.info(f"📥 RAM: quiz yuklandi {qid}")
+
+    def get_quiz(self, quiz_id: str) -> Optional[dict]:
+        return self.active_quizzes.get(quiz_id)
+
+    def unload_quiz(self, quiz_id: str):
+        """Sessiya tugagach testni RAM dan o'chiradi."""
+        if quiz_id in self.active_quizzes:
+            del self.active_quizzes[quiz_id]
+            logger.info(f"🗑️ RAM: quiz o'chirildi {quiz_id}")
+
+    # ════════════════════════════════════════════════
+    # SESSION
+    # ════════════════════════════════════════════════
+
+    def start_session(self, session_id: str, quiz_id: str, quiz_title: str,
+                      group_id: int, group_title: str, started_by: int) -> dict:
         rec = {
-            "type": "QUIZ", "id": quiz_id,
-            "title": title, "description": description,
-            "created_by": created_by,
-            "time_per_question": time_per_question,
-            "question_count": len(questions),
-            "questions": questions,
-            "active": True, "created_at": _now(),
-        }
-        self.quizzes[quiz_id] = rec
-        return rec
-
-    def get_quiz(self, quiz_id: str) -> Optional[Dict]:
-        return self.quizzes.get(quiz_id)
-
-    def get_all_quizzes(self) -> List[Dict]:
-        return [q for q in self.quizzes.values() if q.get("active", True)]
-
-    def delete_quiz(self, quiz_id: str) -> bool:
-        q = self.quizzes.get(quiz_id)
-        if q:
-            q["active"] = False; q["deleted_at"] = _now(); return True
-        return False
-
-    # ── SESSION ──────────────────────────────────────
-    def save_session(self, session_id, quiz_id, quiz_title,
-                     group_id, group_title, started_by) -> Dict:
-        rec = {
-            "type": "SESSION", "id": session_id,
-            "quiz_id": quiz_id, "quiz_title": quiz_title,
-            "group_id": group_id, "group_title": group_title,
-            "started_by": started_by, "started_at": _now(), "status": "active",
+            "id": session_id, "quiz_id": quiz_id,
+            "quiz_title": quiz_title, "group_id": group_id,
+            "group_title": group_title, "started_by": started_by,
+            "started_at": _now(), "status": "active",
         }
         self.sessions[session_id] = rec
-        self.scores[session_id]   = []
+        self.session_scores[session_id] = []
         return rec
 
     def end_session(self, session_id: str):
         s = self.sessions.get(session_id)
         if s:
-            s["status"] = "completed"; s["ended_at"] = _now()
+            s["status"] = "completed"
+            s["ended_at"] = _now()
 
-    def get_sessions(self) -> List[Dict]:
-        return list(self.sessions.values())
+    def get_session(self, session_id: str) -> Optional[dict]:
+        return self.sessions.get(session_id)
 
-    # ── SCORES / RESULTS ─────────────────────────────
-    def save_scores(self, session_id: str, scores: List[Dict]):
-        self.scores[session_id] = scores
+    # ════════════════════════════════════════════════
+    # SCORES — sessiya davomida RAM da
+    # ════════════════════════════════════════════════
 
-    def save_result(self, session_id, quiz_id, group_id,
-                    participants, avg_score, top_scorer) -> Dict:
-        rec = {
-            "type": "RESULT", "session_id": session_id,
-            "quiz_id": quiz_id, "group_id": group_id,
-            "participants": participants, "avg_score": avg_score,
-            "top_scorer": top_scorer, "completed_at": _now(),
-        }
-        self.results[session_id] = rec
-        return rec
+    def update_scores(self, session_id: str, scores: List[dict]):
+        """Sessiya ballarini yangilaydi."""
+        self.session_scores[session_id] = scores
 
-    def get_scores_for_session(self, session_id: str) -> List[Dict]:
-        return self.scores.get(session_id, [])
+    def get_scores(self, session_id: str) -> List[dict]:
+        return self.session_scores.get(session_id, [])
 
-    def get_all_scores(self) -> List[Dict]:
-        out = []
-        for lst in self.scores.values():
-            out.extend(lst)
-        return out
+    def clear_session_progress(self, session_id: str):
+        """
+        Natijalar e'lon qilinganidan keyin:
+        - session_scores tozalanadi (RAM bo'shaydi)
+        - Test RAM dan o'chiriladi
+        """
+        quiz_id = self.sessions.get(session_id, {}).get("quiz_id")
+        if quiz_id:
+            self.unload_quiz(quiz_id)
+        if session_id in self.session_scores:
+            del self.session_scores[session_id]
+        logger.info(f"🧹 RAM tozalandi: session={session_id}")
 
-    def get_user_history(self, user_id: int) -> List[Dict]:
-        return [s for s in self.get_all_scores() if s.get("user_id") == user_id]
+    # ════════════════════════════════════════════════
+    # LOGS
+    # ════════════════════════════════════════════════
 
-    # ── LOG ──────────────────────────────────────────
     def add_log(self, level: str, msg: str, ctx: dict = None):
-        self.logs.append({"type":"LOG","level":level,"message":msg,
-                          "context":ctx or {},"timestamp":_now()})
-        if len(self.logs) > 1000:
-            self.logs = self.logs[-800:]
+        self.logs.append({
+            "level": level, "message": msg,
+            "context": ctx or {}, "timestamp": _now()
+        })
+        if len(self.logs) > 500:
+            self.logs = self.logs[-400:]
 
-    def get_logs(self, limit=100) -> List[Dict]:
+    def get_logs(self, limit=100) -> List[dict]:
         return self.logs[-limit:]
 
-    # ── TELEGRAM EKSPORT ─────────────────────────────
-    def quiz_to_telegram_text(self, quiz_id: str) -> Optional[str]:
-        q = self.quizzes.get(quiz_id)
-        return ("QUIZ:" + json.dumps(q, ensure_ascii=False)) if q else None
-
-    def result_to_telegram_text(self, session_id: str) -> Optional[str]:
-        result  = self.results.get(session_id)
-        if not result:
-            return None
-        payload = {
-            **result,
-            "session":     self.sessions.get(session_id),
-            "user_scores": self.scores.get(session_id, []),
-        }
-        return "RESULT:" + json.dumps(payload, ensure_ascii=False)
-
-    # ── TELEGRAM IMPORT ──────────────────────────────
-    def load_from_text(self, text: str) -> bool:
-        """Kanal xabaridan JSON ni parse qilib RAM ga yuklaydi."""
-        try:
-            if text.startswith("QUIZ:"):
-                d = json.loads(text[5:])
-                if d.get("id"):
-                    self.quizzes[d["id"]] = d
-                    return True
-            elif text.startswith("RESULT:"):
-                d   = json.loads(text[7:])
-                sid = d.get("session_id")
-                if sid:
-                    self.scores[sid]   = d.pop("user_scores", [])
-                    sess               = d.pop("session", None)
-                    self.results[sid]  = d
-                    if sess:
-                        self.sessions[sid] = sess
-                    return True
-        except Exception as e:
-            logger.warning(f"load_from_text xato: {e}")
-        return False
-
-    def stats(self) -> Dict:
+    def stats(self) -> dict:
         return {
-            "quizzes":  len(self.quizzes),
-            "sessions": len(self.sessions),
-            "results":  len(self.results),
-            "logs":     len(self.logs),
-            "scores":   sum(len(v) for v in self.scores.values()),
+            "active_quizzes":  len(self.active_quizzes),
+            "sessions":        len(self.sessions),
+            "active_sessions": sum(
+                1 for s in self.sessions.values() if s.get("status") == "active"
+            ),
+            "pending_scores":  sum(len(v) for v in self.session_scores.values()),
         }
 
 
