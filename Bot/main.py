@@ -140,16 +140,43 @@ def _run_bot_in_thread():
             BotCommand(command="quiz_history", description="O'tgan testlar"),
         ])
 
-        logger.info("✅ Bot polling boshlandi (background thread)")
+        # ── STARTUP DA DB DAN YUKLASH ──────────────────
+        # getUpdates orqali DB guruhidan oxirgi xabarlarni o'qiymiz
+        logger.info("📥 DB guruhdan xabarlar yuklanmoqda...")
+        try:
+            # drop_pending=False — pending updatelarni o'qib cache ga yozamiz
+            updates = await bot.get_updates(limit=100, timeout=3, allowed_updates=["message"])
+            db_id = int(config.DB_GROUP_ID)
+            loaded = 0
+            for upd in updates:
+                msg = upd.message
+                if msg and msg.chat.id == db_id and msg.text and "DB_RECORD" in msg.text:
+                    db.update_cache(msg.message_id, msg.text)
+                    loaded += 1
+            logger.info(f"📥 Pending updatelardan {loaded} ta record yuklandi")
+        except Exception as e:
+            logger.warning(f"Pending updates o'qishda xato: {e}")
 
-        # drop_pending_updates=True — eski getUpdates so'rovlarini bekor qiladi
-        # handle_signals=False     — signal handler ishlatmaydi (thread uchun zarur)
+        # Adminlarga xabar
+        for admin_id in config.ADMIN_IDS:
+            try:
+                await bot.send_message(
+                    admin_id,
+                    f"✅ <b>Bot ishga tushdi!</b>\n\n"
+                    f"📦 Cache: {len(db._cache)} ta record\n"
+                    f"/quiz_list — testlarni ko'rish\n"
+                    f"/create_quiz — test yaratish"
+                )
+            except Exception:
+                pass
+
+        logger.info("✅ Bot polling boshlandi")
         try:
             await dp.start_polling(
                 bot,
                 allowed_updates=["message", "callback_query"],
-                drop_pending_updates=True,
-                handle_signals=False,       # ← set_wakeup_fd xatosini hal qiladi
+                drop_pending_updates=False,  # pending larni o'qib oldik, o'chirmaymiz
+                handle_signals=False,
                 close_bot_session=True,
             )
         except Exception as e:
