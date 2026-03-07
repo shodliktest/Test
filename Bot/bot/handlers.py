@@ -278,31 +278,26 @@ async def _wait_and_next(bot: Bot, session: QuizSession,
 # ══════════════════════════════════════════════════════
 
 @router.poll_answer()
-async def handle_poll_answer(poll_answer: PollAnswer, quiz_service: QuizService):
+async def handle_poll_answer(poll_answer: PollAnswer):
     """
     Foydalanuvchi poll ga javob berganda chaqiriladi.
     is_anonymous=False bo'lgani uchun user ma'lumotlari keladi.
+    quiz_service kerak emas — session_manager orqali to'g'ridan ishlaydi.
     """
     poll_id    = poll_answer.poll_id
     user       = poll_answer.user
-    option_ids = poll_answer.option_ids  # Bo'sh = bekor qildi
+    option_ids = poll_answer.option_ids
 
     session = session_manager.get_session_by_poll(poll_id)
     if not session:
         return
 
-    is_correct = session.record_poll_answer(
+    session.record_poll_answer(
         user_id    = user.id,
         username   = user.username or "",
         first_name = user.first_name or "O'quvchi",
         option_ids = option_ids,
     )
-
-    if is_correct is None:
-        return  # Allaqachon javob bergan yoki bekor qildi
-
-    # Foydalanuvchini ro'yxatdan o'tkazish
-    quiz_service.register_user(user.id, user.first_name or "", user.username or "")
 
 
 # ══════════════════════════════════════════════════════
