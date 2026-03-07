@@ -1,155 +1,119 @@
 """
-Quiz Service - Business logic for quiz lifecycle management
+Quiz Service — RAM store asosida.
+Test yaratilganda va tugaganda kanalga JSON yoziladi.
 """
 import logging
 from typing import Dict, List, Optional, Tuple
-from utils.helpers import (
-    generate_id, build_quiz_record, build_question_record,
-    build_session_record, build_result_record, build_user_score_record,
-    build_log_record, now_iso
-)
-from utils.config import config
+from database.ram_store import ram
+from utils.helpers import generate_id, now_iso, calculate_score
 
 logger = logging.getLogger(__name__)
 
+# ChannelDB ni lazy ulaymiz (bot ishga tushganda)
+_channel_db = None
+
+def set_channel_db(ch):
+    global _channel_db
+    _channel_db = ch
+
 
 class QuizService:
-    """Handles quiz CRUD and lifecycle operations."""
+    def __init__(self):
+        self.ram = ram
 
-    def __init__(self, db):
-        self.db = db
-
+    # ── TEST ─────────────────────────────────────────
     async def create_quiz(self, title: str, description: str,
                            created_by: str, questions: List[Dict],
                            time_per_question: int = 30) -> Tuple[str, bool]:
-        """
-        Create a new quiz and store all questions.
-        Returns (quiz_id, success).
-        """
         quiz_id = generate_id("quiz")
-        quiz_record = build_quiz_record(
-            quiz_id=quiz_id,
-            title=title,
-            description=description,
-            created_by=created_by,
-            question_count=len(questions),
-            time_per_question=time_per_question
+        ram.save_quiz(
+            quiz_id=quiz_id, title=title, description=description,
+            created_by=created_by, time_per_question=time_per_question,
+            questions=questions
         )
-
-        # Write quiz metadata
-        msg_id = await self.db.write_record(quiz_record)
-        if not msg_id:
-            return quiz_id, False
-
-        # Update cache
-        self.db.update_cache(msg_id, self._to_db_format(quiz_record))
-
-        # Write each question
-        for i, q in enumerate(questions):
-            q_record = build_question_record(
-                quiz_id=quiz_id,
-                question_index=i,
-                question_text=q["text"],
-                options=q["options"],
-                correct_index=q["correct_index"],
-                question_type=q.get("type", "multiple_choice"),
-                explanation=q.get("explanation", ""),
-                image_url=q.get("image_url", "")
-            )
-            qmsg_id = await self.db.write_record(q_record)
-            if qmsg_id:
-                self.db.update_cache(qmsg_id, self._to_db_format(q_record))
-
-        # Log creation
-        log = build_log_record("INFO", f"Quiz created: {quiz_id} '{title}' by {created_by}")
-        log_id = await self.db.write_record(log)
-        if log_id:
-            self.db.update_cache(log_id, self._to_db_format(log))
-
-        logger.info(f"Quiz created: {quiz_id}")
+        ram.add_log("INFO", f"Quiz yaratildi: {quiz_id} '{title}'")
+        # Kanalga saqlash
+        if _channel_db:
+            await _channel_db.save_quiz(quiz_id)
         return quiz_id, True
 
-    def _to_db_format(self, record: Dict) -> str:
-        """Convert record to DB message format for cache update."""
-        import json
-        return f"📦 DB_RECORD\n```json\n{json.dumps(record, ensure_ascii=False, indent=2)}\n```"
+    def get_quiz(self, quiz_id: str) -> Optional[Dict]:
+        return ram.get_quiz(quiz_id)
 
-    async def get_quiz_with_questions(self, quiz_id: str) -> Optional[Dict]:
-        """Get a quiz with all its questions."""
-        quiz = await self.db.get_quiz(quiz_id)
+    def get_quiz_with_questions(self, quiz_id: str) -> Optional[Dict]:
+        quiz = ram.get_quiz(quiz_id)
         if not quiz:
             return None
-        questions = await self.db.get_quiz_questions(quiz_id)
-        quiz["question_list"] = questions
+        quiz = dict(quiz)
+        quiz["question_list"] = quiz.get("questions", [])
         return quiz
 
-    async def list_quizzes(self) -> List[Dict]:
-        """List all active quizzes."""
-        return await self.db.get_all_quizzes()
+    def list_quizzes(self) -> List[Dict]:
+        return ram.get_all_quizzes()
 
-    async def delete_quiz(self, quiz_id: str) -> bool:
-        """Soft delete a quiz."""
-        success = await self.db.soft_delete_quiz(quiz_id)
-        if success:
-            log = build_log_record("INFO", f"Quiz deleted: {quiz_id}")
-            log_id = await self.db.write_record(log)
-            if log_id:
-                self.db.update_cache(log_id, self._to_db_format(log))
-        return success
+    def delete_quiz(self, quiz_id: str) -> bool:
+        ok = ram.delete_quiz(quiz_id)
+        if ok:
+            ram.add_log("INFO", f"Quiz o'chirildi: {quiz_id}")
+        return ok
 
-    async def record_session_start(self, session_id: str, quiz_id: str,
-                                    quiz_title: str, group_id: int,
-                                    group_title: str, started_by: int) -> bool:
-        """Record that a quiz session has started."""
-        record = build_session_record(
-            session_id=session_id,
-            quiz_id=quiz_id,
-            quiz_title=quiz_title,
-            group_id=group_id,
-            group_title=group_title,
-            started_by=started_by
+    # ── SESSIYA ──────────────────────────────────────
+    def record_session_start(self, session_id, quiz_id, quiz_title,
+                              group_id, group_title, started_by):
+        ram.save_session(
+            session_id=session_id, quiz_id=quiz_id, quiz_title=quiz_title,
+            group_id=group_id, group_title=group_title, started_by=started_by
         )
-        msg_id = await self.db.write_record(record)
-        if msg_id:
-            self.db.update_cache(msg_id, self._to_db_format(record))
-        return msg_id is not None
+        ram.add_log("INFO", f"Sessiya boshlandi: {session_id}")
 
+    # ── NATIJALAR — test tugaganda kanalga yoziladi ──
     async def record_session_results(self, session_id: str, quiz_id: str,
                                       group_id: int, results: List[Dict]) -> bool:
-        """Record final session results."""
-        if not results:
-            return True
+        # RAM ga saqlash
+        user_scores = [
+            {
+                "type": "USER_SCORE", "session_id": session_id, "quiz_id": quiz_id,
+                "user_id":    r["user_id"],
+                "username":   r.get("username", ""),
+                "first_name": r.get("first_name", ""),
+                "correct":    r["correct"],
+                "total":      r["total"],
+                "score":      r["score"],
+                "recorded_at": now_iso(),
+            }
+            for r in results
+        ]
+        ram.save_scores(session_id, user_scores)
+        ram.end_session(session_id)
 
-        # Write individual user scores
-        for result in results:
-            score_record = build_user_score_record(
-                session_id=session_id,
-                quiz_id=quiz_id,
-                user_id=result["user_id"],
-                username=result.get("username", ""),
-                first_name=result.get("first_name", ""),
-                correct=result["correct"],
-                total=result["total"],
-                score=result["score"]
-            )
-            msg_id = await self.db.write_record(score_record)
-            if msg_id:
-                self.db.update_cache(msg_id, self._to_db_format(score_record))
-
-        # Write aggregate result
-        top = results[0] if results else {}
-        top_name = top.get("username") or top.get("first_name", "Unknown")
-        avg_score = sum(r["score"] for r in results) / len(results)
-        result_record = build_result_record(
-            session_id=session_id,
-            quiz_id=quiz_id,
-            group_id=group_id,
-            participants=len(results),
-            avg_score=round(avg_score, 2),
-            top_scorer=top_name
+        avg_score = sum(r["score"] for r in results) / len(results) if results else 0
+        top       = results[0] if results else {}
+        top_name  = top.get("username") or top.get("first_name", "Noma'lum")
+        ram.save_result(
+            session_id=session_id, quiz_id=quiz_id, group_id=group_id,
+            participants=len(results), avg_score=round(avg_score, 2),
+            top_scorer=top_name,
         )
-        msg_id = await self.db.write_record(result_record)
-        if msg_id:
-            self.db.update_cache(msg_id, self._to_db_format(result_record))
+        ram.add_log("INFO",
+            f"Test yakunlandi: {session_id} | {len(results)} kishi | avg={avg_score:.1f}%")
 
+        # Kanalga saqlash (test tugaganda)
+        if _channel_db:
+            await _channel_db.save_result(session_id)
         return True
+
+    # ── SO'ROVLAR ────────────────────────────────────
+    def get_sessions(self) -> List[Dict]:
+        return ram.get_sessions()
+
+    def get_all_scores(self) -> List[Dict]:
+        return ram.get_all_scores()
+
+    def get_user_history(self, user_id: int) -> List[Dict]:
+        return ram.get_user_history(user_id)
+
+    def get_logs(self, limit=100) -> List[Dict]:
+        return ram.get_logs(limit)
+
+    def get_stats(self) -> Dict:
+        return ram.stats()
