@@ -1,2 +1,22 @@
-aiogram>=3.4.0
-streamlit>=1.32.0
+# Telegram Quiz Platform - Dependencies
+
+# Core
+aiogram==3.13.1
+aiohttp==3.10.10
+
+# Admin Panel
+streamlit==1.39.0
+
+# Firebase (optional)
+firebase-admin==6.5.0
+
+# Utilities
+python-dotenv==1.0.1
+aiofiles==24.1.0
+
+# Data processing
+pandas==2.2.3
+
+# Dev/Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
