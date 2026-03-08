@@ -306,19 +306,14 @@
 
       <!-- TEXT TAB -->
       <div id="imp-txt-body">
-        <div class="fmt-tabs" style="flex-wrap:wrap;gap:.3rem">
+        <div class="fmt-tabs">
           <button class="fmtt on" onclick="showFmt(0,this)">A) * format</button>
           <button class="fmtt" onclick="showFmt(1,this)">1) [+] format</button>
           <button class="fmtt" onclick="showFmt(2,this)">Ha/Yo'q</button>
-          <button class="fmtt" onclick="showFmt(3,this)">📝 Matnli</button>
-          <button class="fmtt" onclick="showFmt(4,this)">✍️ Yozma javob</button>
-          <button class="fmtt" onclick="showFmt(5,this)">↕️ Tartib</button>
-          <button class="fmtt" onclick="showFmt(6,this)">🔢 Ketma-ketlik</button>
-          <button class="fmtt" onclick="showFmt(7,this)">✏️ Bo'sh to'ldirish</button>
         </div>
         <div class="fmt-preview" id="fmt-preview"></div>
         <div style="font-size:.71rem;color:var(--text-3);margin-bottom:.65rem">
-          💡 <b>*</b> yoki <b>[+]</b> = to'g'ri javob &nbsp;·&nbsp; <b>Izoh:</b> = izoh &nbsp;·&nbsp; <b>Javob:</b> = matnli savol to'g'ri javob
+          💡 <b>*</b> yoki <b>[+]</b> = to'g'ri javob &nbsp;·&nbsp; <b>Izoh:</b> = tushuntirish (ixtiyoriy)
         </div>
         <div class="form-group">
           <label class="form-label">Savollarni kiriting:</label>
@@ -576,17 +571,11 @@ window.toggleExpl = (btn, id) => {
 
 window.chType = (id, type) => {
   const q = findQ(id);
-  if (!q || q.type === type) return;
-  q.type = type;
-  const hasContent = (q.options||[]).some(o => String(o).trim());
-  if (type === 'truefalse') {
-    q.options = ["Ha", "Yo'q"];
-  } else if (type === 'text') {
-    q.options = [];
-  } else if (!hasContent) {
-    q.options = type === 'multiple' ? ['', '', '', ''] : [];
-  }
-  q.correct = Math.min(q.correct||0, Math.max((q.options||[]).length-1, 0));
+  if (!q) return;
+  q.type    = type;
+  q.options = type === 'multiple'  ? ['', '', '', ''] :
+              type === 'truefalse' ? ["Ha", "Yo'q"] : [];
+  q.correct = 0;
   renderAll();
 };
 
@@ -750,40 +739,7 @@ Izoh: Ha, to'g'ri.
 
 2. Yer yumaloqmi?
 Ha *
-Yo'q`,
-
-`1. Present Perfect zamonni qachon ishlatamiz?
-Javob: Hozirgi zamonga aloqador o'tgan harakatlar uchun
-Izoh: Have/has + V3 shaklida qo'llanadi.
-
-2. "She ___ already eaten" jumlani to'ldiring.
-Javob: has
-Izoh: She (u) uchun "has" ishlatiladi.`,
-
-`1. Inglizcha yozing: I love you
-Yozma:
-
-2. O'zbekiston poytaxti?
-Yozma: Toshkent`,
-
-`1. Quyidagi voqealarni to'g'ri tartibda joylashtiring.
-Tartib:
-1. Tuxum qo'yiladi
-2. Jo'ja tug'iladi
-3. Tovuq o'sadi
-4. Tovuq tuxum qo'yadi`,
-
-`1. Dastur ishga tushish ketma-ketligi.
-Ketma-ketlik:
-- Kod yoziladi
-- Kompilyatsiya qilinadi
-- Dastur ishga tushadi`,
-
-`1. Dunyoning eng baland tog'i ___ hisoblanadi.
-Blank: Everest
-
-2. O'zbekiston ___ yilda mustaqil bo'ldi.
-Blank: 1991`
+Yo'q`
 ];
 
 function initFmtPreviews() {
@@ -814,35 +770,10 @@ document.getElementById('imp-modal').addEventListener('click', function (e) {
   if (e.target === this) closeImport();
 });
 
-// Aktiv format indeksini olish
-function getActiveFmtIdx() {
-  const btns = document.querySelectorAll('.fmtt');
-  for (let i = 0; i < btns.length; i++) {
-    if (btns[i].classList.contains('on')) return i;
-  }
-  return 0;
-}
-
-// Format indeksiga qarab majburiy tur
-function forcedTypeByFmt(idx) {
-  // 0: A)* → multiple
-  // 1: 1)[+] → multiple
-  // 2: Ha/Yo'q → truefalse
-  // 3: Matnli (Javob:) → text
-  // 4: Yozma → text
-  // 5: Tartib → order
-  // 6: Ketma-ketlik → sequence
-  // 7: Bo'sh to'ldirish → fill
-  const map = {0:'multiple', 1:'multiple', 2:'truefalse', 3:'text', 4:'text', 5:'order', 6:'sequence', 7:'fill'};
-  return map[idx] || null;
-}
-
 window.doImport = () => {
   const raw = document.getElementById('imp-textarea').value.trim();
   if (!raw) { Toast.error('Matn kiriting!'); return; }
-  const fmtIdx    = getActiveFmtIdx();
-  const forcedType = forcedTypeByFmt(fmtIdx);
-  const imported  = parseTxt(raw, forcedType);
+  const imported = parseTxt(raw);
   if (!imported.length) { Toast.error('Format noto\'g\'ri. Namunaga qarang.'); return; }
   questions.push(...imported);
   renderAll();
@@ -856,9 +787,7 @@ window.handleFile = (inp) => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    const fmtIdx     = getActiveFmtIdx();
-    const forcedType = forcedTypeByFmt(fmtIdx);
-    const imported   = parseTxt(e.target.result, forcedType);
+    const imported = parseTxt(e.target.result);
     const res = document.getElementById('file-result');
     if (!imported.length) {
       res.innerHTML = '<div class="alert alert-error">Format noto\'g\'ri</div>';
@@ -891,176 +820,75 @@ if (dz) {
 }
 
 /* ═══════════════════════════════════════
-   TEXT PARSER — barcha turlar
-   Ko'p tanlov | Ha/Yo'q | Matnli | Yozma | Tartib | Ketma-ketlik | Bo'sh to'ldirish
+   TEXT PARSER — supports A)* and 1)[+] and Ha/Yo'q
 ═══════════════════════════════════════ */
-function parseTxt(raw, forcedType) {
+function parseTxt(raw) {
   const results = [];
-
-  // Bloklarga ajratish — Tartib/Ketma-ketlik ichidagi raqamlarga tegmaymiz
-  const blocks = [];
-  const rawBlocks = raw.split(/\n\s*\n+/);
-  for (const rb of rawBlocks) {
-    const trimmed = rb.trim();
-    if (!trimmed) continue;
-    if (/^tartib\s*:/im.test(trimmed) || /^ketma-?ketlik\s*:/im.test(trimmed)) {
-      blocks.push(trimmed);
-      continue;
-    }
-    const subBlocks = trimmed.split(/(?=^\s*\d+[\.\)]\s+\S)/m);
-    for (const sb of subBlocks) { if (sb.trim()) blocks.push(sb.trim()); }
-  }
+  const blocks  = raw.split(/\n(?=\s*\d+[\.\)\:])/g);
 
   for (const block of blocks) {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
     if (!lines.length) continue;
 
-    let qText = lines[0].replace(/^\s*\d+[\.\)\:]\s*/, '').trim();
-    let explanation = '';
+    let qText = '', options = [], correctIdx = 0, explanation = '', hasOpts = false;
 
-    // ── TARTIB turi ──
-    const tartibIdx = lines.findIndex(l => /^tartib\s*:/i.test(l));
-    if (tartibIdx !== -1) {
-      const items = [];
-      for (let li = tartibIdx + 1; li < lines.length; li++) {
-        const l = lines[li];
-        if (/^izoh\s*:/i.test(l)) { explanation = l.replace(/^izoh\s*:\s*/i, '').trim(); break; }
-        const m = l.match(/^(?:\d+[\.\ )]\s*|[-•]\s*)(.+)/);
-        const t = m ? m[1].trim() : l.trim();
-        if (t) items.push(t);
-      }
-      if (items.length >= 2) {
-        results.push({ _id: Date.now()+Math.random(), type:'order', text:qText,
-          options:[...items], correctOrder:[...items], blanks:[], correct:0, explanation, points:1 });
-        continue;
-      }
-    }
-
-    // ── KETMA-KETLIK turi ──
-    const seqIdx = lines.findIndex(l => /^ketma-?ketlik\s*:/i.test(l));
-    if (seqIdx !== -1) {
-      const items = [];
-      for (let li = seqIdx + 1; li < lines.length; li++) {
-        const l = lines[li];
-        if (/^izoh\s*:/i.test(l)) { explanation = l.replace(/^izoh\s*:\s*/i, '').trim(); break; }
-        const m = l.match(/^(?:\d+[\.\ )]\s*|[-•]\s*)(.+)/);
-        const t = m ? m[1].trim() : l.trim();
-        if (t) items.push(t);
-      }
-      if (items.length >= 2) {
-        results.push({ _id: Date.now()+Math.random(), type:'sequence', text:qText,
-          options:[...items], correctOrder:[...items], blanks:[], correct:0, explanation, points:1 });
-        continue;
-      }
-    }
-
-    // ── BO'SH TO'LDIRISH turi ──
-    const blankLines = lines.filter(l => /^blank\s*:/i.test(l));
-    const hasBlank = /___/.test(qText);
-    if (hasBlank || blankLines.length > 0) {
-      const blanks = blankLines.map(l => l.replace(/^blank\s*:\s*/i,'').trim());
-      if (blanks.length === 0) blanks.push('');
-      const izoh = lines.find(l => /^izoh\s*:/i.test(l));
-      if (izoh) explanation = izoh.replace(/^izoh\s*:\s*/i,'').trim();
-      results.push({ _id: Date.now()+Math.random(), type:'fill', text:qText,
-        options:[], correctOrder:[], blanks, correct:0, explanation, points:1 });
-      continue;
-    }
-
-    // ── KO'P TANLOV / HA-YO'Q / MATNLI / YOZMA ──
-    let options = [], correctIdx = 0, textAnswer = '', isYozma = false;
-
-    for (let li = 1; li < lines.length; li++) {
-      const line = lines[li];
-
-      if (/^izoh\s*:/i.test(line))  { explanation = line.replace(/^izoh\s*:\s*/i,'').trim(); continue; }
-      if (/^javob\s*:/i.test(line)) { textAnswer  = line.replace(/^javob\s*:\s*/i,'').trim(); continue; }
-      if (/^yozma\s*:?/i.test(line)) {
-        isYozma = true;
-        const hint = line.replace(/^yozma\s*:?\s*/i,'').trim();
-        if (hint) textAnswer = hint;
+    for (const line of lines) {
+      /* Izoh */
+      if (/^izoh\s*:/i.test(line)) {
+        explanation = line.replace(/^izoh\s*:\s*/i, '').trim();
         continue;
       }
 
-      // A) B) C) D) E) — to'g'ri javob belgisi oldida ham (*B), +B) yoki oxirida ham (B) *)
-      // Belgisi oldida: *, +, -, !, =
-      const corrPrefixM = line.match(/^([*+\-!=])\s*([A-Ea-e])\s*[\)\.\s]\s*(.+)/);
-      if (corrPrefixM) {
-        let c = corrPrefixM[3].trim();
-        // Oxiridagi belgilarni ham tozala
-        c = c.replace(/\s*[*+\-!=]\s*$/, '').replace(/\s*\[\+\]\s*$/, '').trim();
-        correctIdx = options.length;
-        options.push(c); continue;
-      }
+      /* Option: A) B) ... or 1. 2. 3. */
+      const optM = line.match(/^(?:[A-Da-d]\s*[\)\.:]|\d+[\)\.\s])\s*(.+)/);
+      if (optM) {
+        hasOpts = true;
+        let content = optM[1].trim();
+        let isCorr = false;
 
-      // Oddiy variant: A) matn yoki matn * oxirida
-      const optLetterM = line.match(/^([A-Ea-e])\s*[\)\.\s]\s*(.+)/);
-      if (optLetterM) {
-        let c = optLetterM[2].trim(), isCorr = false;
-        if (/[*+!=]\s*$/.test(c))     { isCorr=true; c=c.replace(/\s*[*+!=]\s*$/,'').trim(); }
-        if (/\[\+\]/.test(c))         { isCorr=true; c=c.replace(/\s*\[\+\]\s*/g,'').trim(); }
-        if (/\(\+\)/.test(c))         { isCorr=true; c=c.replace(/\s*\(\+\)\s*/g,'').trim(); }
-        if (/\(to.g.ri\)/i.test(c))   { isCorr=true; c=c.replace(/\(to.g.ri\)/gi,'').trim(); }
+        if (/\*\s*$/.test(content))    { isCorr = true; content = content.replace(/\s*\*\s*$/, '').trim(); }
+        if (/\[\+\]/.test(content))    { isCorr = true; content = content.replace(/\s*\[\+\]\s*/g, '').trim(); }
+        if (/\(\+\)/.test(content))    { isCorr = true; content = content.replace(/\s*\(\+\)\s*/g, '').trim(); }
+        if (/\(to'g'ri\)/i.test(content)) { isCorr = true; content = content.replace(/\s*\(to'g'ri\)\s*/gi, '').trim(); }
+
         if (isCorr) correctIdx = options.length;
-        options.push(c); continue;
+        options.push(content);
+        continue;
       }
 
-      // 1) 2) 3) raqamli
-      if (options.length > 0) {
-        const optNumM = line.match(/^\d+[\)\.\s]\s*(.+)/);
-        if (optNumM) {
-          let c = optNumM[1].trim(), isCorr = false;
-          if (/\*\s*$/.test(c)) { isCorr=true; c=c.replace(/\s*\*\s*$/,'').trim(); }
-          if (/\[\+\]/.test(c)) { isCorr=true; c=c.replace(/\s*\[\+\]\s*/g,'').trim(); }
-          if (isCorr) correctIdx = options.length;
-          options.push(c); continue;
-        }
+      /* Ha / Yo'q direct */
+      if (!hasOpts && /^(ha|yes|true)\s*(\*|\[\+\])?$/i.test(line)) {
+        hasOpts = true;
+        const isCorr = /(\*|\[\+\])/.test(line) || /^(ha|yes|true)$/i.test(line.split(/[\s\*\[\]]/)[0]);
+        if (isCorr) correctIdx = options.length;
+        options.push(line.replace(/\s*[\*\[\]\+]+\s*$/, '').trim());
+        continue;
       }
-
-      // Ha / Yo'q
-      if (/^(ha|yes|true)\s*(\*|\[\+\])?$/i.test(line)) {
+      if (!hasOpts && /^(yo'q|yoq|no|false)\s*(\*|\[\+\])?$/i.test(line)) {
+        hasOpts = true;
         const isCorr = /(\*|\[\+\])/.test(line);
         if (isCorr) correctIdx = options.length;
-        options.push('Ha'); continue;
-      }
-      if (/^(yo.q|yoq|no|false)\s*(\*|\[\+\])?$/i.test(line)) {
-        const isCorr = /(\*|\[\+\])/.test(line);
-        if (isCorr) correctIdx = options.length;
-        options.push("Yo'q"); continue;
+        options.push(line.replace(/\s*[\*\[\]\+]+\s*$/, '').trim());
+        continue;
       }
 
-      if (options.length === 0 && !textAnswer && !isYozma) qText += ' ' + line;
+      /* Question text */
+      if (!hasOpts) {
+        qText += (qText ? ' ' : '') + line.replace(/^\d+[\.\)\:]\s*/, '');
+      }
     }
 
-    if (!qText.trim()) continue;
+    if (!qText && lines[0]) qText = lines[0].replace(/^\d+[\.\)\:]\s*/, '');
+    if (!qText) continue;
 
-    // Agar forcedType berilgan bo'lsa, turni majburan o'zgartir
-    if (forcedType === 'truefalse') {
-      type = 'truefalse';
-      if (options.length === 0) options = ["Ha", "Yo'q"];
-      if (options.length > 2)   options = options.slice(0, 2);
-      if (correctIdx >= options.length) correctIdx = 0;
-    } else if (forcedType === 'text') {
-      type = 'text';
-      options = [];
-    } else if (forcedType === 'multiple' && options.length >= 2) {
-      type = 'multiple';
-    }
-
+    /* Determine type */
     let type = 'text';
-    if (isYozma) {
-      type = 'text';
-      if (textAnswer) explanation = (explanation ? explanation + ' | ' : '') + '✅ Javob: ' + textAnswer;
-    } else if (textAnswer && options.length === 0) {
-      type = 'text';
-      if (!explanation) explanation = '✅ To\'g\'ri javob: ' + textAnswer;
-      else explanation = '✅ To\'g\'ri javob: ' + textAnswer + ' | ' + explanation;
-    } else if (options.length >= 2) {
+    if (options.length >= 2) {
       type = 'multiple';
       const lower = options.map(o => o.toLowerCase());
       if (options.length === 2 &&
-          (lower[0].includes('ha') || lower[0]==='yes' || lower[0]==='true') &&
-          (lower[1].includes("yo'q") || lower[1].includes('yoq') || lower[1]==='no' || lower[1]==='false')) {
+          (lower[0].includes('ha') || lower[0].includes('yes') || lower[0].includes('true')) &&
+          (lower[1].includes("yo'q") || lower[1].includes('no') || lower[1].includes('false'))) {
         type = 'truefalse';
       }
     }
@@ -1069,9 +897,7 @@ function parseTxt(raw, forcedType) {
       _id:         Date.now() + Math.random(),
       type,
       text:        qText.trim(),
-      options:     (type==='text') ? [] : options,
-      correctOrder: [],
-      blanks:      [],
+      options,
       correct:     correctIdx,
       explanation,
       points:      1,
