@@ -130,6 +130,13 @@
   font-weight:700;font-size:.83rem;cursor:pointer;
   font-family:'Plus Jakarta Sans',sans-serif;margin-top:.6rem}
 
+/* VALIDATION ERROR HIGHLIGHT */
+.field-error{border-color:#ef4444 !important;box-shadow:0 0 0 3px rgba(239,68,68,.18) !important;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.error-label{color:#ef4444;font-size:.78rem;font-weight:700;margin-top:.35rem;display:flex;align-items:center;gap:.3rem}
+.sec-error{border-color:#ef4444 !important;box-shadow:0 0 0 3px rgba(239,68,68,.13) !important}
+.q-card-error{border-color:#ef4444 !important;box-shadow:0 0 0 3px rgba(239,68,68,.13) !important}
+
 /* EXPLANATION TOGGLE */
 .expl-toggle{background:none;border:none;cursor:pointer;
   font-size:.78rem;color:var(--text-3);font-weight:600;
@@ -189,6 +196,18 @@
   </div>
 
   <div id="save-alert" style="margin-bottom:.85rem"></div>
+
+  <!-- STICKY ERROR BANNER -->
+  <div id="error-banner" style="display:none;position:sticky;top:62px;z-index:80;
+    background:#fef2f2;border:1.5px solid #fca5a5;border-radius:14px;
+    padding:.75rem 1rem;margin-bottom:.85rem;
+    box-shadow:0 4px 18px rgba(239,68,68,.13)">
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
+      <span style="font-size:1.1rem">🚨</span>
+      <span style="font-weight:800;font-size:.88rem;color:#dc2626" id="banner-title">Saqlash uchun quyidagilarni to'ldiring:</span>
+    </div>
+    <div id="banner-list" style="display:flex;flex-direction:column;gap:.3rem"></div>
+  </div>
 
   <!-- TEST INFO -->
   <div class="sec">
@@ -628,17 +647,64 @@ window.rmOpt = (id, idx) => {
    SAVE
 ═══════════════════════════════════════ */
 async function doSave() {
-  const title = document.getElementById('t-title').value.trim();
-  if (!title)      { showAlert('Test nomini kiriting!', 'error'); return; }
-  if (!selectedSubj) { showAlert('Fan / Guruh tanlang!', 'error'); return; }
-  if (!questions.length) { showAlert('Kamida 1 savol qo\'shing!', 'error'); return; }
+  clearAllErrors();
+
+  const titleEl = document.getElementById('t-title');
+  const title   = titleEl.value.trim();
+  const errors  = [];
+
+  /* 1. Test nomi */
+  if (!title) {
+    showFieldError(titleEl, 'Test nomini kiriting!');
+    titleEl.closest('.sec').classList.add('sec-error');
+    errors.push({ label: '📋 Test nomi to\'ldirilmagan', target: titleEl });
+  }
+
+  /* 2. Fan / Guruh */
+  if (!selectedSubj) {
+    const subjGrid = document.getElementById('subj-grid');
+    const customInp = document.getElementById('custom-subj');
+    showFieldError(customInp, 'Fan / Guruh tanlang yoki o\'z nomingizni yozing!');
+    subjGrid.closest('.sec').classList.add('sec-error');
+    errors.push({ label: '📚 Fan / Guruh tanlanmagan', target: customInp });
+  }
+
+  /* 3. Savollar */
+  if (!questions.length) {
+    const addArea = document.querySelector('.add-area');
+    errors.push({ label: '❓ Kamida 1 savol qo\'shing', target: addArea });
+  }
 
   for (let i = 0; i < questions.length; i++) {
-    const q = questions[i];
-    if (!q.text.trim()) { showAlert(`${i + 1}-savol matni bo'sh!`, 'error'); return; }
-    if (q.type !== 'text' && q.options.some(o => !o.trim())) {
-      showAlert(`${i + 1}-savoldagi variant bo'sh!`, 'error'); return;
+    const q    = questions[i];
+    const card = document.querySelector(`.q-card[data-id="${q._id}"]`);
+    const textEl = card ? card.querySelector('.q-text') : null;
+
+    /* Savol matni bo'sh */
+    if (!q.text.trim()) {
+      if (textEl) {
+        showFieldError(textEl, 'Savol matni bo\'sh!');
+        if (card) card.classList.add('q-card-error');
+        errors.push({ label: `📝 ${i + 1}-savol matni to'ldirilmagan`, target: textEl });
+      }
     }
+
+    /* Variant bo'sh */
+    if (q.type !== 'text') {
+      const optInputs = card ? card.querySelectorAll('.opt-input') : [];
+      q.options.forEach((o, oi) => {
+        if (!o.trim() && optInputs[oi]) {
+          showFieldError(optInputs[oi], `${oi + 1}-variant bo'sh!`);
+          if (card) card.classList.add('q-card-error');
+          errors.push({ label: `⭕ ${i + 1}-savol: ${oi + 1}-variant bo'sh`, target: optInputs[oi] });
+        }
+      });
+    }
+  }
+
+  if (errors.length) {
+    showErrorBanner(errors);
+    return;
   }
 
   const btn  = document.getElementById('save-btn');
@@ -662,6 +728,7 @@ async function doSave() {
     if (editId) {
       await DB.updateTest(editId, data);
       await DB.saveQuestions(editId, questions.map(q => ({ ...q, id: undefined })));
+      clearAllErrors();
       showAlert('✅ Test yangilandi!', 'success');
     } else {
       const result = await DB.createTest(data, currentUser.uid);
@@ -921,8 +988,61 @@ function escHtml(s) {
 function showAlert(msg, type = 'info') {
   const el = document.getElementById('save-alert');
   el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   setTimeout(() => el.innerHTML = '', 4500);
+}
+
+/* Show inline error label under a field */
+function showFieldError(el, msg) {
+  clearFieldError(el);
+  el.classList.add('field-error');
+  const err = document.createElement('div');
+  err.className = 'error-label field-err-msg';
+  err.innerHTML = `❌ ${msg}`;
+  el.parentNode.insertBefore(err, el.nextSibling);
+  el.addEventListener('input', () => clearFieldError(el), { once: true });
+  el.addEventListener('change', () => clearFieldError(el), { once: true });
+}
+
+function clearFieldError(el) {
+  el.classList.remove('field-error');
+  const next = el.nextSibling;
+  if (next && next.classList && next.classList.contains('field-err-msg')) {
+    next.remove();
+  }
+}
+
+function clearAllErrors() {
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  document.querySelectorAll('.field-err-msg').forEach(el => el.remove());
+  document.querySelectorAll('.sec-error').forEach(el => el.classList.remove('sec-error'));
+  document.querySelectorAll('.q-card-error').forEach(el => el.classList.remove('q-card-error'));
+  document.getElementById('error-banner').style.display = 'none';
+  document.getElementById('banner-list').innerHTML = '';
+}
+
+function showErrorBanner(errors) {
+  /* errors = [{label, target}] — target is DOM element to scroll to */
+  const banner = document.getElementById('error-banner');
+  const list   = document.getElementById('banner-list');
+  list.innerHTML = '';
+  errors.forEach(({ label, target }) => {
+    const row = document.createElement('button');
+    row.style.cssText = 'display:flex;align-items:center;gap:.45rem;background:rgba(239,68,68,.08);'
+      + 'border:1px solid rgba(239,68,68,.22);border-radius:8px;padding:.38rem .7rem;'
+      + 'cursor:pointer;font-size:.78rem;font-weight:700;color:#b91c1c;font-family:inherit;'
+      + 'text-align:left;width:fit-content';
+    row.innerHTML = `<span>→</span> ${label}`;
+    if (target) row.onclick = () => scrollToEl(target);
+    list.appendChild(row);
+  });
+  banner.style.display = 'block';
+  /* Scroll to top so banner is visible */
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToEl(el) {
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 </script>
 </body>
